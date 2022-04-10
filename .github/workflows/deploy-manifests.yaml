@@ -1,0 +1,37 @@
+name: deploy-manifests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'deploy/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Prepare env
+        run: |
+          cat <<EOT >> .env
+
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          NEXT_PUBLIC_SOCKET_URL=https://messages.fictionaldev.com
+          NEXT_PUBLIC_AUTH_CLIENT_ID=9b0a29ac737d605e50a1ecae49e1a1e8753bf738709042901458efba3874e95c
+          SHARE_TOKEN_SECRET=${{ secrets.SHARE_TOKEN_SECRET }}
+          NEXT_PUBLIC_AUTH_BASE_URL=https://auth.fictionaldev.com
+          NEXT_PUBLIC_AUDIENCE=https://salt.fictionaldev.com
+
+          EOT
+      - run: doctl kubernetes cluster kubeconfig save ficdev
+      - name: Create configmap
+        run: |
+          kubectl delete configmap salt-env-config
+          kubectl create configmap salt-env-config --from-env-file=.env
+      - run: kubectl apply -f deploy
