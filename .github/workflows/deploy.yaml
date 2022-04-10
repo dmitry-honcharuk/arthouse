@@ -7,13 +7,16 @@ on:
       - fix/images
     paths:
       - package.json
-      - yarn.lock
+      - package-lock.json
+      - Dockerfile
+      - remix.config.js
       - .github/**
       - public/**
-      - src/**
+      - app/**
+      - prisma/**
 
 concurrency:
-  group: salt
+  group: arthouse
 
 jobs:
   build:
@@ -21,6 +24,18 @@ jobs:
     environment: Staging
     steps:
       - uses: actions/checkout@v3
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Setup cache
+      - name: ⚡️ Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: 🔑 Docker Login
         uses: docker/login-action@v1
@@ -48,69 +63,21 @@ jobs:
     needs:
       - build
     steps:
-      - uses: actions-hub/kubectl@master
-        env:
-          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+      - name: Digitalocean login
+        uses: digitalocean/action-doctl@v2
         with:
-          args: get pods
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-#      - name: Prepare env
-#        run: |
-#          cat <<EOT >> .env
-#
-#          DB_NAME=${{ secrets.DB_NAME }}
-#          DB_USERNAME=${{ secrets.DB_USERNAME }}
-#          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-#          NEXT_PUBLIC_SOCKET_URL=https://messages.fictionaldev.com
-#          NEXT_PUBLIC_AUTH_CLIENT_ID=9b0a29ac737d605e50a1ecae49e1a1e8753bf738709042901458efba3874e95c
-#          SHARE_TOKEN_SECRET=${{ secrets.SHARE_TOKEN_SECRET }}
-#          NEXT_PUBLIC_AUTH_BASE_URL=https://auth.fictionaldev.com
-#          NEXT_PUBLIC_AUDIENCE=https://salt.fictionaldev.com
-#
-#          S3_ACCESS_KEY_ID=${{ secrets.S3_ACCESS_KEY_ID }}
-#          S3_SECRET_ACCESS_KEY=${{ secrets.S3_SECRET_ACCESS_KEY }}
-#
-#          EOT
-#      - name: Cache .next
-#        uses: actions/cache@v2
-#        with:
-#          path: ./.next
-#          key: ${{ runner.os }}-next-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-next-
-#      - name: Cache Docker layers
-#        uses: actions/cache@v2
-#        with:
-#          path: /tmp/.buildx-production-cache
-#          key: ${{ runner.os }}-buildx-${{ github.sha }}
-#          restore-keys: |
-#            ${{ runner.os }}-buildx-
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
-#      - name: Set up Docker Buildx
-#        uses: docker/setup-buildx-action@v1
-#      - name: Build and push
-#        id: docker_build
-#        uses: docker/build-push-action@v2
-#        with:
-#          context: .
-#          push: true
-#          tags: dmitryhoncharuk/salt
-#          cache-from: type=local,src=/tmp/.buildx-production-cache
-#          cache-to: type=local,dest=/tmp/.buildx-production-cache-new,mode=max
-#      - # Temp fix
-#        # https://github.com/docker/build-push-action/issues/252
-#        # https://github.com/moby/buildkit/issues/1896
-#        name: Move cache
-#        run: |
-#          rm -rf /tmp/.buildx-production-cache
-#          mv /tmp/.buildx-production-cache-new /tmp/.buildx-production-cache
-#      - uses: digitalocean/action-doctl@v2
-#        with:
-#          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-#      - run: doctl kubernetes cluster kubeconfig save ficdev
-#      - name: Create configmap
-#        run: |
-#          kubectl delete configmap salt-env-config
-#          kubectl create configmap salt-env-config --from-env-file=.env
-#      - run: kubectl rollout restart deployment salt-deployment
+      - name: Save Digitalocean k8s config
+        run: doctl kubernetes cluster kubeconfig save ficdev
+
+      - name: Create namespace
+        run: kubectl create namespace arthouse || true
+
+      - name: Set configmap
+        run: |
+          kubectl -n=arthouse delete configmap arthouse-env-config || true
+          kubectl -n=arthouse create configmap arthouse-env-config \
+              --from-literal=DATABASE_URL=${{ secrets.DATABASE_URL }}
+      - name: Restart deployment
+        run: kubectl -n=arthouse rollout restart deployment arthouse-deployment
