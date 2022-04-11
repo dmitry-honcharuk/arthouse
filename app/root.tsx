@@ -1,3 +1,4 @@
+import CssBaseline from '@mui/material/CssBaseline';
 import type { LinksFunction, MetaFunction } from '@remix-run/node';
 import {
   Link,
@@ -11,7 +12,8 @@ import {
   useLocation,
 } from '@remix-run/react';
 import * as React from 'react';
-import styles from '~/styles/app.css';
+import globalStyles from '~/styles/global.css';
+import tailwindStyles from '~/styles/tailwind.css';
 
 /**
  * The `links` export is a function that returns an array of objects that map to
@@ -30,12 +32,15 @@ export const links: LinksFunction = () => {
       crossOrigin: 'anonymous',
     },
     {
-      rel: 'preload',
-      as: 'font',
-      href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap',
-      crossOrigin: 'anonymous',
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap',
     },
-    { rel: 'stylesheet', href: styles },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/icon?family=Material+Icons',
+    },
+    { rel: 'stylesheet', href: tailwindStyles },
+    { rel: 'stylesheet', href: globalStyles },
   ];
 };
 
@@ -51,7 +56,8 @@ export const meta: MetaFunction = () => ({
  */
 export default function App() {
   return (
-    <Document>
+    <Document title="Art house">
+      <CssBaseline />
       <Outlet />
     </Document>
   );

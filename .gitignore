@@ -8,4 +8,4 @@ node_modules
 /postgres-data/
 
 /.idea*
-/app/styles/app.css
+/app/styles/tailwind.css
