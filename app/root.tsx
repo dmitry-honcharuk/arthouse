@@ -30,8 +30,10 @@ export const links: LinksFunction = () => {
       crossOrigin: 'anonymous',
     },
     {
-      rel: 'stylesheet',
+      rel: 'preload',
+      as: 'font',
       href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap',
+      crossOrigin: 'anonymous',
     },
     { rel: 'stylesheet', href: styles },
   ];

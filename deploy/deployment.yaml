@@ -16,6 +16,7 @@ spec:
       containers:
         - name: arthouse
           image: dmitryhoncharuk/arthouse:stage
+          imagePullPolicy: Always
           envFrom:
             - configMapRef:
                 name: arthouse-env-config
