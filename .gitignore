@@ -5,7 +5,6 @@ node_modules
 /public/build
 .env
 
-/postgres-data/
-
 /.idea*
 /app/styles/tailwind.css
+/postgres-data/

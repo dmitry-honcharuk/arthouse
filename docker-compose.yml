@@ -1,12 +1,13 @@
 version: "3.7"
 services:
-  postgres:
+  db:
     image: postgres:latest
+    container_name: arthouse-db
     restart: always
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=arthouse
     ports:
       - "5432:5432"
     volumes:

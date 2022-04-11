@@ -8,5 +8,7 @@ generator client {
 }
 
 model User {
-  id String @id @default(cuid())
+  @@map("users")
+
+  id String @id @db.Uuid @default(uuid())
 }

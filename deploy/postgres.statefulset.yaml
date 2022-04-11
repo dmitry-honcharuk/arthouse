@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: arthouse-postgres
+  namespace: arthouse
+spec:
+  serviceName: postgresql-db-service
+  selector:
+    matchLabels:
+      app: arthouse-postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: arthouse-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13.3
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: PGDATA
+              value: /data/var/lib/postgresql/data
+          envFrom:
+            - configMapRef:
+                name: postgres-config-map
+          volumeMounts:
+            - name: postgresql-db-disk
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresql-db-disk
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: do-block-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: arthouse
+  name: arthouse-postgres-cluster-ip-service
+spec:
+  type: ClusterIP
+  selector:
+    app: arthouse-postgres
+  ports:
+    - name: arthouse-postgres
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+
