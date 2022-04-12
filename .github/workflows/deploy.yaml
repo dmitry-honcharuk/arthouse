@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - fix/images
+      - feature/google-auth
     paths:
       - package.json
       - package-lock.json

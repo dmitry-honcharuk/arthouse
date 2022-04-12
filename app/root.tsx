@@ -1,5 +1,6 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import type { LinksFunction, MetaFunction } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import {
   Link,
   Links,
@@ -9,6 +10,7 @@ import {
   Scripts,
   ScrollRestoration,
   useCatch,
+  useLoaderData,
   useLocation,
 } from '@remix-run/react';
 import * as React from 'react';
@@ -44,6 +46,14 @@ export const links: LinksFunction = () => {
   ];
 };
 
+export async function loader() {
+  return json({
+    ENV: {
+      CLIENT_ID: process.env.CLIENT_ID,
+    },
+  });
+}
+
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
   viewport: 'width=device-width,initial-scale=1',
@@ -70,19 +80,33 @@ function Document({
   children: React.ReactNode;
   title?: string;
 }) {
+  const data = useLoaderData();
+
   return (
     <html lang="en">
       <head>
         {title ? <title>{title}</title> : null}
         <Meta />
+        <meta
+          name="google-signin-client_id"
+          content={`${data.ENV.CLIENT_ID}.apps.googleusercontent.com`}
+        />
         <Links />
       </head>
       <body>
+        <div className="g-signin2" data-onsuccess="onSignIn" />
+
         {children}
         <RouteChangeAnnouncement />
         <ScrollRestoration />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = ${JSON.stringify(data.ENV)}`,
+          }}
+        />
         <Scripts />
         <LiveReload />
+        <script src="https://apis.google.com/js/platform.js" async defer />
       </body>
     </html>
   );
