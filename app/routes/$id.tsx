@@ -1,29 +1,12 @@
 import { Typography } from '@mui/material';
 import type { LoaderFunction } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { json } from '@remix-run/node';
+import { Form, useLoaderData } from '@remix-run/react';
 import type { UserPayload } from '~/modules/auth/jwt';
-import { verifyUserToken } from '~/modules/auth/jwt';
-import { destroySession, getSession } from '~/sessions';
+import { requireUser } from '~/server/require-user';
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const session = await getSession(request.headers.get('Cookie'));
-
-  if (!session) {
-    return redirect('/authenticate');
-  }
-
-  const user = verifyUserToken(session.get('user-token'));
-
-  if (!user) {
-    return redirect('/authenticate', {
-      headers: {
-        'Set-Cookie': await destroySession(session),
-      },
-    });
-  }
-
-  return json(user);
+  return json(await requireUser(request));
 };
 
 export default function UserProfile() {
@@ -34,6 +17,10 @@ export default function UserProfile() {
       <div>
         <Typography variant="h3">Hello there,</Typography>
         <Typography variant="h4">{user.email}</Typography>
+
+        <Form action="/logout" method="post">
+          <button type="submit">Logout</button>
+        </Form>
       </div>
     </div>
   );

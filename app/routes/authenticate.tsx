@@ -9,7 +9,7 @@ import { getUserToken } from '~/modules/auth/jwt';
 import { SocialStrategyFactory } from '~/modules/auth/social-strategy/social-strategy.factory';
 import { SocialProvider } from '~/modules/auth/types/social-provider';
 import { getUserBySocial } from '~/modules/users/get-user-by-social';
-import { commitSession, getSession } from '~/sessions';
+import { commitSession, getSession } from '~/sessions.server';
 import type { InitialData } from '~/types/initial-data';
 
 export const action: ActionFunction = async ({ request }) => {
