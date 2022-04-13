@@ -2,43 +2,45 @@ import type { ActionFunction } from '@remix-run/node';
 import { redirect } from '@remix-run/node';
 import { Form, useOutletContext, useSubmit } from '@remix-run/react';
 import * as React from 'react';
+import { useCallback } from 'react';
 import { GoogleLogin } from 'react-google-login';
+import { FacebookLoginButton } from '~/modules/auth/components/facebook-login-button';
 import { getUserToken } from '~/modules/auth/jwt';
+import { SocialStrategyFactory } from '~/modules/auth/social-strategy/social-strategy.factory';
+import { SocialProvider } from '~/modules/auth/types/social-provider';
 import { getUserBySocial } from '~/modules/users/get-user-by-social';
 import { commitSession, getSession } from '~/sessions';
 import type { InitialData } from '~/types/initial-data';
 
 export const action: ActionFunction = async ({ request }) => {
-  const idToken = (await request.formData()).get('idToken');
+  const data = await request.formData();
+
+  const token = data.get('token');
+  const provider = data.get('provider');
+
   const session = await getSession(request.headers.get('Cookie'));
 
-  if (typeof idToken !== 'string') {
+  if (
+    typeof provider !== 'string' ||
+    !Object.values(SocialProvider).includes(provider as SocialProvider)
+  ) {
+    throw new Error(`Invalid Provider ${provider}`);
+  }
+
+  if (typeof token !== 'string') {
     throw new Error(`Form not submitted correctly.`);
   }
 
-  const { OAuth2Client } = await import('google-auth-library');
-  const client = new OAuth2Client({
-    clientId: '968212429669-u2971f8fp53vpkup93hqrvn12hc17s8s',
+  const strategy = new SocialStrategyFactory(token).getSocialStrategy(
+    provider as SocialProvider
+  );
+
+  const socialUser = await strategy.authorize();
+
+  const user = await getUserBySocial({
+    email: socialUser.email,
+    social: { id: socialUser.id, provider: provider as SocialProvider },
   });
-
-  const ticket = await client.verifyIdToken({
-    idToken,
-    audience: `${process.env.GOOGLE_CLIENT_ID}.apps.googleusercontent.com`,
-  });
-
-  const payload = ticket.getPayload();
-
-  if (!payload) {
-    throw new Error('Failed to get google auth payload.');
-  }
-
-  const { sub: googleId, email } = payload;
-
-  if (!email) {
-    throw new Error('No email provided');
-  }
-
-  const user = await getUserBySocial({ email, googleId });
 
   session.set('user-token', getUserToken(user));
 
@@ -55,9 +57,18 @@ export default function Authenticate() {
 
   return (
     <div className="pt-36 flex justify-center">
-      <Form method="post" replace>
-        <input type="hidden" name="idToken" />
-
+      <Form method="post" replace className="flex flex-col gap-2">
+        <FacebookLoginButton
+          onSuccess={useCallback(
+            ({ token }) => {
+              submit(
+                { token, provider: SocialProvider.Facebook },
+                { replace: true, method: 'post' }
+              );
+            },
+            [submit]
+          )}
+        />
         <GoogleLogin
           theme="dark"
           clientId={context.ENV.GOOGLE_CLIENT_ID}
@@ -66,9 +77,12 @@ export default function Authenticate() {
               return;
             }
 
-            const idToken = googleUser.getAuthResponse().id_token;
+            const token = googleUser.getAuthResponse().id_token;
 
-            submit({ idToken }, { replace: true, method: 'post' });
+            submit(
+              { token, provider: SocialProvider.Google },
+              { replace: true, method: 'post' }
+            );
           }}
         />
       </Form>

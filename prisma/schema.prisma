@@ -15,4 +15,6 @@ model User {
   email String @unique
 
   googleId String? @unique @map("google_id")
+
+  facebookId String? @unique @map("facebook_id")
 }
