@@ -42,9 +42,9 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: arthouse
-  name: arthouse-postgres-cluster-ip-service
+  name: arthouse-postgres-load-balancer-service
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: arthouse-postgres
   ports:

@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useInsertScript } from '~/modules/common/hooks/use-insert-script';
 import { useWindowField } from '~/modules/common/hooks/use-window-field';
 
@@ -10,6 +10,21 @@ interface Props {
 const APP_ID = '460747149179660';
 
 export const FacebookLoginButton: FC<Props> = ({ onSuccess }) => {
+  const initFb = useCallback(() => {
+    window.FB?.init({
+      appId: APP_ID,
+      cookie: true,
+      xfbml: true,
+      version: 'v13.0',
+    });
+  }, []);
+
+  useEffect(() => {
+    if (window.FB) {
+      initFb();
+    }
+  }, [initFb]);
+
   const statusChangeCallback = useCallback<GetLoginStatusCallback>(
     (response) => {
       if (response.status === 'connected' && response.authResponse) {
@@ -23,25 +38,14 @@ export const FacebookLoginButton: FC<Props> = ({ onSuccess }) => {
     [onSuccess]
   );
 
-  const checkLoginState = useCallback(() => {
-    window.FB.getLoginStatus(statusChangeCallback);
-  }, [statusChangeCallback]);
-
-  useWindowField('checkLoginState', checkLoginState);
-
   useWindowField(
-    'fbAsyncInit',
+    'checkLoginState',
     useCallback(() => {
-      window.FB.init({
-        appId: APP_ID,
-        cookie: true,
-        xfbml: true,
-        version: 'v13.0',
-      });
-
-      checkLoginState();
-    }, [checkLoginState])
+      window.FB?.getLoginStatus(statusChangeCallback);
+    }, [statusChangeCallback])
   );
+
+  useWindowField('fbAsyncInit', initFb);
 
   useInsertScript({
     id: 'facebook-async-init',
@@ -78,7 +82,7 @@ export const FacebookLoginButton: FC<Props> = ({ onSuccess }) => {
 
 declare global {
   interface Window {
-    FB: {
+    FB?: {
       api: (resource: string, callback: ApiRequestCallback) => void;
       getLoginStatus: (callback: GetLoginStatusCallback) => void;
       init: (params: any) => void;
