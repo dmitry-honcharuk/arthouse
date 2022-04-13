@@ -30,6 +30,7 @@ function getClient() {
   console.log(`🔌 setting up prisma client to ${databaseUrl.host}`);
 
   const client = new PrismaClient({
+    log: ['query', 'error', 'info', 'warn'],
     datasources: {
       db: {
         url: databaseUrl.toString(),

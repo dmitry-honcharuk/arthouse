@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - fix/images
+
     paths:
       - package.json
       - package-lock.json
@@ -78,6 +78,8 @@ jobs:
         run: |
           kubectl -n=arthouse delete configmap arthouse-env-config || true
           kubectl -n=arthouse create configmap arthouse-env-config \
-              --from-literal=DATABASE_URL=${{ secrets.DATABASE_URL }}
+              --from-literal=DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              --from-literal=JWT_SECRET=${{ secrets.JWT_SECRET }} \
+              --from-literal=GOOGLE_CLIENT_ID="968212429669-u2971f8fp53vpkup93hqrvn12hc17s8s"
       - name: Restart deployment
         run: kubectl -n=arthouse rollout restart deployment arthouse-deployment

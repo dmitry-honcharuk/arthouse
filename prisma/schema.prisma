@@ -11,4 +11,8 @@ model User {
   @@map("users")
 
   id String @id @db.Uuid @default(uuid())
+
+  email String @unique
+
+  googleId String? @unique @map("google_id")
 }
