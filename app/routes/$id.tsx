@@ -1,27 +1,39 @@
-import { Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { Form, useLoaderData } from '@remix-run/react';
-import type { UserPayload } from '~/modules/auth/jwt';
-import { requireUser } from '~/server/require-user';
+import { Outlet, useLoaderData } from '@remix-run/react';
+import * as React from 'react';
+import { Header } from '~/modules/common/header';
+import {
+  SIDEBAR_WIDTH,
+  UserPageSidebar,
+} from '~/modules/users/components/user-page/sidebar';
+import type { UserWithProfile } from '~/modules/users/types/social-user';
+import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
-  return json(await requireUser(request));
+  const user = await getLoggedInUser(request);
+
+  return json(user as UserWithProfile);
 };
 
+const Content = styled('div')(({ theme }) => ({
+  padding: theme.spacing(3),
+  width: `calc(100% - ${SIDEBAR_WIDTH}px - ${theme.spacing(2)})`,
+}));
+
 export default function UserProfile() {
-  const user = useLoaderData<UserPayload>();
+  const user = useLoaderData<UserWithProfile>();
 
   return (
-    <div className="pt-36 flex justify-center">
-      <div>
-        <Typography variant="h3">Hello there,</Typography>
-        <Typography variant="h4">{user.email}</Typography>
-
-        <Form action="/logout" method="post">
-          <button type="submit">Logout</button>
-        </Form>
+    <>
+      <Header user={user} />
+      <Content>
+        <Outlet context={user} />
+      </Content>
+      <div className="fixed right-4 top-32">
+        <UserPageSidebar />
       </div>
-    </div>
+    </>
   );
 }
