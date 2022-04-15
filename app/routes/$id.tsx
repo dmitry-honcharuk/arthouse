@@ -1,7 +1,7 @@
 import { styled } from '@mui/material/styles';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { Outlet, useLoaderData } from '@remix-run/react';
+import { Outlet, useLoaderData, useParams } from '@remix-run/react';
 import * as React from 'react';
 import { Header } from '~/modules/common/header';
 import {
@@ -23,13 +23,16 @@ const Content = styled('div')(({ theme }) => ({
 }));
 
 export default function UserProfile() {
-  const user = useLoaderData<UserWithProfile>();
+  const currentUser = useLoaderData<UserWithProfile>();
+  const { id } = useParams();
 
   return (
     <>
-      <Header user={user} />
+      <Header user={currentUser} />
       <Content>
-        <Outlet context={user} />
+        <Outlet
+          context={{ user: currentUser, isCurrentUser: id === currentUser.id }}
+        />
       </Content>
       <div className="fixed right-4 top-32">
         <UserPageSidebar />

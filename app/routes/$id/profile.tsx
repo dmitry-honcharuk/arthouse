@@ -1,88 +1,54 @@
-import type { SvgIconComponent } from '@mui/icons-material';
-import {
-  ConnectWithoutContact,
-  Facebook,
-  GitHub,
-  LinkedIn,
-  MailOutline,
-  Twitter,
-  YouTube,
-} from '@mui/icons-material';
-import { Paper, Typography } from '@mui/material';
+import type { Profile } from '@prisma/client';
+import type { ActionFunction } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { useOutletContext } from '@remix-run/react';
+import * as React from 'react';
+import { ProfileDetailsSection } from '~/modules/users/components/profile/profile-details.section';
+import { SocialSection } from '~/modules/users/components/profile/social.section';
+import { SummarySection } from '~/modules/users/components/profile/summary.section';
+import type { ProfileFields } from '~/modules/users/components/profile/types/profile-fields';
 import type { UserWithProfile } from '~/modules/users/types/social-user';
+import { updateProfile } from '~/modules/users/update-profile';
+import { requireUser } from '~/server/require-user';
 
-function getSocialIcon(link: string): SvgIconComponent | null {
-  const [, domain] = new URL(link).host.split('.').reverse();
+export const action: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+  const user = await requireUser(request);
 
-  switch (domain.toLowerCase()) {
-    case 'facebook':
-      return Facebook;
+  const fields = formData
+    .getAll('fields')
+    .map((field) => field.toString()) as ProfileFields[];
 
-    case 'twitter':
-      return Twitter;
+  const profileFields: Partial<Omit<Profile, 'id'>> = {};
 
-    case 'linkedin':
-      return LinkedIn;
+  const summary = formData.get('summary');
+  const socialLinks = formData.getAll('socialLinks');
 
-    case 'youtube':
-      return YouTube;
-
-    case 'github':
-      return GitHub;
-
-    default:
-      return ConnectWithoutContact;
+  if (fields.includes('summary') && typeof summary === 'string') {
+    profileFields.summary = summary;
   }
-}
+
+  if (
+    fields.includes('socialLinks') &&
+    socialLinks.every((link): link is string => typeof link === 'string')
+  ) {
+    profileFields.socialLinks = socialLinks;
+  }
+
+  return json(await updateProfile(user.id, profileFields));
+};
 
 export default function UserProfile() {
-  const user = useOutletContext<UserWithProfile>();
+  const { user, isCurrentUser } = useOutletContext<{
+    user: UserWithProfile;
+    isCurrentUser: boolean;
+  }>();
 
   return (
     <main className="flex flex-col gap-10 pt-16">
-      <section>
-        <Typography variant="h3">Profile</Typography>
-        <Paper sx={{ p: 2 }} variant="outlined">
-          <div className="flex items-center gap-4">
-            <MailOutline />
-            <a href={`mailto:${user.email}`}>
-              <span className="underline">{user.email}</span>
-            </a>
-          </div>
-        </Paper>
-      </section>
-      <section>
-        <Typography variant="h4">Summary</Typography>
-        <Paper sx={{ p: 2 }} variant="outlined">
-          {user.profile?.summary ?? 'User has no summary yet'}
-        </Paper>
-      </section>
-      <section>
-        <Typography variant="h4">Social Links</Typography>
-        <Paper sx={{ p: 2 }} variant="outlined" elevation={4}>
-          {!user.profile?.socialLinks.length ? (
-            'User has no social links yet'
-          ) : (
-            <div className="flex items-center flex-wrap justify-between">
-              {user.profile.socialLinks.map((link) => {
-                const Icon = getSocialIcon(link);
-
-                return (
-                  <div key={link} className="flex items-center">
-                    <div className="p-2">{Icon ? <Icon /> : null}</div>
-                    <div className="p-2">
-                      <a href={link} target="_blank" rel="noopener noreferrer">
-                        <span className="underline">{new URL(link).host}</span>
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Paper>
-      </section>
+      <ProfileDetailsSection editable={isCurrentUser} user={user} />
+      <SummarySection editable={isCurrentUser} user={user} />
+      <SocialSection editable={isCurrentUser} user={user} />
     </main>
   );
 }
