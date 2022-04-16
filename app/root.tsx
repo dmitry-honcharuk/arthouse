@@ -1,4 +1,4 @@
-import CssBaseline from '@mui/material/CssBaseline';
+import { CssBaseline } from '@mui/material';
 import type { LinksFunction, MetaFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import {
@@ -14,6 +14,7 @@ import {
 } from '@remix-run/react';
 import * as React from 'react';
 import invariant from 'tiny-invariant';
+import { Content } from '~/content';
 import globalStyles from '~/styles/global.css';
 import tailwindStyles from '~/styles/tailwind.css';
 import type { InitialData } from '~/types/initial-data';
@@ -93,7 +94,7 @@ function Document({
         <Links />
       </head>
       <body>
-        {children}
+        <Content>{children}</Content>
         <RouteChangeAnnouncement />
         <ScrollRestoration />
         <Scripts />
