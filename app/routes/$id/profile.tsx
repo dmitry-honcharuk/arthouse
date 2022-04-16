@@ -21,6 +21,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   const profileFields: Partial<Omit<Profile, 'id'>> = {};
 
+  const nickname = formData.get('nickname');
   const summary = formData.get('summary');
   const socialLinks = formData.getAll('socialLinks');
 
@@ -35,6 +36,10 @@ export const action: ActionFunction = async ({ request }) => {
     profileFields.socialLinks = socialLinks;
   }
 
+  if (fields.includes('nickname') && typeof nickname === 'string') {
+    profileFields.nickname = nickname;
+  }
+
   return json(await updateProfile(user.id, profileFields));
 };
 
@@ -46,7 +51,11 @@ export default function UserProfile() {
 
   return (
     <main className="flex flex-col gap-10 pt-16">
-      <ProfileDetailsSection editable={isCurrentUser} user={user} />
+      <ProfileDetailsSection
+        editable={isCurrentUser}
+        user={user}
+        isCurrentUser={isCurrentUser}
+      />
       <SummarySection editable={isCurrentUser} user={user} />
       <SocialSection editable={isCurrentUser} user={user} />
     </main>

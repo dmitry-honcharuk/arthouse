@@ -23,7 +23,9 @@ export const SocialLinksEdit: FC<{
   }, [fetcher.state, fetcher.type, onSuccess]);
 
   const [linkList, setLinkList] = useState<LinkItem[]>(
-    links.map((link) => ({ link, key: link }))
+    links.length
+      ? links.map((link) => ({ link, key: link }))
+      : [{ link: null, key: cuid() }]
   );
   const linksRef = useRef(
     new Map(linkList.map(({ key, link }) => [key, link]))
@@ -57,6 +59,7 @@ export const SocialLinksEdit: FC<{
           return (
             <SocialField
               key={key}
+              autoFocus={link === null && index === 0}
               name={`link-${index}`}
               link={link ?? ''}
               onDelete={() => {
@@ -99,9 +102,10 @@ export const SocialLinksEdit: FC<{
 const SocialField: FC<{
   name: string;
   link: string;
+  autoFocus: boolean;
   onChange: (link: string) => void;
   onDelete: () => void;
-}> = ({ name, link, onChange, onDelete }) => {
+}> = ({ name, link, onChange, onDelete, autoFocus }) => {
   const DefaultIcon = ConnectWithoutContact;
 
   const [Icon, setIcon] = useState(() => getSocialIcon(link) ?? DefaultIcon);
@@ -116,6 +120,7 @@ const SocialField: FC<{
         name={name}
         variant="outlined"
         defaultValue={link}
+        autoFocus={autoFocus}
         onChange={({ target }) => {
           setIcon(getSocialIcon(target.value) ?? DefaultIcon);
           onChange(target.value);

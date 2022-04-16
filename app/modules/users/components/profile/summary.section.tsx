@@ -37,7 +37,7 @@ export const SummarySection: FC<{
             </Button>
           </Form>
         ) : (
-          <>{user.profile?.summary ?? 'User has no summary yet'}</>
+          <>{user.profile?.summary ?? 'No summary yet'}</>
         )
       }
     />

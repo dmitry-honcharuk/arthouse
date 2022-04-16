@@ -7,6 +7,7 @@ import {
   Twitter,
   YouTube,
 } from '@mui/icons-material';
+import { Typography } from '@mui/material';
 import type { FC } from 'react';
 import type { UserWithProfile } from '~/modules/users/types/social-user';
 
@@ -20,7 +21,7 @@ function getHost(link: string) {
 
 export const SocialLinksDisplay: FC<{ user: UserWithProfile }> = ({ user }) => {
   if (!user.profile?.socialLinks.length) {
-    return <>User has no social links yet</>;
+    return <Typography>No social links yet</Typography>;
   }
 
   return (

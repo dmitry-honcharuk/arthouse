@@ -1,4 +1,4 @@
-import { Logout } from '@mui/icons-material';
+import { Logout, Person } from '@mui/icons-material';
 import {
   Avatar,
   Button,
@@ -13,16 +13,18 @@ import {
 import AppBar from '@mui/material/AppBar';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
-import type { User } from '@prisma/client';
 import { Link, useFetcher } from '@remix-run/react';
 import md5 from 'md5';
 import type { FC } from 'react';
 import * as React from 'react';
 import { useMemo, useRef, useState } from 'react';
+import { NicknameTag } from '../users/components/profile/nickname-tag';
+import { getUserPath } from '../users/get-user-path';
+import type { UserWithProfile } from '../users/types/social-user';
 
 const Offset = styled('div')(({ theme }) => theme.mixins.toolbar);
 
-export const Header: FC<{ user: User | null }> = ({ user }) => {
+export const Header: FC<{ user: UserWithProfile | null }> = ({ user }) => {
   const fetcher = useFetcher();
 
   const logoutRef = useRef<HTMLFormElement>(null);
@@ -80,9 +82,32 @@ export const Header: FC<{ user: User | null }> = ({ user }) => {
                 onClose={handleCloseUserMenu}
               >
                 <MenuItem disabled>
-                  <ListItemText primary={user.email} />
+                  {user.profile?.nickname ? (
+                    <ListItemText
+                      primary={user.email}
+                      secondary={
+                        <NicknameTag nickname={user.profile.nickname} />
+                      }
+                    />
+                  ) : (
+                    <ListItemText primary={user.email} />
+                  )}
                 </MenuItem>
+
                 <Divider />
+                <MenuItem>
+                  <ListItemIcon>
+                    <Person fontSize="small" />
+                  </ListItemIcon>
+                  <Link
+                    to={`/${getUserPath(user)}`}
+                    onClick={() => {
+                      handleCloseUserMenu();
+                    }}
+                  >
+                    <ListItemText primary="Personal" />
+                  </Link>
+                </MenuItem>
                 <fetcher.Form ref={logoutRef} action="/logout" method="post">
                   <MenuItem
                     onClick={() => {

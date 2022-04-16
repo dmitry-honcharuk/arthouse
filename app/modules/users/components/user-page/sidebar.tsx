@@ -17,7 +17,7 @@ export const UserPageSidebar: FC = () => {
   return (
     <Paper sx={{ width: SIDEBAR_WIDTH, maxWidth: '100%' }} elevation={6}>
       <MenuList>
-        <NavLink to={`projects`}>
+        <NavLink to={`.`} end>
           {({ isActive }) => (
             <MenuItem selected={isActive}>
               <ListItemIcon>
