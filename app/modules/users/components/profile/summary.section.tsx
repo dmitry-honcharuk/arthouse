@@ -19,9 +19,13 @@ export const SummarySection: FC<{
           Summary
         </SectionTitle>
       )}
-      render={({ isEdit }) =>
+      render={({ isEdit, setIsEdit }) =>
         isEdit ? (
-          <Form method="post" className="flex flex-col gap-2">
+          <Form
+            method="post"
+            className="flex flex-col gap-2"
+            onSubmit={() => setIsEdit(false)}
+          >
             <input type="hidden" name="fields" value="summary" />
             <TextField
               multiline
