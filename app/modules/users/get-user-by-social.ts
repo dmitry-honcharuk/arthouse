@@ -10,10 +10,7 @@ type Details = {
   };
 };
 
-export async function getUserBySocial({
-  email,
-  social,
-}: Details): Promise<User> {
+export async function getUserBySocial({ email, social }: Details) {
   const socialIdField = getSocialProviderIdField(social.provider);
 
   const user = await prisma.user.findFirst({
@@ -23,6 +20,7 @@ export async function getUserBySocial({
         { email, [socialIdField]: null },
       ],
     },
+    include: { profile: true },
   });
 
   if (!user) {
@@ -31,6 +29,7 @@ export async function getUserBySocial({
         email,
         [socialIdField]: social.id,
       },
+      include: { profile: true },
     });
   }
 
@@ -38,6 +37,7 @@ export async function getUserBySocial({
     return prisma.user.update({
       where: { id: user.id },
       data: { [socialIdField]: social.id },
+      include: { profile: true },
     });
   }
 

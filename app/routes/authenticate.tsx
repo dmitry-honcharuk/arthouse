@@ -9,6 +9,7 @@ import { getUserToken } from '~/modules/auth/jwt';
 import { SocialStrategyFactory } from '~/modules/auth/social-strategy/social-strategy.factory';
 import { SocialProvider } from '~/modules/auth/types/social-provider';
 import { getUserBySocial } from '~/modules/users/get-user-by-social';
+import { getUserPath } from '~/modules/users/get-user-path';
 import { commitSession, getSession } from '~/sessions.server';
 import type { InitialData } from '~/types/initial-data';
 
@@ -44,7 +45,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   session.set('user-token', getUserToken(user));
 
-  return redirect(`/${user.id}`, {
+  return redirect(`/${getUserPath(user)}`, {
     headers: {
       'Set-Cookie': await commitSession(session),
     },
