@@ -49,8 +49,6 @@ export const SocialLinksEdit: FC<{
           formData.append('socialLinks', link);
         }
 
-        formData.set('test', 'aha');
-
         fetcher.submit(formData, { method: 'post' });
       }}
     >

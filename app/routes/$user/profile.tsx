@@ -2,41 +2,49 @@ import type { Profile } from '@prisma/client';
 import type { ActionFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { useOutletContext } from '@remix-run/react';
+import { castArray } from 'lodash';
 import * as React from 'react';
+import { z } from 'zod';
 import { ProfileDetailsSection } from '~/modules/users/components/profile/profile-details.section';
 import { SocialSection } from '~/modules/users/components/profile/social.section';
 import { SummarySection } from '~/modules/users/components/profile/summary.section';
-import type { ProfileFields } from '~/modules/users/components/profile/types/profile-fields';
 import type { UserWithProfile } from '~/modules/users/types/social-user';
 import { updateProfile } from '~/modules/users/update-profile';
+import { validateFormData } from '~/modules/validation/validate-form-data';
 import { requireUser } from '~/server/require-user';
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const user = await requireUser(request);
 
-  const fields = formData
-    .getAll('fields')
-    .map((field) => field.toString()) as ProfileFields[];
-
   const profileFields: Partial<Omit<Profile, 'id'>> = {};
 
-  const nickname = formData.get('nickname');
-  const summary = formData.get('summary');
-  const socialLinks = formData.getAll('socialLinks');
+  const {
+    fields: field,
+    nickname,
+    summary,
+    socialLinks,
+  } = validateFormData(
+    formData,
+    z.object({
+      fields: z.union([z.string(), z.array(z.string())]),
+      nickname: z.string().optional(),
+      summary: z.string().optional(),
+      socialLinks: z.union([z.string(), z.array(z.string())]).optional(),
+    })
+  );
 
-  if (fields.includes('summary') && typeof summary === 'string') {
+  const fields = castArray(field);
+
+  if (fields.includes('summary') && summary) {
     profileFields.summary = summary;
   }
 
-  if (
-    fields.includes('socialLinks') &&
-    socialLinks.every((link): link is string => typeof link === 'string')
-  ) {
-    profileFields.socialLinks = socialLinks;
+  if (fields.includes('socialLinks')) {
+    profileFields.socialLinks = socialLinks ? castArray(socialLinks) : [];
   }
 
-  if (fields.includes('nickname') && typeof nickname === 'string') {
+  if (fields.includes('nickname') && nickname) {
     profileFields.nickname = nickname;
   }
 
@@ -50,7 +58,7 @@ export default function UserProfile() {
   }>();
 
   return (
-    <main className="flex flex-col gap-10 pt-16">
+    <main className="flex flex-col gap-10">
       <ProfileDetailsSection
         editable={isCurrentUser}
         user={user}
