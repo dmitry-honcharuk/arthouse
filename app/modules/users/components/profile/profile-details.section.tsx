@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { ProfileSection } from '~/modules/users/components/profile/profile-section';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import type { UserWithProfile } from '~/modules/users/types/social-user';
-import { getNickname } from '../../getNickname';
+import { getURI } from '../../getURI';
 import { NicknameTag } from './nickname-tag';
 
 export const ProfileDetailsSection: FC<{
@@ -86,9 +86,7 @@ export const ProfileDetailsSection: FC<{
                   size="small"
                   variant="outlined"
                   defaultValue={nickname}
-                  onChange={({ target }) =>
-                    setNickname(getNickname(target.value))
-                  }
+                  onChange={({ target }) => setNickname(getURI(target.value))}
                   helperText={
                     <span className="flex flex-col gap-1 items-start">
                       <span>

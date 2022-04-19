@@ -1,13 +1,13 @@
 import { validate } from 'uuid';
 import { prisma } from '~/db.server';
 
-export async function getUserById(id: string) {
+export async function getUserByIdentifier(id: string) {
   const isId = validate(id);
 
   if (isId) {
     return prisma.user.findUnique({
       where: { id },
-      include: { profile: {} },
+      include: { profile: true },
     });
   }
 
