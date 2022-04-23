@@ -1,9 +1,15 @@
 import { Delete, Edit, MoreVert } from '@mui/icons-material';
 import {
+  Button,
   Card,
   CardContent,
   CardHeader,
   CardMedia,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   IconButton,
   ListItemIcon,
   ListItemText,
@@ -14,10 +20,9 @@ import {
 import type { ProjectItem } from '@prisma/client';
 import { ProjectItemType } from '@prisma/client';
 import type { FC, MouseEvent } from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { YoutubeFrame } from '~/modules/common/youtube-frame';
 
-// @TODO Edit & Delete item
 export const ProjectItemCard: FC<{
   item: ProjectItem;
   isCurrentUser: boolean;
@@ -31,6 +36,17 @@ export const ProjectItemCard: FC<{
     setAnchorEl(null);
   };
 
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleModalOpen = () => {
+    handleClose();
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
+
   return (
     <>
       {isCurrentUser && (
@@ -41,7 +57,7 @@ export const ProjectItemCard: FC<{
             </ListItemIcon>
             <ListItemText>Edit</ListItemText>
           </MenuItem>
-          <MenuItem onClick={handleClose} color="error">
+          <MenuItem onClick={handleModalOpen} color="error">
             <ListItemIcon color="error">
               <Delete fontSize="small" color="error" />
             </ListItemIcon>
@@ -89,6 +105,37 @@ export const ProjectItemCard: FC<{
           </CardContent>
         )}
       </Card>
+
+      <Dialog
+        open={modalOpen}
+        onClose={handleModalClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Delete {item.title ?? 'slide'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this slide?
+            <br />
+            <strong>This action is not revertable.</strong>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleModalClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleModalClose}
+            autoFocus
+            variant="contained"
+            color="error"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
