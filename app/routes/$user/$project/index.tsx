@@ -26,7 +26,7 @@ import { updateProject } from '~/modules/projects/update-project';
 import { validateCreateItemFormData } from '~/modules/projects/utils/validate-create-item-form-data';
 import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
-import { getLoggedInUser } from '~/server/get-logged-in-user.server';
+import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const { user, project: projectID } = z
@@ -38,7 +38,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   const [project, currentUser] = await Promise.all([
     getUserProject(user, projectID),
-    getLoggedInUser(request),
+    requireLoggedInUser(request),
   ]);
 
   if (!project) {

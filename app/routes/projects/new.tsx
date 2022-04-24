@@ -10,17 +10,17 @@ import { getUserPath } from '~/modules/users/get-user-path';
 import { getURI } from '~/modules/users/getURI';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { validateFormData } from '~/modules/validation/validate-form-data';
-import { getLoggedInUser } from '~/server/get-logged-in-user.server';
+import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
   return json({
-    currentUser: await getLoggedInUser(request),
+    currentUser: await requireLoggedInUser(request),
   });
 };
 
 export const action: ActionFunction = async ({ request }) => {
   const [user, formData] = await Promise.all([
-    getLoggedInUser(request),
+    requireLoggedInUser(request),
     request.formData(),
   ]);
 

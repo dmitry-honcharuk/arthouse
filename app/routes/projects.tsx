@@ -4,10 +4,10 @@ import { Outlet, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import Layout from '~/modules/common/layout';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
-import { getLoggedInUser } from '~/server/get-logged-in-user.server';
+import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const currentUser = await getLoggedInUser(request);
+  const currentUser = await requireLoggedInUser(request);
 
   return json({
     currentUser,

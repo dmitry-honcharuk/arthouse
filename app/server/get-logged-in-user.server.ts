@@ -1,20 +1,12 @@
 import { getUserByIdentifier } from '~/modules/users/getUserById';
-import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
-import { logoutUser } from '~/server/logout-user';
-import { requireUser } from '~/server/require-user.server';
-import { getSession } from '~/sessions.server';
+import { getSessionUser } from '~/server/get-session.user.server';
 
 export async function getLoggedInUser(request: Request) {
-  const userPayload = await requireUser(request);
+  const userPayload = await getSessionUser(request);
 
-  const user = await getUserByIdentifier(userPayload.id);
-
-  if (!user) {
-    const session = await getSession(request.headers.get('Cookie'));
-
-    // throws redirect
-    await logoutUser(session);
+  if (!userPayload) {
+    return null;
   }
 
-  return user as UserWithProfile;
+  return getUserByIdentifier(userPayload!.id);
 }
