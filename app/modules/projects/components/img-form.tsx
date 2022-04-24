@@ -1,4 +1,5 @@
 import { PhotoCamera } from '@mui/icons-material';
+import { LoadingButton } from '@mui/lab';
 import { Box, Button, Typography } from '@mui/material';
 import type { ProjectItem } from '@prisma/client';
 import { ProjectItemType } from '@prisma/client';
@@ -10,10 +11,12 @@ import ImageUploading from 'react-images-uploading';
 import { CommonItemFields } from './common-item-fields';
 
 interface Props {
-  onSuccess: (item: ProjectItem) => void;
+  onSuccess: () => void;
+  onCancel?: () => void;
+  item?: ProjectItem;
 }
 
-export const ImageForm: FC<Props> = ({ onSuccess }) => {
+export const ImageForm: FC<Props> = ({ item, onSuccess, onCancel }) => {
   const [images, setImages] = useState<ImageListType>([]);
   const fetcher = useFetcher<ProjectItem>();
 
@@ -23,30 +26,31 @@ export const ImageForm: FC<Props> = ({ onSuccess }) => {
     if (fetcher.type === 'done' && fetcher.data) {
       formRef.current?.reset();
       setImages([]);
-      onSuccess(fetcher.data);
+      onSuccess();
     }
   }, [fetcher.data, fetcher.type, onSuccess]);
 
   return (
     <fetcher.Form
-      method="post"
       className="flex flex-col gap-3 w-full h-full"
       ref={formRef}
-      encType="multipart/form-data"
       onSubmit={(e) => {
         e.preventDefault();
 
         const formData = new FormData(formRef.current!);
 
-        if (!images[0]) {
+        if (!item && !images[0]) {
           alert('Image is required');
           return;
         }
 
-        formData.set('image', images[0].file!);
+        if (!item) {
+          formData.set('image', images[0].file!);
+        }
 
         fetcher.submit(formData, {
-          method: 'post',
+          ...(item && { action: `${location.pathname}/${item.id}` }),
+          method: item ? 'put' : 'post',
           encType: 'multipart/form-data',
         });
       }}
@@ -60,6 +64,12 @@ export const ImageForm: FC<Props> = ({ onSuccess }) => {
         dataURLKey="data_url"
       >
         {({ imageList, onImageUpload, isDragging, dragProps }) => {
+          const list = imageList.length
+            ? imageList
+            : item
+            ? [{ data_url: item.value }]
+            : [];
+
           return (
             <div className="flex flex-col gap-3">
               <Box
@@ -67,10 +77,10 @@ export const ImageForm: FC<Props> = ({ onSuccess }) => {
                   display: 'grid',
                   gap: 1,
                   gridTemplateRows: 200,
-                  gridTemplateAreas: imageList.length
+                  gridTemplateAreas: list.length
                     ? '"upload image"'
                     : '"upload"',
-                  gridTemplateColumns: imageList.length ? '1fr 2fr' : '1fr',
+                  gridTemplateColumns: list.length ? '1fr 2fr' : '1fr',
                 }}
               >
                 <Box
@@ -91,7 +101,7 @@ export const ImageForm: FC<Props> = ({ onSuccess }) => {
                     </Typography>
                   </div>
                 </Box>
-                {imageList.map((image) => (
+                {list.map((image) => (
                   <Box
                     key={image['data_url']}
                     component="img"
@@ -110,11 +120,20 @@ export const ImageForm: FC<Props> = ({ onSuccess }) => {
         }}
       </ImageUploading>
 
-      <CommonItemFields />
+      <CommonItemFields item={item} />
 
-      <Button type="submit" variant="contained" className="self-end">
-        Add image
-      </Button>
+      <div className="flex gap-2 justify-end">
+        <Button type="button" onClick={onCancel}>
+          Cancel
+        </Button>
+        <LoadingButton
+          type="submit"
+          variant="contained"
+          loading={fetcher.type === 'actionSubmission'}
+        >
+          {item ? 'Update slide' : 'Add slide'}
+        </LoadingButton>
+      </div>
     </fetcher.Form>
   );
 };

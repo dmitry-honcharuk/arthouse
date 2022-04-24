@@ -11,20 +11,19 @@ import {
 } from '@mui/material';
 import { ProjectItemType, ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
-import { json, unstable_parseMultipartFormData } from '@remix-run/node';
+import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { useState } from 'react';
 import { z } from 'zod';
 import { prisma } from '~/db.server';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
-import { ImageForm } from '~/modules/projects/components/img-form';
+import { ItemForm } from '~/modules/projects/components/item-form';
 import { ProjectItems } from '~/modules/projects/components/project-items';
-import { VideoLinkForm } from '~/modules/projects/components/video-link-form';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
-import { validateFormData } from '~/modules/validation/validate-form-data';
+import { validateCreateItemFormData } from '~/modules/projects/utils/validate-create-item-form-data';
+import { getRequestFormData } from '~/server/get-form-data.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
-import { uploadHandler } from '~/upload-handler.server';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const { user, project: projectID } = z
@@ -56,8 +55,6 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 };
 
 export const action: ActionFunction = async ({ request, params }) => {
-  const contentType = request.headers.get('content-type');
-
   const { user, project: projectID } = z
     .object({
       user: z.string(),
@@ -71,30 +68,9 @@ export const action: ActionFunction = async ({ request, params }) => {
     throw new Response('Unauthorized', { status: 401 });
   }
 
-  const formData = contentType?.includes('multipart/form-data')
-    ? await unstable_parseMultipartFormData(request, uploadHandler)
-    : await request.formData();
+  const formData = await getRequestFormData(request);
 
-  const commonFields = {
-    title: z.ostring(),
-    caption: z.ostring(),
-  };
-
-  const data = validateFormData(
-    formData,
-    z.union([
-      z.object({
-        ...commonFields,
-        type: z.literal(ProjectItemType.IMAGE),
-        image: z.string(),
-      }),
-      z.object({
-        ...commonFields,
-        type: z.literal(ProjectItemType.YOUTUBE),
-        url: z.string(),
-      }),
-    ])
-  );
+  const data = validateCreateItemFormData(formData);
 
   return json(
     await prisma.projectItem.create({
@@ -167,12 +143,7 @@ export default function ProjectScreen() {
                 </MenuList>
               </Paper>
               <Paper className="flex justify-center grow p-3" elevation={3}>
-                {type === ProjectItemType.IMAGE && (
-                  <ImageForm onSuccess={() => toggleAddItem()} />
-                )}
-                {type === ProjectItemType.YOUTUBE && (
-                  <VideoLinkForm onSuccess={() => toggleAddItem()} />
-                )}
+                <ItemForm type={type} onSuccess={() => toggleAddItem()} />
               </Paper>
             </div>
           </div>
@@ -203,6 +174,6 @@ const Status = styled('span')<{ status: ProjectStatus }>(
     color:
       status === ProjectStatus.PUBLISHED
         ? theme.palette.primary.contrastText
-        : theme.palette.grey[300],
+        : theme.palette.text.primary,
   })
 );

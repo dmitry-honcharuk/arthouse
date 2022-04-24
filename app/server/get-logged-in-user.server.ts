@@ -1,7 +1,7 @@
 import { getUserByIdentifier } from '~/modules/users/getUserById';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { logoutUser } from '~/server/logout-user';
-import { requireUser } from '~/server/require-user';
+import { requireUser } from '~/server/require-user.server';
 import { getSession } from '~/sessions.server';
 
 export async function getLoggedInUser(request: Request) {

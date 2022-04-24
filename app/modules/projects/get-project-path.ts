@@ -1,6 +1,6 @@
 import type { Project } from '@prisma/client';
 import { getUserPath } from '../users/get-user-path';
-import type { UserWithProfile } from '../users/types/social-user';
+import type { UserWithProfile } from '../users/types/user-with-profile';
 
 export function getProjectPath(
   project: Pick<Project, 'id' | 'slug'>,

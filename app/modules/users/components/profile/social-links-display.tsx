@@ -9,7 +9,7 @@ import {
 } from '@mui/icons-material';
 import { Typography } from '@mui/material';
 import type { FC } from 'react';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 
 function getHost(link: string) {
   try {

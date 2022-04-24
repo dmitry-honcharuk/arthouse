@@ -3,7 +3,7 @@ import { Form } from '@remix-run/react';
 import type { FC } from 'react';
 import { ProfileSection } from '~/modules/users/components/profile/profile-section';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 
 export const SummarySection: FC<{
   user: UserWithProfile;

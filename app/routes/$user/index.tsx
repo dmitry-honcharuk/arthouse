@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { prisma } from '~/db.server';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
-import { requireUser } from '~/server/require-user';
+import { requireUser } from '~/server/require-user.server';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   const { user: userIdentifier } = z

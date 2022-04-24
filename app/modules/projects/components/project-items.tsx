@@ -2,7 +2,6 @@ import type { ProjectItem } from '@prisma/client';
 import type { FC } from 'react';
 import { ProjectItemCard } from '~/modules/projects/components/project-item';
 
-// @TODO Edit & Delete item
 export const ProjectItems: FC<{
   items: ProjectItem[];
   isCurrentUser: boolean;

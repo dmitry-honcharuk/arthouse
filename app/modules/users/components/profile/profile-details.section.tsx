@@ -6,7 +6,7 @@ import type { FC } from 'react';
 import { useEffect, useState } from 'react';
 import { ProfileSection } from '~/modules/users/components/profile/profile-section';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { getURI } from '../../getURI';
 import { NicknameTag } from './nickname-tag';
 

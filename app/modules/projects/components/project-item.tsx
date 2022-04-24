@@ -15,18 +15,26 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Paper,
   Typography,
 } from '@mui/material';
 import type { ProjectItem } from '@prisma/client';
 import { ProjectItemType } from '@prisma/client';
+import { useFetcher } from '@remix-run/react';
 import type { FC, MouseEvent } from 'react';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useToggle } from '~/modules/common/hooks/use-toggle';
 import { YoutubeFrame } from '~/modules/common/youtube-frame';
+import { ItemForm } from '~/modules/projects/components/item-form';
 
 export const ProjectItemCard: FC<{
   item: ProjectItem;
   isCurrentUser: boolean;
 }> = ({ item, isCurrentUser }) => {
+  const deleteFormRef = useRef<HTMLFormElement | null>(null);
+  const fetcher = useFetcher();
+  const [edit, toggleEdit] = useToggle();
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -47,11 +55,29 @@ export const ProjectItemCard: FC<{
     setModalOpen(false);
   };
 
+  if (edit) {
+    return (
+      <Paper elevation={3} className="p-4">
+        <ItemForm
+          type={item.type}
+          item={item}
+          onSuccess={() => toggleEdit()}
+          onCancel={() => toggleEdit()}
+        />
+      </Paper>
+    );
+  }
+
   return (
     <>
       {isCurrentUser && (
         <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-          <MenuItem onClick={handleClose}>
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              toggleEdit();
+            }}
+          >
             <ListItemIcon>
               <Edit fontSize="small" />
             </ListItemIcon>
@@ -122,19 +148,33 @@ export const ProjectItemCard: FC<{
             <strong>This action is not revertable.</strong>
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleModalClose} variant="outlined">
-            Cancel
-          </Button>
-          <Button
-            onClick={handleModalClose}
-            autoFocus
-            variant="contained"
-            color="error"
-          >
-            Delete
-          </Button>
-        </DialogActions>
+        <fetcher.Form
+          action={`delete`}
+          method="post"
+          ref={deleteFormRef}
+          onSubmit={(e) => {
+            e.preventDefault();
+
+            fetcher.submit(
+              {},
+              {
+                action: `${location.pathname}/${item.id}`,
+                method: 'delete',
+              }
+            );
+
+            handleModalClose();
+          }}
+        >
+          <DialogActions>
+            <Button onClick={handleModalClose} variant="outlined" type="button">
+              Cancel
+            </Button>
+            <Button type="submit" autoFocus variant="contained" color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </fetcher.Form>
       </Dialog>
     </>
   );
