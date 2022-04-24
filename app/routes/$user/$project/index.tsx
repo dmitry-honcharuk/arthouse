@@ -12,7 +12,7 @@ import {
 import { ProjectItemType, ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { useFetcher, useLoaderData } from '@remix-run/react';
 import { useState } from 'react';
 import { z } from 'zod';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
@@ -22,6 +22,7 @@ import { createProjectItem } from '~/modules/projects/create-project-item';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import { validateCreateItemFormData } from '~/modules/projects/utils/validate-create-item-form-data';
+import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
@@ -70,6 +71,22 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   const formData = await getRequestFormData(request);
 
+  if (request.method === 'PUT') {
+    const { status } = validateFormData(
+      formData,
+      z.object({
+        status: z.nativeEnum(ProjectStatus),
+      })
+    );
+
+    return json(
+      await prisma.project.update({
+        where: { id: project.id },
+        data: { status },
+      })
+    );
+  }
+
   const data = validateCreateItemFormData(formData);
 
   return json(
@@ -91,18 +108,44 @@ export default function ProjectScreen() {
 
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
+  const fetcher = useFetcher();
+
+  const isPublished = project.status === ProjectStatus.PUBLISHED;
 
   return (
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-2">
-        {isCurrentUser && (
-          <div>
-            <Status status={project.status} className="capitalize p-2 rounded">
-              {project.status.toLowerCase()}
-            </Status>
+        <div className="flex justify-between items-center">
+          <div className="flex items-start gap-2">
+            <Typography variant="h3">{project.name}</Typography>
+            {isCurrentUser && (
+              <Status
+                className="text-xs capitalize px-2 py-1 rounded border"
+                status={project.status}
+              >
+                {project.status.toLowerCase()}
+              </Status>
+            )}
           </div>
-        )}
-        <Typography variant="h3">{project.name}</Typography>
+          {isCurrentUser && (
+            <fetcher.Form method="put" className="flex flex-col items-start">
+              <input
+                type="hidden"
+                name="status"
+                value={
+                  isPublished ? ProjectStatus.DRAFT : ProjectStatus.PUBLISHED
+                }
+              />
+              <Button
+                type="submit"
+                variant="contained"
+                color={isPublished ? 'inherit' : 'secondary'}
+              >
+                {isPublished ? 'Unpublish' : 'Publish'}
+              </Button>
+            </fetcher.Form>
+          )}
+        </div>
         {project.caption && (
           <>
             <Typography>{project.caption}</Typography>
@@ -165,13 +208,13 @@ export default function ProjectScreen() {
 
 const Status = styled('span')<{ status: ProjectStatus }>(
   ({ theme, status }) => ({
-    backgroundColor:
-      status === ProjectStatus.PUBLISHED
-        ? theme.palette.primary.light
-        : theme.palette.grey[300],
     color:
       status === ProjectStatus.PUBLISHED
-        ? theme.palette.primary.contrastText
-        : theme.palette.text.primary,
+        ? theme.palette.secondary.light
+        : theme.palette.grey[500],
+    borderColor:
+      status === ProjectStatus.PUBLISHED
+        ? theme.palette.secondary.light
+        : theme.palette.grey[500],
   })
 );
