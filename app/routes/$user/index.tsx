@@ -4,6 +4,7 @@ import {
   Card,
   CardActionArea,
   CardContent,
+  CardMedia,
   styled,
   Typography,
 } from '@mui/material';
@@ -64,18 +65,18 @@ export default function UserProjects() {
       )}
 
       <Projects>
-        {projects.map(({ id, name, caption, slug, status }) => (
+        {projects.map(({ id, name, caption, slug, status, preview }) => (
           <Card elevation={3} key={id}>
             <Link
               to={`${getProjectPath({ id, slug })}`}
               className="block h-full"
             >
               <CardActionArea
-                sx={{ pt: 1, alignItems: 'normal' }}
-                className="h-full flex-col"
+                sx={{ alignItems: 'normal' }}
+                className="h-full flex-col relative"
               >
-                <div className="flex justify-end">
-                  {isCurrentUser && (
+                {isCurrentUser && (
+                  <div className="flex justify-end absolute right-0 top-2">
                     <Status
                       status={status}
                       className="text-center capitalize font-bold text-sm py-1 px-2 rounded-l-sm"
@@ -91,8 +92,16 @@ export default function UserProjects() {
                         {status.toLowerCase()}
                       </Typography>
                     </Status>
-                  )}
-                </div>
+                  </div>
+                )}
+                {preview && (
+                  <CardMedia
+                    component="img"
+                    sx={{ height: 200 }}
+                    image={preview}
+                    alt="Paella dish"
+                  />
+                )}
                 <CardContent>
                   <Typography gutterBottom variant="h5" component="div">
                     {name}

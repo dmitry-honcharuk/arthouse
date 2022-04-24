@@ -1,5 +1,16 @@
-import { Add, ImageOutlined, VideocamOutlined } from '@mui/icons-material';
 import {
+  Add,
+  ExpandMore,
+  ImageOutlined,
+  PhotoCamera,
+  VideocamOutlined,
+} from '@mui/icons-material';
+import { LoadingButton } from '@mui/lab';
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
   Button,
   ListItemIcon,
   ListItemText,
@@ -14,6 +25,8 @@ import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { useFetcher, useLoaderData } from '@remix-run/react';
 import { useState } from 'react';
+import type { ImageListType } from 'react-images-uploading';
+import ImageUploading from 'react-images-uploading';
 import { z } from 'zod';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
 import { ItemForm } from '~/modules/projects/components/item-form';
@@ -44,7 +57,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response('Not Found', { status: 404 });
   }
 
-  const isCurrentUser = currentUser.id === project.userId;
+  const isCurrentUser = currentUser?.id === project.userId;
 
   if (!isCurrentUser && project.status !== ProjectStatus.PUBLISHED) {
     throw new Response('Not Found', { status: 404 });
@@ -73,14 +86,20 @@ export const action: ActionFunction = async ({ request, params }) => {
   const formData = await getRequestFormData(request);
 
   if (request.method === 'PUT') {
-    const { status } = validateFormData(
+    const { status, preview } = validateFormData(
       formData,
       z.object({
-        status: z.nativeEnum(ProjectStatus),
+        preview: z.string().optional(),
+        status: z.nativeEnum(ProjectStatus).optional(),
       })
     );
 
-    return json(await updateProject(project.id, { status }));
+    return json(await updateProject(project.id, {
+      status,
+      ...(typeof preview !== 'undefined' && preview === ''
+        ? { preview: null }
+        : { preview }),
+    }));
   }
 
   const data = validateCreateItemFormData(formData);
@@ -104,9 +123,12 @@ export default function ProjectScreen() {
 
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
-  const fetcher = useFetcher();
+  const statusFetcher = useFetcher();
+  const previewFetcher = useFetcher();
 
   const isPublished = project.status === ProjectStatus.PUBLISHED;
+
+  const [images, setImages] = useState<ImageListType>([]);
 
   return (
     <div className="flex flex-col gap-10">
@@ -124,7 +146,10 @@ export default function ProjectScreen() {
             )}
           </div>
           {isCurrentUser && (
-            <fetcher.Form method="put" className="flex flex-col items-start">
+            <statusFetcher.Form
+              method="put"
+              className="flex flex-col items-start"
+            >
               <input
                 type="hidden"
                 name="status"
@@ -139,13 +164,144 @@ export default function ProjectScreen() {
               >
                 {isPublished ? 'Unpublish' : 'Publish'}
               </Button>
-            </fetcher.Form>
+            </statusFetcher.Form>
           )}
         </div>
         {project.caption && (
           <>
             <Typography>{project.caption}</Typography>
           </>
+        )}
+        {isCurrentUser && (
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMore />}
+              aria-controls="panel1a-content"
+              id="panel1a-header"
+            >
+              <Typography>Preview Image</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <previewFetcher.Form
+                method="put"
+                encType="multipart/form-data"
+                className="flex flex-col gap-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+
+                  const formData = new FormData();
+
+                  if (!images[0]) {
+                    alert('Image is required');
+                    return;
+                  }
+
+                  formData.set('preview', images[0].file!);
+
+                  previewFetcher.submit(formData, {
+                    method: 'put',
+                    encType: 'multipart/form-data',
+                  });
+                }}
+              >
+                <ImageUploading
+                  onChange={(imageList) => {
+                    setImages(imageList);
+                  }}
+                  value={images}
+                  dataURLKey="data_url"
+                  inputProps={{ name: 'preview' }}
+                >
+                  {({
+                    imageList: [uploaded],
+                    onImageUpload,
+                    isDragging,
+                    dragProps,
+                  }) => {
+                    const image = uploaded
+                      ? uploaded
+                      : project.preview
+                      ? { data_url: project.preview }
+                      : null;
+
+                    return (
+                      <div className="flex flex-col gap-3">
+                        <Box
+                          sx={{
+                            display: 'grid',
+                            gap: 1,
+                            gridTemplateAreas: image
+                              ? '"upload" "image"'
+                              : '"upload"',
+                          }}
+                        >
+                          <Box
+                            borderColor={
+                              isDragging ? 'primary.light' : undefined
+                            }
+                            className="border-2 border-dashed border-gray-300 w-full h-full rounded pt-10 pb-8 flex justify-center items-center transition-colors"
+                            {...dragProps}
+                          >
+                            <div className="flex flex-col gap-2">
+                              <Button
+                                onClick={onImageUpload}
+                                startIcon={<PhotoCamera />}
+                                variant="outlined"
+                              >
+                                Upload
+                              </Button>
+                              <Typography variant="caption">
+                                or drug and drop here
+                              </Typography>
+                            </div>
+                          </Box>
+                          {image && (
+                            <Box
+                              key={image['data_url']}
+                              component="img"
+                              src={image['data_url']}
+                              className="rounded"
+                              sx={{
+                                objectFit: 'cover',
+                                height: '100%',
+                                width: '100%',
+                              }}
+                            />
+                          )}
+                        </Box>
+                      </div>
+                    );
+                  }}
+                </ImageUploading>
+                <div className="flex gap-2 justify-end">
+                  {project.preview && (
+                    <Button
+                      type="button"
+                      color="secondary"
+                      onClick={() => {
+                        statusFetcher.submit(
+                          { preview: '' },
+                          {
+                            method: 'put',
+                          }
+                        );
+                      }}
+                    >
+                      Remove preview
+                    </Button>
+                  )}
+                  <LoadingButton
+                    type="submit"
+                    disabled={!images.length}
+                    variant="contained"
+                    loading={previewFetcher.type === 'actionSubmission'}
+                  >
+                    Save
+                  </LoadingButton>
+                </div>
+              </previewFetcher.Form>
+            </AccordionDetails>
+          </Accordion>
         )}
       </div>
 

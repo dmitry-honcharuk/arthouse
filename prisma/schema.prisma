@@ -63,6 +63,8 @@ model Project {
 
   status ProjectStatus @default(DRAFT)
 
+  preview String?
+
   @@unique([userId, slug])
 }
 
