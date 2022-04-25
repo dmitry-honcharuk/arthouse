@@ -1,6 +1,7 @@
 import type { SvgIconComponent } from '@mui/icons-material';
 import {
   ConnectWithoutContact,
+  EmailOutlined,
   Facebook,
   GitHub,
   LinkedIn,
@@ -33,7 +34,11 @@ export const SocialLinksDisplay: FC<{ user: UserWithProfile }> = ({ user }) => {
           <div key={`${link}-${index}`} className="flex items-center gap-3">
             <div>{Icon ? <Icon /> : <ConnectWithoutContact />}</div>
             <div>
-              <a href={link} target="_blank" rel="noopener noreferrer">
+              <a
+                href={isEmail(link) ? `mailto:${link}` : link}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <span className="underline">{getHost(link)}</span>
               </a>
             </div>
@@ -44,7 +49,15 @@ export const SocialLinksDisplay: FC<{ user: UserWithProfile }> = ({ user }) => {
   );
 };
 
+export function isEmail(link: string): boolean {
+  return link.includes('@');
+}
+
 export function getSocialIcon(link: string): SvgIconComponent | null {
+  if (isEmail(link)) {
+    return EmailOutlined;
+  }
+
   try {
     const [, domain] = new URL(link).host.split('.').reverse();
 
