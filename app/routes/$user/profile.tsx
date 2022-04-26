@@ -44,8 +44,8 @@ export const action: ActionFunction = async ({ request }) => {
     profileFields.socialLinks = socialLinks ? castArray(socialLinks) : [];
   }
 
-  if (fields.includes('nickname') && nickname) {
-    profileFields.nickname = nickname;
+  if (fields.includes('nickname')) {
+    profileFields.nickname = nickname || null;
   }
 
   return json(await updateProfile(user.id, profileFields));

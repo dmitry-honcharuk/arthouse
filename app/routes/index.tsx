@@ -48,7 +48,7 @@ export default function UserProfile() {
             gridTemplateColumns: 'repeat(5, 1fr)',
           },
         })}
-        className="grid gap-4"
+        className="grid gap-4 pt-28"
       >
         {projects.map((project) => (
           <ProjectCard
