@@ -13,19 +13,20 @@ import {
 import AppBar from '@mui/material/AppBar';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
-import { Link, useFetcher } from '@remix-run/react';
+import { Link, useFetcher, useNavigate } from '@remix-run/react';
 import md5 from 'md5';
 import type { FC } from 'react';
 import * as React from 'react';
 import { useMemo, useRef, useState } from 'react';
 import { NicknameTag } from '../users/components/profile/nickname-tag';
 import { getUserPath } from '../users/get-user-path';
-import type { UserWithProfile } from '../users/types/social-user';
+import type { UserWithProfile } from '../users/types/user-with-profile';
 
 const Offset = styled('div')(({ theme }) => theme.mixins.toolbar);
 
 export const Header: FC<{ user: UserWithProfile | null }> = ({ user }) => {
   const fetcher = useFetcher();
+  const navigate = useNavigate();
 
   const logoutRef = useRef<HTMLFormElement>(null);
   const emailHash = useMemo(
@@ -95,18 +96,16 @@ export const Header: FC<{ user: UserWithProfile | null }> = ({ user }) => {
                 </MenuItem>
 
                 <Divider />
-                <MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleCloseUserMenu();
+                    navigate(`/${getUserPath(user)}`);
+                  }}
+                >
                   <ListItemIcon>
                     <Person fontSize="small" />
                   </ListItemIcon>
-                  <Link
-                    to={`/${getUserPath(user)}`}
-                    onClick={() => {
-                      handleCloseUserMenu();
-                    }}
-                  >
-                    <ListItemText primary="Personal" />
-                  </Link>
+                  <ListItemText className="text-left">Personal</ListItemText>
                 </MenuItem>
                 <fetcher.Form ref={logoutRef} action="/logout" method="post">
                   <MenuItem

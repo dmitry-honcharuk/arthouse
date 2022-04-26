@@ -8,10 +8,10 @@ import { z } from 'zod';
 import { ProfileDetailsSection } from '~/modules/users/components/profile/profile-details.section';
 import { SocialSection } from '~/modules/users/components/profile/social.section';
 import { SummarySection } from '~/modules/users/components/profile/summary.section';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { updateProfile } from '~/modules/users/update-profile';
 import { validateFormData } from '~/modules/validation/validate-form-data';
-import { requireUser } from '~/server/require-user';
+import { requireUser } from '~/server/require-user.server';
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();

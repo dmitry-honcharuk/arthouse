@@ -2,7 +2,7 @@ import { styled } from '@mui/material/styles';
 import * as React from 'react';
 import { Header } from '~/modules/common/header';
 import { SIDEBAR_WIDTH } from '~/modules/users/components/user-page/sidebar';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 
 interface Props {
   sidebar?: React.ReactNode;
@@ -30,7 +30,7 @@ export default function Layout({
 const Content = styled('div')(({ theme }) => ({
   padding: theme.spacing(3),
 
-  [theme.breakpoints.up('md')]: {
+  [theme.breakpoints.up('sm')]: {
     width: `calc(100% - ${SIDEBAR_WIDTH}px - ${theme.spacing(2)})`,
   },
 }));

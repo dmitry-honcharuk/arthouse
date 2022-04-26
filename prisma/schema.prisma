@@ -66,6 +66,11 @@ model Project {
   @@unique([userId, slug])
 }
 
+enum ProjectItemType {
+  IMAGE
+  YOUTUBE
+}
+
 model ProjectItem {
   @@map("project_items")
 
@@ -73,7 +78,13 @@ model ProjectItem {
 
   project Project @relation(fields: [projectId], references: [id])
 
-  projectId String @db.Uuid @unique @map("project_id")
+  projectId String @db.Uuid @map("project_id")
+
+  title String?
 
   caption String?
+
+  type ProjectItemType
+
+  value String
 }

@@ -8,7 +8,7 @@ import { createProject } from '~/modules/projects/create-project';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserPath } from '~/modules/users/get-user-path';
 import { getURI } from '~/modules/users/getURI';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 

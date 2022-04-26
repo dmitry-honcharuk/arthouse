@@ -36,6 +36,16 @@ export const links: LinksFunction = () => {
       crossOrigin: 'anonymous',
     },
     {
+      rel: 'preconnect',
+      href: 'https://s3.eu-central-1.amazonaws.com',
+      crossOrigin: 'anonymous',
+    },
+    {
+      rel: 'preconnect',
+      href: 'https://www.youtube.com',
+      crossOrigin: 'anonymous',
+    },
+    {
       rel: 'stylesheet',
       href: 'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap',
     },

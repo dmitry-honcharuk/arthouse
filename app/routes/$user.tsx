@@ -5,7 +5,7 @@ import * as React from 'react';
 import Layout from '~/modules/common/layout';
 import { UserPageSidebar } from '~/modules/users/components/user-page/sidebar';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
-import type { UserWithProfile } from '~/modules/users/types/social-user';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
