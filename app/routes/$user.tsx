@@ -6,7 +6,7 @@ import Layout from '~/modules/common/layout';
 import { UserPageSidebar } from '~/modules/users/components/user-page/sidebar';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
-import { getLoggedInUser } from '~/server/get-logged-in-user.server';
+import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   try {
@@ -14,7 +14,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     const [user, currentUser] = await Promise.all([
       getUserByIdentifier(userId!),
-      getLoggedInUser(request),
+      requireLoggedInUser(request),
     ]);
 
     if (!user) {

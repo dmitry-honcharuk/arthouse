@@ -7,7 +7,7 @@ import { getUserProject } from '~/modules/projects/get-user-project';
 import { updateProjectItem } from '~/modules/projects/update-project-item';
 import { validateUpdateItemFormData } from '~/modules/projects/utils/validate-update-item-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
-import { requireUser } from '~/server/require-user.server';
+import { requireSessionUser } from '~/server/require-session-user.server';
 
 export const action: ActionFunction = async ({ request, params }) => {
   const {
@@ -23,7 +23,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     .parse(params);
 
   const [{ id: currentUserId }, project] = await Promise.all([
-    requireUser(request),
+    requireSessionUser(request),
     getUserProject(userID, projectID),
   ]);
 
