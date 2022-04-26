@@ -21,6 +21,7 @@ import { ProjectItems } from '~/modules/projects/components/project-items';
 import { createProjectItem } from '~/modules/projects/create-project-item';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
+import { updateProject } from '~/modules/projects/update-project';
 import { validateCreateItemFormData } from '~/modules/projects/utils/validate-create-item-form-data';
 import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
@@ -79,12 +80,7 @@ export const action: ActionFunction = async ({ request, params }) => {
       })
     );
 
-    return json(
-      await prisma.project.update({
-        where: { id: project.id },
-        data: { status },
-      })
-    );
+    return json(await updateProject(project.id, { status }));
   }
 
   const data = validateCreateItemFormData(formData);
