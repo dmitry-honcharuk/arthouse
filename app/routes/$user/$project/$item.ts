@@ -2,8 +2,9 @@ import { ProjectItemType } from '@prisma/client';
 import type { ActionFunction } from '@remix-run/node';
 import { json, Response } from '@remix-run/node';
 import { z } from 'zod';
-import { prisma } from '~/db.server';
+import { deleteProjectItem } from '~/modules/projects/delete-project-item';
 import { getUserProject } from '~/modules/projects/get-user-project';
+import { updateProjectItem } from '~/modules/projects/update-project-item';
 import { validateUpdateItemFormData } from '~/modules/projects/utils/validate-update-item-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
 import { requireUser } from '~/server/require-user.server';
@@ -41,23 +42,16 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
 
   if (request.method === 'DELETE') {
-    await prisma.projectItem.delete({
-      where: { id: item.id },
-    });
+    await deleteProjectItem(item.id);
   } else if (request.method === 'PUT') {
     const formData = await getRequestFormData(request);
 
     const data = validateUpdateItemFormData(formData);
 
-    await prisma.projectItem.update({
-      where: {
-        id: item.id,
-      },
-      data: {
-        value: data.type === ProjectItemType.IMAGE ? data.image : data.url,
-        title: data.title ?? null,
-        caption: data.caption ?? null,
-      },
+    await updateProjectItem(item.id, {
+      value: data.type === ProjectItemType.IMAGE ? data.image : data.url,
+      title: data.title ?? null,
+      caption: data.caption ?? null,
     });
   }
 

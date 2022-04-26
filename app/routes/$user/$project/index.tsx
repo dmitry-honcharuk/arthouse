@@ -15,10 +15,10 @@ import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { useState } from 'react';
 import { z } from 'zod';
-import { prisma } from '~/db.server';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
 import { ItemForm } from '~/modules/projects/components/item-form';
 import { ProjectItems } from '~/modules/projects/components/project-items';
+import { createProjectItem } from '~/modules/projects/create-project-item';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import { validateCreateItemFormData } from '~/modules/projects/utils/validate-create-item-form-data';
@@ -73,14 +73,12 @@ export const action: ActionFunction = async ({ request, params }) => {
   const data = validateCreateItemFormData(formData);
 
   return json(
-    await prisma.projectItem.create({
-      data: {
-        type: data.type,
-        value: data.type === ProjectItemType.IMAGE ? data.image : data.url,
-        title: data.title,
-        caption: data.caption,
-        projectId: project.id,
-      },
+    await createProjectItem({
+      projectId: project.id,
+      type: data.type,
+      value: data.type === ProjectItemType.IMAGE ? data.image : data.url,
+      title: data.title ?? null,
+      caption: data.caption ?? null,
     })
   );
 };
