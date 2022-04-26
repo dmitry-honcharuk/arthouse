@@ -18,6 +18,7 @@ import { z } from 'zod';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
 import { ItemForm } from '~/modules/projects/components/item-form';
 import { ProjectItems } from '~/modules/projects/components/project-items';
+import { ProjectPreviewForm } from '~/modules/projects/components/project-preview-form';
 import { createProjectItem } from '~/modules/projects/create-project-item';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
@@ -44,7 +45,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response('Not Found', { status: 404 });
   }
 
-  const isCurrentUser = currentUser.id === project.userId;
+  const isCurrentUser = currentUser?.id === project.userId;
 
   if (!isCurrentUser && project.status !== ProjectStatus.PUBLISHED) {
     throw new Response('Not Found', { status: 404 });
@@ -73,21 +74,26 @@ export const action: ActionFunction = async ({ request, params }) => {
   const formData = await getRequestFormData(request);
 
   if (request.method === 'PUT') {
-    const { status } = validateFormData(
+    const { status, preview } = validateFormData(
       formData,
       z.object({
-        status: z.nativeEnum(ProjectStatus),
+        preview: z.string().optional(),
+        status: z.nativeEnum(ProjectStatus).optional(),
       })
     );
 
-    return json(await updateProject(project.id, { status }));
+    return json(
+      await updateProject(project.id, {
+        status,
+        preview,
+      })
+    );
   }
 
   const data = validateCreateItemFormData(formData);
 
   return json(
-    await createProjectItem({
-      projectId: project.id,
+    await createProjectItem(project.id, {
       type: data.type,
       value: data.type === ProjectItemType.IMAGE ? data.image : data.url,
       title: data.title ?? null,
@@ -104,7 +110,7 @@ export default function ProjectScreen() {
 
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
-  const fetcher = useFetcher();
+  const statusFetcher = useFetcher();
 
   const isPublished = project.status === ProjectStatus.PUBLISHED;
 
@@ -124,7 +130,10 @@ export default function ProjectScreen() {
             )}
           </div>
           {isCurrentUser && (
-            <fetcher.Form method="put" className="flex flex-col items-start">
+            <statusFetcher.Form
+              method="put"
+              className="flex flex-col items-start"
+            >
               <input
                 type="hidden"
                 name="status"
@@ -139,7 +148,7 @@ export default function ProjectScreen() {
               >
                 {isPublished ? 'Unpublish' : 'Publish'}
               </Button>
-            </fetcher.Form>
+            </statusFetcher.Form>
           )}
         </div>
         {project.caption && (
@@ -147,6 +156,7 @@ export default function ProjectScreen() {
             <Typography>{project.caption}</Typography>
           </>
         )}
+        {isCurrentUser && <ProjectPreviewForm project={project} />}
       </div>
 
       {isCurrentUser ? (
