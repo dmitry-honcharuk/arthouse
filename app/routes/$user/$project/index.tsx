@@ -82,12 +82,12 @@ export const action: ActionFunction = async ({ request, params }) => {
       })
     );
 
-    return json(await updateProject(project.id, {
-      status,
-      ...(typeof preview !== 'undefined' && preview === ''
-        ? { preview: null }
-        : { preview }),
-    }));
+    return json(
+      await updateProject(project.id, {
+        status,
+        preview,
+      })
+    );
   }
 
   const data = validateCreateItemFormData(formData);
