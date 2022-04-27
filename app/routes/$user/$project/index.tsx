@@ -41,10 +41,19 @@ import type { WithUser } from '~/modules/users/types/with-user';
 import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
+import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
+import { getFavorites } from '~/modules/favorites/get-favorites';
+import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
+import { addFavorite } from '~/modules/favorites/add-favorite';
+import { deleteFavorite } from '~/modules/favorites/delete-favorite';
+import { requireSessionUser } from '~/server/require-session-user.server';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 
 interface LoaderData {
   isCurrentUser: boolean;
+  isFavorite: boolean;
   project: ProjectWithItems & WithUser;
+  currentUser: UserWithProfile | null;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -64,6 +73,8 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response('Not Found', { status: 404 });
   }
 
+  const favorites = currentUser ? await getFavorites(currentUser.id) : [];
+
   const isCurrentUser = currentUser?.id === project.userId;
 
   if (!isCurrentUser && project.status !== ProjectStatus.PUBLISHED) {
@@ -72,7 +83,9 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   return json<LoaderData>({
     project,
+    isFavorite: isFavorite({ projectId: project.id, favorites }),
     isCurrentUser,
+    currentUser,
   });
 };
 
@@ -91,6 +104,18 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
 
   const formData = await getRequestFormData(request);
+
+  if (request.method === 'POST') {
+    const currentUser = await requireSessionUser(request);
+
+    return json(await addFavorite(currentUser.id, project.id));
+  }
+
+  if (request.method === 'DELETE') {
+    const currentUser = await requireSessionUser(request);
+
+    return json(await deleteFavorite(currentUser.id, project.id));
+  }
 
   if (request.method === 'PUT') {
     const { status, preview } = validateFormData(
@@ -122,7 +147,8 @@ export const action: ActionFunction = async ({ request, params }) => {
 };
 
 export default function ProjectScreen() {
-  const { project, isCurrentUser } = useLoaderData<LoaderData>();
+  const { project, isCurrentUser, isFavorite, currentUser } =
+    useLoaderData<LoaderData>();
 
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
@@ -247,6 +273,9 @@ export default function ProjectScreen() {
               </Typography>
               {project.caption && (
                 <Typography variant="body2">{project.caption}</Typography>
+              )}
+              {!isCurrentUser && currentUser && (
+                  <FavoriteBtn isFavorite={isFavorite} />
               )}
               <div className="text-right">
                 <Typography variant="overline">
