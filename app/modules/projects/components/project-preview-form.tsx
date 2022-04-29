@@ -11,13 +11,28 @@ import {
 import type { Project } from '@prisma/client';
 import { useFetcher } from '@remix-run/react';
 import type { FC, FormEvent } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ImageListType } from 'react-images-uploading';
 import ImageUploading from 'react-images-uploading';
 
 export const ProjectPreviewForm: FC<{ project: Project }> = ({ project }) => {
   const fetcher = useFetcher();
   const [images, setImages] = useState<ImageListType>([]);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    const { data, type } = fetcher;
+
+    if (type !== 'done') {
+      return;
+    }
+
+    if (data?.preview === null) {
+      setImages([]);
+    }
+
+    setExpanded(false);
+  }, [fetcher]);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -38,7 +53,11 @@ export const ProjectPreviewForm: FC<{ project: Project }> = ({ project }) => {
   };
 
   return (
-    <Accordion>
+    <Accordion
+      elevation={2}
+      expanded={expanded}
+      onChange={(_, isExpanded) => setExpanded(isExpanded)}
+    >
       <AccordionSummary
         expandIcon={<ExpandMore />}
         aria-controls="panel1a-content"
@@ -125,6 +144,7 @@ export const ProjectPreviewForm: FC<{ project: Project }> = ({ project }) => {
               <Button
                 type="button"
                 color="secondary"
+                disabled={fetcher.type === 'actionSubmission'}
                 onClick={() => {
                   fetcher.submit(
                     { preview: '' },

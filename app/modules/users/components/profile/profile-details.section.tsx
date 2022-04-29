@@ -98,6 +98,7 @@ export const ProfileDetailsSection: FC<{
                   InputLabelProps={{
                     shrink: true,
                   }}
+                  autoFocus
                 />
                 <Button type="submit" size="small" variant="outlined">
                   Save

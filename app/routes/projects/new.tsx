@@ -53,8 +53,9 @@ export default function NewProject() {
     setLink(`${location.host}/${getUserPath(currentUser)}/${slug}`);
   }, [currentUser, slug]);
 
+  // @TODO Check all pages (including other user)
   return (
-    <Form method="post" className="flex flex-col gap-4 max-w-2xl">
+    <Form method="post" className="flex flex-col gap-4 max-w-2xl pt-10">
       <Typography variant="h3">Create new project</Typography>
 
       <Paper className="p-4 flex flex-col gap-3" elevation={3}>

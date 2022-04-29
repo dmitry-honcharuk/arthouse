@@ -10,15 +10,16 @@ import type { Project } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import { Link } from '@remix-run/react';
 import type { FC } from 'react';
+import type { WithUser } from '~/modules/users/types/with-user';
 
 export const ProjectCard: FC<{
-  project: Project;
+  project: Project & WithUser;
   isCurrentUser?: boolean;
   link: string;
 }> = ({
   link,
   isCurrentUser = false,
-  project: { id, status, preview, caption, name },
+  project: { id, status, preview, caption, name, user },
 }) => {
   return (
     <Card elevation={3} key={id}>
@@ -55,6 +56,13 @@ export const ProjectCard: FC<{
             />
           )}
           <CardContent>
+            <Typography
+              variant="subtitle1"
+              color="text.secondary"
+              component="div"
+            >
+              {user.profile?.nickname ?? user.email}
+            </Typography>
             <Typography gutterBottom variant="h5" component="div">
               {name}
             </Typography>

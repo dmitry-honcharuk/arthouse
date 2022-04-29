@@ -20,6 +20,9 @@ export async function getUserProject(
       ...(isUUID ? { id: projectIdentifier } : { slug: projectIdentifier }),
     },
     include: {
+      user: {
+        include: { profile: true },
+      },
       items: true,
     },
   });
