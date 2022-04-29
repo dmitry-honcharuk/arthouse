@@ -27,7 +27,7 @@ import { ProjectCard } from '~/modules/projects/components/project-card';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { WithUser } from '~/modules/users/types/with-user';
-import { requireSessionUser } from '~/server/require-session-user.server';
+import { getSessionUser } from '~/server/get-session.user.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -42,13 +42,13 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     .parse(params);
 
   const [currentUser, user] = await Promise.all([
-    requireSessionUser(request),
+    getSessionUser(request),
     getUserByIdentifier(userIdentifier),
   ]);
 
   invariant(user, `Invalid user identifier ${userIdentifier}`);
 
-  const isCurrentUser = currentUser.id === user.id;
+  const isCurrentUser = currentUser?.id === user.id;
 
   const projects = await prisma.project.findMany({
     where: {

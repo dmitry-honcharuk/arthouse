@@ -4,7 +4,7 @@ import { useFetcher } from '@remix-run/react';
 import cuid from 'cuid';
 import type { FC } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { getSocialIcon } from '~/modules/users/components/profile/social-links-display';
+import { getSocialIcon } from '~/modules/users/components/profile/get-social-icon';
 
 type LinkItem = {
   link: string | null;

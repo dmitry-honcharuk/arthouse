@@ -7,7 +7,7 @@ import * as React from 'react';
 import Layout from '~/modules/common/layout';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
-import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
+import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 export const loader: LoaderFunction = async ({ request, params }) => {
   try {
@@ -15,7 +15,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     const [user, currentUser] = await Promise.all([
       getUserByIdentifier(userId!),
-      requireLoggedInUser(request),
+      getLoggedInUser(request),
     ]);
 
     if (!user) {
@@ -24,7 +24,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
     return json({
       user,
-      currentUser: currentUser as UserWithProfile,
+      currentUser: currentUser,
     });
   } catch (error) {
     throw new Response('Not Found', { status: 404 });
@@ -34,7 +34,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export default function UserProfile() {
   const { user, currentUser } = useLoaderData<{
     user: UserWithProfile;
-    currentUser: UserWithProfile;
+    currentUser: UserWithProfile | null;
   }>();
   const matches = useMatches();
   const previous = matches[matches.length - 2];
@@ -72,13 +72,13 @@ export default function UserProfile() {
         <div className="pt-4">
           <Link to={previous.pathname}>
             <Button startIcon={<ArrowBackIosNew />} color="inherit">
-              Back
+              User projects
             </Button>
           </Link>
         </div>
       )}
 
-      <Outlet context={{ user, isCurrentUser: user.id === currentUser.id }} />
+      <Outlet context={{ user, isCurrentUser: user.id === currentUser?.id }} />
     </Layout>
   );
 }

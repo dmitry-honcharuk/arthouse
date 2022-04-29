@@ -1,6 +1,5 @@
 import { Logout, Person } from '@mui/icons-material';
 import {
-  Avatar,
   Button,
   Divider,
   ListItemIcon,
@@ -14,10 +13,10 @@ import AppBar from '@mui/material/AppBar';
 import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import { Link, useFetcher, useNavigate } from '@remix-run/react';
-import md5 from 'md5';
 import type { FC } from 'react';
 import * as React from 'react';
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
 import { NicknameTag } from '../users/components/profile/nickname-tag';
 import { getUserPath } from '../users/get-user-path';
 import type { UserWithProfile } from '../users/types/user-with-profile';
@@ -29,10 +28,6 @@ export const Header: FC<{ user: UserWithProfile | null }> = ({ user }) => {
   const navigate = useNavigate();
 
   const logoutRef = useRef<HTMLFormElement>(null);
-  const emailHash = useMemo(
-    () => (user?.email ? md5(user.email) : null),
-    [user?.email]
-  );
 
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
@@ -61,10 +56,7 @@ export const Header: FC<{ user: UserWithProfile | null }> = ({ user }) => {
                 sx={{ p: 0 }}
                 onClick={(event) => setAnchorElUser(event.currentTarget)}
               >
-                <Avatar
-                  alt="picture"
-                  src={`https://www.gravatar.com/avatar/${emailHash}`}
-                />
+                <GravatarAvatar email={user.email} />
               </IconButton>
               <Menu
                 sx={{ mt: '45px', textAlign: 'right' }}
