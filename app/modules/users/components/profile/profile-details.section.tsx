@@ -38,7 +38,6 @@ export const ProfileDetailsSection: FC<{
     <ProfileSection
       renderTitle={({ isEdit, setIsEdit }) => (
         <SectionTitle
-          variant="h3"
           onEdit={editable ? () => setIsEdit((edit) => !edit) : null}
           isEdit={isEdit}
         >

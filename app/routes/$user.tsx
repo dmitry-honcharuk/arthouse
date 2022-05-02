@@ -1,8 +1,6 @@
-import { ArrowBackIosNew, PersonPin, Shop2Outlined } from '@mui/icons-material';
-import { Button, Tab, Tabs } from '@mui/material';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { Link, Outlet, useLoaderData, useMatches } from '@remix-run/react';
+import { Outlet, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import Layout from '~/modules/common/layout';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
@@ -36,48 +34,9 @@ export default function UserProfile() {
     user: UserWithProfile;
     currentUser: UserWithProfile | null;
   }>();
-  const matches = useMatches();
-  const previous = matches[matches.length - 2];
-  const current = matches[matches.length - 1];
-  const isProjectPage = current.id !== 'routes/$user/$project/index';
-
-  const [value, setValue] = React.useState(
-    current.pathname.includes('profile') ? 1 : 0
-  );
 
   return (
     <Layout currentUser={currentUser} className="flex flex-col gap-8">
-      {isProjectPage ? (
-        <Tabs
-          value={value}
-          onChange={(_, newValue) => setValue(newValue)}
-          aria-label="icon position tabs example"
-        >
-          <Tab
-            icon={<Shop2Outlined />}
-            to="."
-            component={Link}
-            iconPosition="end"
-            label="projects"
-          />
-          <Tab
-            icon={<PersonPin />}
-            to="profile"
-            component={Link}
-            iconPosition="end"
-            label="profile"
-          />
-        </Tabs>
-      ) : (
-        <div className="pt-4">
-          <Link to={previous.pathname}>
-            <Button startIcon={<ArrowBackIosNew />} color="inherit">
-              User projects
-            </Button>
-          </Link>
-        </div>
-      )}
-
       <Outlet context={{ user, isCurrentUser: user.id === currentUser?.id }} />
     </Layout>
   );

@@ -18,6 +18,8 @@ model User {
 
   projects Project[]
 
+  albums Album[]
+
   googleId String? @unique @map("google_id")
 
   facebookId String? @unique @map("facebook_id")
@@ -67,6 +69,8 @@ model Project {
 
   createdAt DateTime @default(now()) @map("created_at")
 
+  albums Album[]
+
   @@unique([userId, slug])
 }
 
@@ -91,4 +95,18 @@ model ProjectItem {
   type ProjectItemType
 
   value String
+}
+
+model Album {
+  @@map("albums")
+
+  id String @id @db.Uuid @default(uuid())
+
+  name String
+
+  projects Project[]
+
+  user User @relation(fields: [userId], references: [id])
+
+  userId String @db.Uuid @map("user_id")
 }
