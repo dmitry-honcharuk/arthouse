@@ -1,19 +1,17 @@
-import {
-  AddBoxOutlined,
-  FavoriteBorderOutlined,
-  Shop2Outlined,
-} from '@mui/icons-material';
-import { TabContext, TabPanel } from '@mui/lab';
+import { AddBoxOutlined } from '@mui/icons-material';
 import {
   Button,
   Card,
   CardActionArea,
-  styled,
-  Tab,
-  Tabs,
+  FormControl,
+  InputLabel,
+  Link as MaterialLink,
+  MenuItem,
+  OutlinedInput,
+  Select,
   Typography,
 } from '@mui/material';
-import type { Project } from '@prisma/client';
+import type { Album, Project } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
@@ -23,15 +21,23 @@ import { useState } from 'react';
 import invariant from 'tiny-invariant';
 import { z } from 'zod';
 import { prisma } from '~/db.server';
+import { getAlbumPath } from '~/modules/albums/get-album-path';
+import { getUserAlbums } from '~/modules/albums/get-user-albums';
+import { UserPersonalNavigation } from '~/modules/common/user-personal-navigation';
 import { ProjectCard } from '~/modules/projects/components/project-card';
+import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
+import type { WithProjects } from '~/modules/projects/types/with-projects';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getSessionUser } from '~/server/get-session.user.server';
 
+type FullAlbum = Album & WithProjects & WithUser;
+
 interface LoaderData {
   isCurrentUser: boolean;
   projects: (Project & WithUser)[];
+  albums: FullAlbum[];
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -62,91 +68,99 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     },
   });
 
-  return json<LoaderData>({ projects, isCurrentUser });
+  const albums = await getUserAlbums(user.id);
+
+  return json<LoaderData>({ projects, isCurrentUser, albums });
 };
 
 export default function UserProjects() {
-  const { projects, isCurrentUser } = useLoaderData<LoaderData>();
+  const { projects, isCurrentUser, albums } = useLoaderData<LoaderData>();
 
-  const [value, setValue] = useState('all');
+  const [selectedAlbum, setSelectedAlbum] = useState<FullAlbum | 'all'>('all');
+
+  const showAll = selectedAlbum === 'all';
 
   return (
-    <TabContext value={value}>
-      <div className="flex gap-2 items-start">
-        <div className="grow">
-          <TabPanel value="favourites">Favourites</TabPanel>
-          <TabPanel value="all">
-            <div className="flex flex-col gap-4">
-              <Projects>
-                {isCurrentUser && (
-                  <Card sx={{ minHeight: 200 }} variant="outlined">
-                    <Link to="/projects/new" className="block h-full">
-                      <CardActionArea className="flex h-full items-center">
-                        <Typography
-                          color="primary"
-                          className="flex items-center gap-1 justify-center text-lg"
-                        >
-                          <AddBoxOutlined />
-                          <span>New Project</span>
-                        </Typography>
-                      </CardActionArea>
-                    </Link>
-                  </Card>
-                )}
-
-                {projects.map((project) => (
-                  <ProjectCard
-                    link={getProjectPath(project)}
-                    key={project.id}
-                    isCurrentUser={isCurrentUser}
-                    project={project}
-                  />
-                ))}
-              </Projects>
-            </div>
-          </TabPanel>
+    <>
+      <UserPersonalNavigation />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {showAll ? (
+            <Typography variant="h4">All projects</Typography>
+          ) : (
+            <MaterialLink
+              component={Link}
+              variant="h4"
+              color="inherit"
+              to={`/${getAlbumPath(selectedAlbum, selectedAlbum.user)}`}
+            >
+              {selectedAlbum.name}
+            </MaterialLink>
+          )}
         </div>
 
-        <div className="shrink-0 flex flex-col gap-4">
-          <Tabs
-            value={value}
-            onChange={(_, newValue) => setValue(newValue)}
-            orientation="vertical"
-            aria-label="icon position tabs example"
-            sx={{ borderRight: 1, borderColor: 'divider' }}
-            variant="scrollable"
-          >
-            <Tab
-              icon={<FavoriteBorderOutlined />}
-              value="favourites"
-              iconPosition="end"
-              label="favourites"
-            />
-            <Tab
-              icon={<Shop2Outlined />}
-              value="all"
-              iconPosition="end"
-              label="all projects"
-            />
-          </Tabs>
-          <Button startIcon={<AddBoxOutlined />} variant="outlined">
-            New Album (Impl)
-          </Button>
-        </div>
+        {isCurrentUser && (
+          <Link to="/albums/new" className="block h-full">
+            <Button variant="outlined" startIcon={<AddBoxOutlined />}>
+              Album
+            </Button>
+          </Link>
+        )}
       </div>
-    </TabContext>
+      <FormControl>
+        <InputLabel id="demo-multiple-name-label">Album</InputLabel>
+        <Select
+          labelId="demo-multiple-name-label"
+          id="demo-multiple-name"
+          value={showAll ? 'all' : selectedAlbum.id}
+          onChange={({ target }) => {
+            const selected =
+              target.value === 'all'
+                ? 'all'
+                : albums.find(({ id }) => id === target.value);
+
+            setSelectedAlbum(selected!);
+          }}
+          input={<OutlinedInput label="Name" />}
+        >
+          <MenuItem value="all">All projects</MenuItem>
+          {albums.map(({ id, name }) => (
+            <MenuItem key={id} value={id}>
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <Projects>
+        {isCurrentUser && (
+          <Card sx={{ minHeight: 200 }} variant="outlined">
+            <Link to="/projects/new" className="block h-full">
+              <CardActionArea className="flex h-full items-center">
+                <Typography
+                  color="primary"
+                  className="flex items-center gap-1 justify-center text-lg"
+                >
+                  <AddBoxOutlined />
+                  <span>New Project</span>
+                </Typography>
+              </CardActionArea>
+            </Link>
+          </Card>
+        )}
+
+        {(showAll ? projects : selectedAlbum.projects).map(
+          ({ user, ...project }) => {
+            return (
+              <ProjectCard
+                link={getProjectPath(project)}
+                key={project.id}
+                isCurrentUser={isCurrentUser}
+                project={project}
+              />
+            );
+          }
+        )}
+      </Projects>
+    </>
   );
 }
-
-const Projects = styled('div')(({ theme }) => ({
-  display: 'grid',
-  gap: theme.spacing(3),
-
-  [theme.breakpoints.up('md')]: {
-    gridTemplateColumns: 'repeat(3, 1fr)',
-  },
-
-  [theme.breakpoints.up('lg')]: {
-    gridTemplateColumns: 'repeat(4, 1fr)',
-  },
-}));

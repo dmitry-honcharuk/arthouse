@@ -1,4 +1,5 @@
 import { Box } from '@mui/system';
+import { ProjectStatus } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
@@ -15,7 +16,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   try {
     const [currentUser, projects] = await Promise.all([
       getLoggedInUser(request),
-      getProjects(),
+      getProjects({ statuses: [ProjectStatus.PUBLISHED] }),
     ]);
 
     return json({ currentUser, projects });
