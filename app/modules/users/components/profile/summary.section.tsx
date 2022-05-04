@@ -1,7 +1,7 @@
 import { Button, TextField } from '@mui/material';
 import { Form } from '@remix-run/react';
 import type { FC } from 'react';
-import { ProfileSection } from '~/modules/users/components/profile/profile-section';
+import { EditableCardSection } from '~/modules/common/editable-card-section';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 
@@ -10,7 +10,7 @@ export const SummarySection: FC<{
   editable: boolean;
 }> = ({ editable, user }) => {
   return (
-    <ProfileSection
+    <EditableCardSection
       renderTitle={({ isEdit, setIsEdit }) => (
         <SectionTitle
           onEdit={editable ? () => setIsEdit((edit) => !edit) : null}

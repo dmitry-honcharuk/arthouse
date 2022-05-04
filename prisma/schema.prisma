@@ -8,9 +8,7 @@ generator client {
 }
 
 model User {
-  @@map("users")
-
-  id String @id @db.Uuid @default(uuid())
+  id String @id @default(uuid()) @db.Uuid
 
   email String @unique
 
@@ -25,22 +23,24 @@ model User {
   facebookId String? @unique @map("facebook_id")
 
   Favorite Favorite[]
+
+  @@map("users")
 }
 
 model Profile {
-  @@map("profiles")
-
-  id String @id @db.Uuid @default(uuid())
+  id String @id @default(uuid()) @db.Uuid
 
   nickname String? @unique
 
   user User @relation(fields: [userId], references: [id])
 
-  userId String @db.Uuid @unique @map("user_id")
+  userId String @unique @map("user_id") @db.Uuid
 
   summary String?
 
   socialLinks String[]
+
+  @@map("profiles")
 }
 
 enum ProjectStatus {
@@ -49,13 +49,11 @@ enum ProjectStatus {
 }
 
 model Project {
-  @@map("projects")
-
-  id String @id @db.Uuid @default(uuid())
+  id String @id @default(uuid()) @db.Uuid
 
   user User @relation(fields: [userId], references: [id])
 
-  userId String @db.Uuid @map("user_id")
+  userId String @map("user_id") @db.Uuid
 
   items ProjectItem[]
 
@@ -73,9 +71,28 @@ model Project {
 
   albums Album[]
 
-  @@unique([userId, slug])
-
   Favorite Favorite[]
+
+  projectSecurity ProjectSecurity?
+
+  isSecure Boolean @default(false) @map("is_secure")
+
+
+  @@unique([userId, slug])
+  @@map("projects")
+}
+
+model ProjectSecurity {
+  projectId String @id @map("project_id") @db.Uuid
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  passwordHash String @map("password_hash")
+  passwordIv   String @map("password_iv")
+
+  passwordVersion Int @default(1)
+
+  @@map("project_security")
 }
 
 enum ProjectItemType {
@@ -84,13 +101,11 @@ enum ProjectItemType {
 }
 
 model ProjectItem {
-  @@map("project_items")
-
-  id String @id @db.Uuid @default(uuid())
+  id String @id @default(uuid()) @db.Uuid
 
   project Project @relation(fields: [projectId], references: [id])
 
-  projectId String @db.Uuid @map("project_id")
+  projectId String @map("project_id") @db.Uuid
 
   title String?
 
@@ -99,6 +114,8 @@ model ProjectItem {
   type ProjectItemType
 
   value String
+
+  @@map("project_items")
 }
 
 model Favorite {
@@ -114,9 +131,7 @@ model Favorite {
 }
 
 model Album {
-  @@map("albums")
-
-  id String @id @db.Uuid @default(uuid())
+  id String @id @default(uuid()) @db.Uuid
 
   name String
 
@@ -124,5 +139,7 @@ model Album {
 
   user User @relation(fields: [userId], references: [id])
 
-  userId String @db.Uuid @map("user_id")
+  userId String @map("user_id") @db.Uuid
+
+  @@map("albums")
 }

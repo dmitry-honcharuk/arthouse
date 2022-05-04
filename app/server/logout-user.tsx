@@ -1,6 +1,6 @@
 import type { Session } from '@remix-run/node';
 import { redirect } from '@remix-run/node';
-import { destroySession } from '~/sessions.server';
+import { destroySession } from '~/server/sessions.server';
 
 export async function logoutUser(session: Session) {
   throw redirect('/authenticate', {

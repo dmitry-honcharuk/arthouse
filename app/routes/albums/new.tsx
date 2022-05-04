@@ -12,8 +12,8 @@ import { ProjectsAutocomplete } from '~/modules/projects/components/projects-aut
 import { getProjects } from '~/modules/projects/get-projects';
 import type { FullProject } from '~/modules/projects/types/full-project';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
-import { validateFormData } from '~/modules/validation/validate-form-data';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
+import { validateFormData } from '~/server/validate-form-data.server';
 
 interface LoaderData {
   currentUser: UserWithProfile;

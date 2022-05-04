@@ -16,7 +16,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   try {
     const [currentUser, projects] = await Promise.all([
       getLoggedInUser(request),
-      getProjects({ statuses: [ProjectStatus.PUBLISHED] }),
+      getProjects({ statuses: [ProjectStatus.PUBLISHED], isSecure: false }),
     ]);
 
     return json({ currentUser, projects });

@@ -4,7 +4,7 @@ import type { Profile } from '@prisma/client';
 import { Form, useActionData, useNavigate } from '@remix-run/react';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
-import { ProfileSection } from '~/modules/users/components/profile/profile-section';
+import { EditableCardSection } from '~/modules/common/editable-card-section';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { getURI } from '../../getURI';
@@ -35,7 +35,7 @@ export const ProfileDetailsSection: FC<{
   }, [navigate, profile, profile?.nickname, user.id, user.profile?.nickname]);
 
   return (
-    <ProfileSection
+    <EditableCardSection
       renderTitle={({ isEdit, setIsEdit }) => (
         <SectionTitle
           onEdit={editable ? () => setIsEdit((edit) => !edit) : null}

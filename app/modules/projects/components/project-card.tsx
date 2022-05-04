@@ -1,8 +1,10 @@
+import { GppGoodOutlined } from '@mui/icons-material';
 import {
   Card,
   CardActionArea,
   CardContent,
   CardMedia,
+  Stack,
   styled,
   Typography,
 } from '@mui/material';
@@ -10,6 +12,7 @@ import type { Project } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import { Link } from '@remix-run/react';
 import type { FC } from 'react';
+import { getStatusLabel } from '~/modules/projects/utils/get-status-label';
 import type { WithUser } from '~/modules/users/types/with-user';
 
 export const ProjectCard: FC<{
@@ -19,7 +22,7 @@ export const ProjectCard: FC<{
 }> = ({
   link,
   isCurrentUser = false,
-  project: { id, status, preview, caption, name, user },
+  project: { id, status, preview, caption, name, user, isSecure },
 }) => {
   const cardContent = (
     <>
@@ -37,7 +40,12 @@ export const ProjectCard: FC<{
                   : 'text.secondary'
               }
             >
-              {status.toLowerCase()}
+              <Stack direction="row" alignItems="center" gap={1}>
+                {getStatusLabel(status)}
+                {isSecure && (
+                  <GppGoodOutlined fontSize="small" color="inherit" />
+                )}
+              </Stack>
             </Typography>
           </Status>
         </div>

@@ -62,15 +62,22 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         ? { in: [ProjectStatus.DRAFT, ProjectStatus.PUBLISHED] }
         : ProjectStatus.PUBLISHED,
       userId: user.id,
+      ...(!isCurrentUser && { isSecure: false }),
     },
     include: {
       user: { include: { profile: true } },
     },
   });
 
-  const albums = await getUserAlbums(user.id);
+  const albums = await getUserAlbums(user.id, {
+    ...(!isCurrentUser && { isSecure: false }),
+  });
 
-  return json<LoaderData>({ projects, isCurrentUser, albums });
+  return json<LoaderData>({
+    projects,
+    isCurrentUser,
+    albums: albums.filter(({ projects }) => !!projects.length),
+  });
 };
 
 export default function UserProjects() {

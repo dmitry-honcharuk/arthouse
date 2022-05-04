@@ -9,8 +9,8 @@ import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserPath } from '~/modules/users/get-user-path';
 import { getURI } from '~/modules/users/getURI';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
-import { validateFormData } from '~/modules/validation/validate-form-data';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
+import { validateFormData } from '~/server/validate-form-data.server';
 
 export const loader: LoaderFunction = async ({ request }) => {
   return json({
