@@ -5,15 +5,15 @@ import { useFetcher } from '@remix-run/react';
 
 type Props = {
   isFavorite: boolean;
+  projectId: string;
 };
 
-export function FavoriteBtn({ isFavorite }: Props) {
+export function FavoriteBtn({ projectId, isFavorite }: Props) {
   const fetcher = useFetcher();
 
   if (isFavorite) {
     return (
-      <fetcher.Form method="delete">
-        <input type="hidden" name="projectId" />
+      <fetcher.Form method="delete" action={`/favorites/${projectId}`}>
         <IconButton type="submit">
           <ThumbUpIcon />
         </IconButton>
@@ -22,8 +22,8 @@ export function FavoriteBtn({ isFavorite }: Props) {
   }
 
   return (
-    <fetcher.Form method="post">
-      <input type="hidden" name="projectId" />
+    <fetcher.Form method="post" action="/favorites">
+      <input type="hidden" name="projectId" value={projectId} />
       <IconButton type="submit">
         <ThumbUpOutlinedIcon />
       </IconButton>

@@ -105,18 +105,6 @@ export const action: ActionFunction = async ({ request, params }) => {
 
   const formData = await getRequestFormData(request);
 
-  if (request.method === 'POST') {
-    const currentUser = await requireSessionUser(request);
-
-    return json(await addFavorite(currentUser.id, project.id));
-  }
-
-  if (request.method === 'DELETE') {
-    const currentUser = await requireSessionUser(request);
-
-    return json(await deleteFavorite(currentUser.id, project.id));
-  }
-
   if (request.method === 'PUT') {
     const { status, preview } = validateFormData(
       formData,
@@ -275,7 +263,7 @@ export default function ProjectScreen() {
                 <Typography variant="body2">{project.caption}</Typography>
               )}
               {!isCurrentUser && currentUser && (
-                  <FavoriteBtn isFavorite={isFavorite} />
+                <FavoriteBtn projectId={project.id} isFavorite={isFavorite} />
               )}
               <div className="text-right">
                 <Typography variant="overline">

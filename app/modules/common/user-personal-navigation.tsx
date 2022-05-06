@@ -13,7 +13,7 @@ import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-cont
 
 enum Nav {
   Projects = 'projects',
-  Favourites = 'favourites',
+  Favourites = 'favorites',
   Profile = 'profile',
 }
 
@@ -42,11 +42,11 @@ export const UserPersonalNavigation: FC = () => {
       />
       <Tab
         icon={<FavoriteBorderOutlined />}
-        to={`/${userPath}/favourites`}
+        to={`/${userPath}/favorites`}
         value={Nav.Favourites}
         component={Link}
         iconPosition="end"
-        label="favourites"
+        label="favorites"
       />
       <Tab
         icon={<PersonPin />}
