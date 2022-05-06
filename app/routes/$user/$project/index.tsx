@@ -25,6 +25,9 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
+import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
+import { getFavorites } from '~/modules/favorites/get-favorites';
+import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
 import { ItemForm } from '~/modules/projects/components/item-form';
 import { ProjectItems } from '~/modules/projects/components/project-items';
 import { ProjectPreviewForm } from '~/modules/projects/components/project-preview-form';
@@ -37,6 +40,7 @@ import { validateCreateItemFormData } from '~/modules/projects/utils/validate-cr
 import { NicknameTag } from '~/modules/users/components/profile/nickname-tag';
 import { SocialLink } from '~/modules/users/components/profile/social-link';
 import { getUserPath } from '~/modules/users/get-user-path';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
@@ -44,7 +48,9 @@ import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
+  isFavorite: boolean;
   project: ProjectWithItems & WithUser;
+  currentUser: UserWithProfile | null;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -64,6 +70,8 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response('Not Found', { status: 404 });
   }
 
+  const favorites = currentUser ? await getFavorites(currentUser.id) : [];
+
   const isCurrentUser = currentUser?.id === project.userId;
 
   if (!isCurrentUser && project.status !== ProjectStatus.PUBLISHED) {
@@ -72,7 +80,9 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   return json<LoaderData>({
     project,
+    isFavorite: isFavorite({ projectId: project.id, favorites }),
     isCurrentUser,
+    currentUser,
   });
 };
 
@@ -122,7 +132,8 @@ export const action: ActionFunction = async ({ request, params }) => {
 };
 
 export default function ProjectScreen() {
-  const { project, isCurrentUser } = useLoaderData<LoaderData>();
+  const { project, isCurrentUser, isFavorite, currentUser } =
+    useLoaderData<LoaderData>();
 
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
@@ -240,6 +251,9 @@ export default function ProjectScreen() {
           <ProjectItems items={project.items} isCurrentUser={isCurrentUser} />
         </div>
         <div className="flex flex-col gap-3">
+          {!isCurrentUser && currentUser && (
+            <FavoriteBtn projectId={project.id} isFavorite={isFavorite} />
+          )}
           <Card elevation={3}>
             <CardContent>
               <Typography variant="h4" component="div">

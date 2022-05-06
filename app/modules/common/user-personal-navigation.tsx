@@ -13,12 +13,12 @@ import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-cont
 
 enum Nav {
   Projects = 'projects',
-  Favourites = 'favourites',
+  Favourites = 'favorites',
   Profile = 'profile',
 }
 
 export const UserPersonalNavigation: FC = () => {
-  const { user } = useUserOutletContext();
+  const { user, isCurrentUser } = useUserOutletContext();
   const matches = useMatches();
   const current = matches[matches.length - 1];
 
@@ -40,14 +40,16 @@ export const UserPersonalNavigation: FC = () => {
         iconPosition="end"
         label="projects"
       />
-      <Tab
-        icon={<FavoriteBorderOutlined />}
-        to={`/${userPath}/favourites`}
-        value={Nav.Favourites}
-        component={Link}
-        iconPosition="end"
-        label="favourites"
-      />
+      {isCurrentUser && (
+        <Tab
+          icon={<FavoriteBorderOutlined />}
+          to={`/${userPath}/favorites`}
+          value={Nav.Favourites}
+          component={Link}
+          iconPosition="end"
+          label="favorites"
+        />
+      )}
       <Tab
         icon={<PersonPin />}
         to={`/${userPath}/profile`}
