@@ -119,15 +119,14 @@ model ProjectItem {
 }
 
 model Favorite {
-  @@map("favorites")
-
   projectId String @db.Uuid
-  userId String @db.Uuid
+  userId    String @db.Uuid
 
   project Project @relation(fields: [projectId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 
   @@id([projectId, userId])
+  @@map("favorites")
 }
 
 model Album {

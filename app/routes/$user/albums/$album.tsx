@@ -177,7 +177,8 @@ export default function AlbumScreen() {
                     <ProjectCard
                       key={project.id}
                       project={project}
-                      isCurrentUser={isCurrentUser}
+                      showStatus={isCurrentUser}
+                      showIsSecured={isCurrentUser}
                       link={`/${getProjectPath(project, album.user)}`}
                     />
                   ))}

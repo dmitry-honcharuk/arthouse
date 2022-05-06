@@ -56,6 +56,7 @@ export default function UserFavorites() {
             link={`/${getProjectPath(project, project.user)}`}
             key={project.id}
             project={project}
+            showIsSecured
           />
         ))}
       </Projects>

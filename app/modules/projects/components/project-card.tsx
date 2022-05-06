@@ -17,16 +17,18 @@ import type { WithUser } from '~/modules/users/types/with-user';
 
 export const ProjectCard: FC<{
   project: Project & Partial<WithUser>;
-  isCurrentUser?: boolean;
+  showStatus?: boolean;
+  showIsSecured?: boolean;
   link?: string;
 }> = ({
   link,
-  isCurrentUser = false,
+  showIsSecured = false,
+  showStatus = false,
   project: { id, status, preview, caption, name, user, isSecure },
 }) => {
   const cardContent = (
     <>
-      {isCurrentUser && (
+      {(showStatus || (isSecure && showIsSecured)) && (
         <div className="flex justify-end absolute right-0 top-2">
           <Status
             status={status}
@@ -40,9 +42,14 @@ export const ProjectCard: FC<{
                   : 'text.secondary'
               }
             >
-              <Stack direction="row" alignItems="center" gap={1}>
-                {getStatusLabel(status)}
-                {isSecure && (
+              <Stack
+                component="span"
+                direction="row"
+                alignItems="center"
+                gap={1}
+              >
+                {showStatus && getStatusLabel(status)}
+                {showIsSecured && isSecure && (
                   <GppGoodOutlined fontSize="small" color="inherit" />
                 )}
               </Stack>

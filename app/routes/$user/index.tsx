@@ -161,7 +161,8 @@ export default function UserProjects() {
               <ProjectCard
                 link={getProjectPath(project)}
                 key={project.id}
-                isCurrentUser={isCurrentUser}
+                showStatus={isCurrentUser}
+                showIsSecured={isCurrentUser}
                 project={project}
               />
             );
