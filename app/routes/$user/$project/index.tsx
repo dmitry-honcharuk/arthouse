@@ -25,6 +25,9 @@ import { useState } from 'react';
 import { z } from 'zod';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
+import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
+import { getFavorites } from '~/modules/favorites/get-favorites';
+import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
 import { ItemForm } from '~/modules/projects/components/item-form';
 import { ProjectItems } from '~/modules/projects/components/project-items';
 import { ProjectPreviewForm } from '~/modules/projects/components/project-preview-form';
@@ -37,17 +40,11 @@ import { validateCreateItemFormData } from '~/modules/projects/utils/validate-cr
 import { NicknameTag } from '~/modules/users/components/profile/nickname-tag';
 import { SocialLink } from '~/modules/users/components/profile/social-link';
 import { getUserPath } from '~/modules/users/get-user-path';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
-import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
-import { getFavorites } from '~/modules/favorites/get-favorites';
-import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
-import { addFavorite } from '~/modules/favorites/add-favorite';
-import { deleteFavorite } from '~/modules/favorites/delete-favorite';
-import { requireSessionUser } from '~/server/require-session-user.server';
-import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -254,6 +251,9 @@ export default function ProjectScreen() {
           <ProjectItems items={project.items} isCurrentUser={isCurrentUser} />
         </div>
         <div className="flex flex-col gap-3">
+          {!isCurrentUser && currentUser && (
+            <FavoriteBtn projectId={project.id} isFavorite={isFavorite} />
+          )}
           <Card elevation={3}>
             <CardContent>
               <Typography variant="h4" component="div">
@@ -261,9 +261,6 @@ export default function ProjectScreen() {
               </Typography>
               {project.caption && (
                 <Typography variant="body2">{project.caption}</Typography>
-              )}
-              {!isCurrentUser && currentUser && (
-                <FavoriteBtn projectId={project.id} isFavorite={isFavorite} />
               )}
               <div className="text-right">
                 <Typography variant="overline">

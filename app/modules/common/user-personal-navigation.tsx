@@ -18,7 +18,7 @@ enum Nav {
 }
 
 export const UserPersonalNavigation: FC = () => {
-  const { user } = useUserOutletContext();
+  const { user, isCurrentUser } = useUserOutletContext();
   const matches = useMatches();
   const current = matches[matches.length - 1];
 
@@ -40,14 +40,16 @@ export const UserPersonalNavigation: FC = () => {
         iconPosition="end"
         label="projects"
       />
-      <Tab
-        icon={<FavoriteBorderOutlined />}
-        to={`/${userPath}/favorites`}
-        value={Nav.Favourites}
-        component={Link}
-        iconPosition="end"
-        label="favorites"
-      />
+      {isCurrentUser && (
+        <Tab
+          icon={<FavoriteBorderOutlined />}
+          to={`/${userPath}/favorites`}
+          value={Nav.Favourites}
+          component={Link}
+          iconPosition="end"
+          label="favorites"
+        />
+      )}
       <Tab
         icon={<PersonPin />}
         to={`/${userPath}/profile`}

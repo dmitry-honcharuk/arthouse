@@ -1,6 +1,5 @@
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
-import { IconButton } from '@mui/material';
+import { FavoriteBorderOutlined, FavoriteOutlined } from '@mui/icons-material';
+import { Button } from '@mui/material';
 import { useFetcher } from '@remix-run/react';
 
 type Props = {
@@ -14,9 +13,15 @@ export function FavoriteBtn({ projectId, isFavorite }: Props) {
   if (isFavorite) {
     return (
       <fetcher.Form method="delete" action={`/favorites/${projectId}`}>
-        <IconButton type="submit">
-          <ThumbUpIcon />
-        </IconButton>
+        <Button
+          variant="contained"
+          type="submit"
+          color="secondary"
+          size="large"
+          fullWidth
+        >
+          <FavoriteOutlined />
+        </Button>
       </fetcher.Form>
     );
   }
@@ -24,9 +29,9 @@ export function FavoriteBtn({ projectId, isFavorite }: Props) {
   return (
     <fetcher.Form method="post" action="/favorites">
       <input type="hidden" name="projectId" value={projectId} />
-      <IconButton type="submit">
-        <ThumbUpOutlinedIcon />
-      </IconButton>
+      <Button type="submit" color="secondary" size="large" fullWidth>
+        <FavoriteBorderOutlined />
+      </Button>
     </fetcher.Form>
   );
 }
