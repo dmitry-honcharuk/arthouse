@@ -10,7 +10,7 @@ import { SocialStrategyFactory } from '~/modules/auth/social-strategy/social-str
 import { SocialProvider } from '~/modules/auth/types/social-provider';
 import { getUserBySocial } from '~/modules/users/get-user-by-social';
 import { getUserPath } from '~/modules/users/get-user-path';
-import { commitSession, getSession } from '~/sessions.server';
+import { commitSession, getSession } from '~/server/sessions.server';
 import type { InitialData } from '~/types/initial-data';
 
 export const action: ActionFunction = async ({ request }) => {

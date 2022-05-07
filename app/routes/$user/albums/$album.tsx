@@ -14,7 +14,7 @@ import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import type { Details as UpdateAlbumDetails } from '~/modules/albums/update-album';
 import { updateAlbum } from '~/modules/albums/update-album';
 import { EditButton } from '~/modules/common/edit-button';
-import { EditableSection } from '~/modules/common/editable-section';
+import { TogglableContent } from '~/modules/common/togglable-content';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
@@ -22,10 +22,10 @@ import { getUserProjects } from '~/modules/projects/get-user-projects';
 import type { WithProjects } from '~/modules/projects/types/with-projects';
 import { getUserPath } from '~/modules/users/get-user-path';
 import type { WithUser } from '~/modules/users/types/with-user';
-import { validateFormData } from '~/modules/validation/validate-form-data';
 import { getRequestFormData } from '~/server/get-form-data.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
+import { validateFormData } from '~/server/validate-form-data.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -131,43 +131,43 @@ export default function AlbumScreen() {
       <div className="pt-4">
         <Link to={`/${getUserPath(album.user)}`}>
           <Button startIcon={<ArrowBackIosNew />} color="inherit">
-            Projects
+            {isCurrentUser ? 'Your Projects' : 'User Projects'}
           </Button>
         </Link>
       </div>
       <div className="flex flex-col gap-8">
         <div className="flex gap-2 items-center">
-          <EditableSection>
-            {({ isEdit, disableEditMode, enableEditMode }) => {
-              if (!isEdit) {
+          <TogglableContent>
+            {({ isEnabled, disable, enable }) => {
+              if (!isEnabled) {
                 return (
                   <div className="flex items-center gap-2">
                     <Typography variant="h4">{album.name}</Typography>
-                    {isCurrentUser && <EditButton onClick={enableEditMode} />}
+                    {isCurrentUser && <EditButton onClick={enable} />}
                   </div>
                 );
               }
 
               return (
                 <AlbumTitleForm
-                  onSubmit={disableEditMode}
-                  onCancel={disableEditMode}
+                  onSubmit={disable}
+                  onCancel={disable}
                   album={album}
                 />
               );
             }}
-          </EditableSection>
+          </TogglableContent>
         </div>
 
         <div>
-          <EditableSection>
-            {({ isEdit, enableEditMode, disableEditMode }) => {
+          <TogglableContent>
+            {({ isEnabled, enable, disable }) => {
               const form = (
                 <AlbumProjectsForm
                   allProjects={projects}
                   defaultProjects={album.projects}
-                  onSubmit={disableEditMode}
-                  onCancel={disableEditMode}
+                  onSubmit={disable}
+                  onCancel={disable}
                 />
               );
 
@@ -177,7 +177,8 @@ export default function AlbumScreen() {
                     <ProjectCard
                       key={project.id}
                       project={project}
-                      isCurrentUser={isCurrentUser}
+                      showStatus={isCurrentUser}
+                      showIsSecured={isCurrentUser}
                       link={`/${getProjectPath(project, album.user)}`}
                     />
                   ))}
@@ -190,7 +191,7 @@ export default function AlbumScreen() {
                     variant="outlined"
                     type="button"
                     startIcon={<Add />}
-                    onClick={enableEditMode}
+                    onClick={enable}
                   >
                     Add projects
                   </Button>
@@ -205,17 +206,17 @@ export default function AlbumScreen() {
                 <>
                   <div className="flex justify-between mb-3">
                     <Typography variant="h5">Projects</Typography>
-                    {isCurrentUser && !isEdit && (
-                      <EditButton onClick={enableEditMode} />
+                    {isCurrentUser && !isEnabled && (
+                      <EditButton onClick={enable} />
                     )}
                   </div>
                   <Paper className="p-4" variant="outlined">
-                    {isEdit ? form : displayProjects}
+                    {isEnabled ? form : displayProjects}
                   </Paper>
                 </>
               );
             }}
-          </EditableSection>
+          </TogglableContent>
         </div>
       </div>
     </>

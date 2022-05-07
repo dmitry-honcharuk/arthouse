@@ -15,7 +15,10 @@ import { useEffect, useState } from 'react';
 import type { ImageListType } from 'react-images-uploading';
 import ImageUploading from 'react-images-uploading';
 
-export const ProjectPreviewForm: FC<{ project: Project }> = ({ project }) => {
+export const ProjectPreviewForm: FC<{ project: Project; action: string }> = ({
+  project,
+  action,
+}) => {
   const fetcher = useFetcher();
   const [images, setImages] = useState<ImageListType>([]);
   const [expanded, setExpanded] = useState(false);
@@ -44,11 +47,13 @@ export const ProjectPreviewForm: FC<{ project: Project }> = ({ project }) => {
       return;
     }
 
+    formData.set('fields', 'preview');
     formData.set('preview', images[0].file!);
 
     fetcher.submit(formData, {
       method: 'put',
       encType: 'multipart/form-data',
+      action,
     });
   };
 
@@ -70,6 +75,7 @@ export const ProjectPreviewForm: FC<{ project: Project }> = ({ project }) => {
           method="put"
           encType="multipart/form-data"
           className="flex flex-col gap-4"
+          action={action}
           onSubmit={onSubmit}
         >
           <ImageUploading
@@ -150,6 +156,7 @@ export const ProjectPreviewForm: FC<{ project: Project }> = ({ project }) => {
                     { preview: '' },
                     {
                       method: 'put',
+                      action,
                     }
                   );
                 }}

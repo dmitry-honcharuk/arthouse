@@ -10,8 +10,8 @@ import { SocialSection } from '~/modules/users/components/profile/social.section
 import { SummarySection } from '~/modules/users/components/profile/summary.section';
 import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-context';
 import { updateProfile } from '~/modules/users/update-profile';
-import { validateFormData } from '~/modules/validation/validate-form-data';
 import { requireSessionUser } from '~/server/require-session-user.server';
+import { validateFormData } from '~/server/validate-form-data.server';
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();

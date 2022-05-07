@@ -1,6 +1,6 @@
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 import { logoutUser } from '~/server/logout-user';
-import { getSession } from '~/sessions.server';
+import { getSession } from '~/server/sessions.server';
 
 export async function requireLoggedInUser(request: Request) {
   const [session, user] = await Promise.all([

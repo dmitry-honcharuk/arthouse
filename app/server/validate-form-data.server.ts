@@ -1,6 +1,9 @@
 import { castArray } from 'lodash';
 import type { z, ZodSchema } from 'zod';
 
+/**
+ * @deprecated - use FormDataHandler
+ */
 export function validateFormData<T extends ZodSchema>(
   formData: FormData,
   schema: T

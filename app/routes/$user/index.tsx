@@ -24,6 +24,7 @@ import { prisma } from '~/db.server';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import { UserPersonalNavigation } from '~/modules/common/user-personal-navigation';
+import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
@@ -37,6 +38,7 @@ type FullAlbum = Album & WithProjects & WithUser;
 interface LoaderData {
   isCurrentUser: boolean;
   projects: (Project & WithUser)[];
+  favouriteIds: string[];
   albums: FullAlbum[];
 }
 
@@ -62,19 +64,30 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         ? { in: [ProjectStatus.DRAFT, ProjectStatus.PUBLISHED] }
         : ProjectStatus.PUBLISHED,
       userId: user.id,
+      ...(!isCurrentUser && { isSecure: false }),
     },
     include: {
       user: { include: { profile: true } },
     },
   });
 
-  const albums = await getUserAlbums(user.id);
+  const albums = await getUserAlbums(user.id, {
+    ...(!isCurrentUser && { isSecure: false }),
+  });
 
-  return json<LoaderData>({ projects, isCurrentUser, albums });
+  const favorites = currentUser ? await getFavorites(currentUser.id) : [];
+
+  return json<LoaderData>({
+    projects,
+    favouriteIds: favorites.map(({ projectId }) => projectId),
+    isCurrentUser,
+    albums: albums.filter(({ projects }) => !!projects.length),
+  });
 };
 
 export default function UserProjects() {
-  const { projects, isCurrentUser, albums } = useLoaderData<LoaderData>();
+  const { projects, isCurrentUser, albums, favouriteIds } =
+    useLoaderData<LoaderData>();
 
   const [selectedAlbum, setSelectedAlbum] = useState<FullAlbum | 'all'>('all');
 
@@ -154,7 +167,9 @@ export default function UserProjects() {
               <ProjectCard
                 link={getProjectPath(project)}
                 key={project.id}
-                isCurrentUser={isCurrentUser}
+                showStatus={isCurrentUser}
+                showIsSecured={isCurrentUser}
+                showFavourite={favouriteIds.includes(project.id)}
                 project={project}
               />
             );

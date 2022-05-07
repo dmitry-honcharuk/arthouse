@@ -1,9 +1,9 @@
 import type { ActionFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { addFavorite } from '~/modules/favorites/add-favorite';
-import { validateFormData } from '~/modules/validation/validate-form-data';
-import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 import { z } from 'zod';
+import { addFavorite } from '~/modules/favorites/add-favorite';
+import { getLoggedInUser } from '~/server/get-logged-in-user.server';
+import { validateFormData } from '~/server/validate-form-data.server';
 
 export const action: ActionFunction = async ({ request }) => {
   if (request.method !== 'POST') {

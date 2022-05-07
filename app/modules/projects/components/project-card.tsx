@@ -1,8 +1,10 @@
+import { Favorite, GppGoodOutlined } from '@mui/icons-material';
 import {
   Card,
   CardActionArea,
   CardContent,
   CardMedia,
+  Stack,
   styled,
   Typography,
 } from '@mui/material';
@@ -10,20 +12,25 @@ import type { Project } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import { Link } from '@remix-run/react';
 import type { FC } from 'react';
+import { getStatusLabel } from '~/modules/projects/utils/get-status-label';
 import type { WithUser } from '~/modules/users/types/with-user';
 
 export const ProjectCard: FC<{
   project: Project & Partial<WithUser>;
-  isCurrentUser?: boolean;
+  showStatus?: boolean;
+  showIsSecured?: boolean;
+  showFavourite?: boolean;
   link?: string;
 }> = ({
   link,
-  isCurrentUser = false,
-  project: { id, status, preview, caption, name, user },
+  showIsSecured = false,
+  showStatus = false,
+  showFavourite = false,
+  project: { id, status, preview, caption, name, user, isSecure },
 }) => {
   const cardContent = (
     <>
-      {isCurrentUser && (
+      {(showStatus || (isSecure && showIsSecured)) && (
         <div className="flex justify-end absolute right-0 top-2">
           <Status
             status={status}
@@ -37,7 +44,17 @@ export const ProjectCard: FC<{
                   : 'text.secondary'
               }
             >
-              {status.toLowerCase()}
+              <Stack
+                component="span"
+                direction="row"
+                alignItems="center"
+                gap={1}
+              >
+                {showStatus && getStatusLabel(status)}
+                {showIsSecured && isSecure && (
+                  <GppGoodOutlined fontSize="small" color="inherit" />
+                )}
+              </Stack>
             </Typography>
           </Status>
         </div>
@@ -69,6 +86,11 @@ export const ProjectCard: FC<{
           </Typography>
         )}
       </CardContent>
+      {showFavourite && (
+        <div className="flex justify-end absolute right-2 bottom-2">
+          <Favorite fontSize="small" color="secondary" />
+        </div>
+      )}
     </>
   );
 

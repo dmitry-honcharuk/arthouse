@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { ProfileSection } from '~/modules/users/components/profile/profile-section';
+import { EditableCardSection } from '~/modules/common/editable-card-section';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import { SocialLinksDisplay } from '~/modules/users/components/profile/social-links-display';
 import { SocialLinksEdit } from '~/modules/users/components/profile/social-links-edit';
@@ -10,7 +10,7 @@ export const SocialSection: FC<{
   editable: boolean;
 }> = ({ editable, user }) => {
   return (
-    <ProfileSection
+    <EditableCardSection
       renderTitle={({ isEdit, setIsEdit }) => (
         <SectionTitle
           onEdit={editable ? () => setIsEdit((edit) => !edit) : null}

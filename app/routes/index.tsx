@@ -5,6 +5,7 @@ import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import Layout from '~/modules/common/layout';
+import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getProjects } from '~/modules/projects/get-projects';
@@ -12,24 +13,37 @@ import type { FullProject } from '~/modules/projects/types/full-project';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
+interface LoaderData {
+  currentUser: UserWithProfile | null;
+  projects: FullProject[];
+  favouriteIds: string[];
+}
+
 export const loader: LoaderFunction = async ({ request }) => {
   try {
     const [currentUser, projects] = await Promise.all([
       getLoggedInUser(request),
-      getProjects({ statuses: [ProjectStatus.PUBLISHED] }),
+      getProjects({ statuses: [ProjectStatus.PUBLISHED], isSecure: false }),
     ]);
 
-    return json({ currentUser, projects });
+    const favorites = currentUser ? await getFavorites(currentUser.id) : [];
+
+    return json<LoaderData>({
+      currentUser,
+      favouriteIds: favorites.map(({ projectId }) => projectId),
+      projects,
+    });
   } catch (error) {
-    return json({ currentUser: null });
+    return json<LoaderData>({
+      currentUser: null,
+      projects: [],
+      favouriteIds: [],
+    });
   }
 };
 
 export default function UserProfile() {
-  const { currentUser, projects } = useLoaderData<{
-    currentUser: UserWithProfile | null;
-    projects: FullProject[];
-  }>();
+  const { currentUser, projects, favouriteIds } = useLoaderData<LoaderData>();
 
   return (
     <Layout currentUser={currentUser}>
@@ -56,6 +70,7 @@ export default function UserProfile() {
             key={project.id}
             project={project}
             link={getProjectPath(project, project.user)}
+            showFavourite={favouriteIds.includes(project.id)}
           />
         ))}
       </Box>

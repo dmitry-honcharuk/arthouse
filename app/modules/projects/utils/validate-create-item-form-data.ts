@@ -1,6 +1,6 @@
 import { ProjectItemType } from '@prisma/client';
 import { z } from 'zod';
-import { validateFormData } from '~/modules/validation/validate-form-data';
+import { validateFormData } from '~/server/validate-form-data.server';
 
 export function validateCreateItemFormData(formData: FormData) {
   const commonFields = {

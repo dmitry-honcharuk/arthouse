@@ -1,6 +1,9 @@
 import { unstable_parseMultipartFormData } from '@remix-run/node';
-import { uploadHandler } from '~/upload-handler.server';
+import { uploadHandler } from '~/server/upload-handler.server';
 
+/**
+ * @deprecated - use FormDataHandler
+ */
 export async function getRequestFormData(request: Request) {
   const contentType = request.headers.get('content-type');
 
