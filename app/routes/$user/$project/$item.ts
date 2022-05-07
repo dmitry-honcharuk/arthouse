@@ -6,10 +6,13 @@ import { deleteProjectItem } from '~/modules/projects/delete-project-item';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import { updateProjectItem } from '~/modules/projects/update-project-item';
 import { validateUpdateItemFormData } from '~/modules/projects/utils/validate-update-item-form-data';
-import { getRequestFormData } from '~/server/get-form-data.server';
+import { ActionBuilder } from '~/server/action-builder.server';
+import { FormDataHandler } from '~/server/form-data-handler.server';
 import { requireSessionUser } from '~/server/require-session-user.server';
 
-export const action: ActionFunction = async ({ request, params }) => {
+export const action: ActionFunction = async (actionDetails) => {
+  const { request, params } = actionDetails;
+
   const {
     user: userID,
     project: projectID,
@@ -41,19 +44,24 @@ export const action: ActionFunction = async ({ request, params }) => {
     throw new Response('Invalid item id', { status: 422 });
   }
 
-  if (request.method === 'DELETE') {
-    await deleteProjectItem(item.id);
-  } else if (request.method === 'PUT') {
-    const formData = await getRequestFormData(request);
+  return new ActionBuilder(actionDetails)
+    .use('DELETE', async () => {
+      await deleteProjectItem(item.id);
 
-    const data = validateUpdateItemFormData(formData);
+      return json({});
+    })
+    .use('PUT', async () => {
+      const formData = await FormDataHandler.getRequestFormData(request);
 
-    await updateProjectItem(item.id, {
-      value: data.type === ProjectItemType.IMAGE ? data.image : data.url,
-      title: data.title ?? null,
-      caption: data.caption ?? null,
-    });
-  }
+      const data = validateUpdateItemFormData(formData);
 
-  return json({});
+      await updateProjectItem(item.id, {
+        value: data.type === ProjectItemType.IMAGE ? data.image : data.url,
+        title: data.title ?? null,
+        caption: data.caption ?? null,
+      });
+
+      return json({});
+    })
+    .build();
 };

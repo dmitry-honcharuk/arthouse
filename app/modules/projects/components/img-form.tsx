@@ -39,13 +39,15 @@ export const ImageForm: FC<Props> = ({ item, onSuccess, onCancel }) => {
 
         const formData = new FormData(formRef.current!);
 
-        if (!item && !images[0]) {
+        const [image] = images;
+
+        if (!item && !image) {
           alert('Image is required');
           return;
         }
 
-        if (!item) {
-          formData.set('image', images[0].file!);
+        if (image?.file) {
+          formData.set('image', image.file);
         }
 
         fetcher.submit(formData, {

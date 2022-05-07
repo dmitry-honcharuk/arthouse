@@ -1,6 +1,6 @@
 import type { ActionFunction, DataFunctionArgs } from '@remix-run/node';
 
-type Method = 'POST' | 'PUT';
+type Method = 'POST' | 'PUT' | 'DELETE';
 
 type Handler = (
   context: Parameters<ActionFunction>[0]
