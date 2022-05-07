@@ -1,8 +1,8 @@
-import { Typography } from '@mui/material';
+import { Link as MaterialLink, Typography } from '@mui/material';
 import type { Favorite } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { Link, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { z } from 'zod';
 import { UserPersonalNavigation } from '~/modules/common/user-personal-navigation';
@@ -50,16 +50,27 @@ export default function UserFavorites() {
       <main className="flex flex-col gap-10">
         <Typography variant="h4">Favourites</Typography>
       </main>
-      <Projects>
-        {favorites.map(({ project }) => (
-          <ProjectCard
-            link={`/${getProjectPath(project, project.user)}`}
-            key={project.id}
-            project={project}
-            showIsSecured
-          />
-        ))}
-      </Projects>
+      {favorites.length ? (
+        <Projects>
+          {favorites.map(({ project }) => (
+            <ProjectCard
+              link={`/${getProjectPath(project, project.user)}`}
+              key={project.id}
+              project={project}
+              showIsSecured
+            />
+          ))}
+        </Projects>
+      ) : (
+        <Typography>
+          You didn't mark anything as your favourite.
+          <br />
+          <Link to="/">
+            <MaterialLink>Browse all projects</MaterialLink>
+          </Link>{' '}
+          to find something you like.
+        </Typography>
+      )}
     </>
   );
 }
