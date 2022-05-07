@@ -9,7 +9,7 @@ import * as React from 'react';
 import { z } from 'zod';
 import { AlbumProjectsForm } from '~/modules/albums/components/album-projects-form';
 import { AlbumTitleForm } from '~/modules/albums/components/album-title-form';
-import { getAlbumById } from '~/modules/albums/get-album-by-id';
+import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import type { Details as UpdateAlbumDetails } from '~/modules/albums/update-album';
 import { updateAlbum } from '~/modules/albums/update-album';
@@ -21,11 +21,11 @@ import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserProjects } from '~/modules/projects/get-user-projects';
 import type { WithProjects } from '~/modules/projects/types/with-projects';
 import { getUserPath } from '~/modules/users/get-user-path';
+import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { WithUser } from '~/modules/users/types/with-user';
-import { getRequestFormData } from '~/server/get-form-data.server';
+import { FormDataHandler } from '~/server/form-data-handler.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
-import { validateFormData } from '~/server/validate-form-data.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -34,17 +34,23 @@ interface LoaderData {
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const { user: userID, album: albumId } = z
+  const { user: userID, album: albumID } = z
     .object({
       album: z.string(),
       user: z.string(),
     })
     .parse(params);
 
+  const user = await getUserByIdentifier(userID);
+
+  if (!user) {
+    throw new Response(null, { status: 404 });
+  }
+
   const [currentUser, album, projects] = await Promise.all([
     getLoggedInUser(request),
-    getAlbumById(albumId),
-    getUserProjects(userID),
+    getUserAlbum(user, albumID),
+    getUserProjects(user),
   ]);
 
   if (!album) {
@@ -65,7 +71,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     throw new Response(null, { status: 405 });
   }
 
-  const { user, album } = z
+  const { user, album: albumID } = z
     .object({
       user: z.string(),
       album: z.string(),
@@ -81,14 +87,17 @@ export const action: ActionFunction = async ({ request, params }) => {
     throw new Response('Unauthorized', { status: 401 });
   }
 
-  if (!albums.find(({ id }) => id === album)) {
+  const album = albums.find(
+    ({ id, slug }) => id === albumID || slug === albumID
+  );
+
+  if (!album) {
     throw new Response('Unauthorized', { status: 401 });
   }
 
-  const formData = await getRequestFormData(request);
+  const formDataHandler = new FormDataHandler(request);
 
-  const { fields: field } = validateFormData(
-    formData,
+  const { fields: field } = await formDataHandler.validate(
     z.object({
       fields: z.union([z.string(), z.array(z.string())]),
     })
@@ -99,8 +108,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   const albumFields: UpdateAlbumDetails = {};
 
   if (fields.includes('projects')) {
-    const { projects } = validateFormData(
-      formData,
+    const { projects } = await formDataHandler.validate(
       z.object({
         projects: z.union([z.string(), z.array(z.string())]).optional(),
       })
@@ -110,8 +118,7 @@ export const action: ActionFunction = async ({ request, params }) => {
   }
 
   if (fields.includes('name')) {
-    const { name } = validateFormData(
-      formData,
+    const { name } = await formDataHandler.validate(
       z.object({
         name: z.string().nonempty(),
       })
@@ -120,7 +127,7 @@ export const action: ActionFunction = async ({ request, params }) => {
     albumFields.name = name;
   }
 
-  return json(await updateAlbum(album, albumFields));
+  return json(await updateAlbum(album.id, albumFields));
 };
 
 export default function AlbumScreen() {

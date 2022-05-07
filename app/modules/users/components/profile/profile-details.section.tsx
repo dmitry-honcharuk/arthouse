@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { EditableCardSection } from '~/modules/common/editable-card-section';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
-import { getURI } from '../../getURI';
+import { getURI } from '../../../common/utils/getURI';
 import { NicknameTag } from './nickname-tag';
 
 export const ProfileDetailsSection: FC<{
