@@ -1,4 +1,4 @@
-import { GppGoodOutlined } from '@mui/icons-material';
+import { Favorite, GppGoodOutlined } from '@mui/icons-material';
 import {
   Card,
   CardActionArea,
@@ -19,11 +19,13 @@ export const ProjectCard: FC<{
   project: Project & Partial<WithUser>;
   showStatus?: boolean;
   showIsSecured?: boolean;
+  showFavourite?: boolean;
   link?: string;
 }> = ({
   link,
   showIsSecured = false,
   showStatus = false,
+  showFavourite = false,
   project: { id, status, preview, caption, name, user, isSecure },
 }) => {
   const cardContent = (
@@ -84,6 +86,11 @@ export const ProjectCard: FC<{
           </Typography>
         )}
       </CardContent>
+      {showFavourite && (
+        <div className="flex justify-end absolute right-2 bottom-2">
+          <Favorite fontSize="small" color="secondary" />
+        </div>
+      )}
     </>
   );
 

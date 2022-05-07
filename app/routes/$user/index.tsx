@@ -24,6 +24,7 @@ import { prisma } from '~/db.server';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import { UserPersonalNavigation } from '~/modules/common/user-personal-navigation';
+import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
@@ -37,6 +38,7 @@ type FullAlbum = Album & WithProjects & WithUser;
 interface LoaderData {
   isCurrentUser: boolean;
   projects: (Project & WithUser)[];
+  favouriteIds: string[];
   albums: FullAlbum[];
 }
 
@@ -73,15 +75,19 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     ...(!isCurrentUser && { isSecure: false }),
   });
 
+  const favorites = currentUser ? await getFavorites(currentUser.id) : [];
+
   return json<LoaderData>({
     projects,
+    favouriteIds: favorites.map(({ projectId }) => projectId),
     isCurrentUser,
     albums: albums.filter(({ projects }) => !!projects.length),
   });
 };
 
 export default function UserProjects() {
-  const { projects, isCurrentUser, albums } = useLoaderData<LoaderData>();
+  const { projects, isCurrentUser, albums, favouriteIds } =
+    useLoaderData<LoaderData>();
 
   const [selectedAlbum, setSelectedAlbum] = useState<FullAlbum | 'all'>('all');
 
@@ -163,6 +169,7 @@ export default function UserProjects() {
                 key={project.id}
                 showStatus={isCurrentUser}
                 showIsSecured={isCurrentUser}
+                showFavourite={favouriteIds.includes(project.id)}
                 project={project}
               />
             );

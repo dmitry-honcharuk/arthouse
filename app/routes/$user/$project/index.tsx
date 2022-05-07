@@ -1,12 +1,15 @@
 import {
   Add,
   ArrowBackIosNew,
+  Favorite,
+  FavoriteBorderOutlined,
   GppGoodOutlined,
   ImageOutlined,
   SettingsOutlined,
   VideocamOutlined,
 } from '@mui/icons-material';
 import {
+  Badge,
   Box,
   Button,
   Card,
@@ -19,6 +22,7 @@ import {
   Paper,
   Stack,
   styled,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { ProjectItemType, ProjectStatus } from '@prisma/client';
@@ -32,6 +36,9 @@ import { z } from 'zod';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
 import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
+import { HappyMessage } from '~/modules/favorites/components/happy-message';
+import { UnhappyMessage } from '~/modules/favorites/components/unhappy-message';
+import { countFavourites } from '~/modules/favorites/count-favourites';
 import { getFavorites } from '~/modules/favorites/get-favorites';
 import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
 import { ItemForm } from '~/modules/projects/components/item-form';
@@ -59,6 +66,7 @@ import { getProjectAuthSession } from '~/server/project-auth-sessions.server';
 interface LoaderData {
   isCurrentUser: boolean;
   isFavorite: boolean;
+  favouritesCount: number;
   currentUser: UserWithProfile | null;
   project: ProjectWithItems & WithUser & WithProjectSecurity;
 }
@@ -104,6 +112,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     isFavorite: isFavorite({ projectId: project.id, favorites }),
     isCurrentUser,
     currentUser,
+    favouritesCount: await countFavourites(project.id),
   });
 };
 
@@ -142,7 +151,7 @@ export const action: ActionFunction = async (context) => {
 };
 
 export default function ProjectScreen() {
-  const { project, isCurrentUser, isFavorite, currentUser } =
+  const { project, isCurrentUser, isFavorite, currentUser, favouritesCount } =
     useLoaderData<LoaderData>();
 
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
@@ -244,6 +253,29 @@ export default function ProjectScreen() {
           )}
           {!isCurrentUser && currentUser && (
             <FavoriteBtn projectId={project.id} isFavorite={isFavorite} />
+          )}
+          {isCurrentUser && (
+            <Card variant="outlined">
+              <CardContent>
+                <Tooltip
+                  title={
+                    favouritesCount ? (
+                      <HappyMessage count={favouritesCount} />
+                    ) : (
+                      <UnhappyMessage />
+                    )
+                  }
+                >
+                  <Badge badgeContent={favouritesCount} color="primary">
+                    {favouritesCount ? (
+                      <Favorite color="secondary" />
+                    ) : (
+                      <FavoriteBorderOutlined color="secondary" />
+                    )}
+                  </Badge>
+                </Tooltip>
+              </CardContent>
+            </Card>
           )}
           <Card elevation={3}>
             {project.isSecure && (
