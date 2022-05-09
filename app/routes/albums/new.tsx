@@ -4,16 +4,18 @@ import { json, redirect, Response } from '@remix-run/node';
 import { Form, useLoaderData } from '@remix-run/react';
 import { castArray } from 'lodash';
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { createAlbum } from '~/modules/albums/create-album';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
+import { getURI } from '~/modules/common/utils/getURI';
 import { ProjectsAutocomplete } from '~/modules/projects/components/projects-autocomplete';
 import { getProjects } from '~/modules/projects/get-projects';
 import type { FullProject } from '~/modules/projects/types/full-project';
+import { getUserPath } from '~/modules/users/get-user-path';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
+import { FormDataHandler } from '~/server/form-data-handler.server';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
-import { validateFormData } from '~/server/validate-form-data.server';
 
 interface LoaderData {
   currentUser: UserWithProfile;
@@ -36,10 +38,15 @@ export const action: ActionFunction = async ({ request }) => {
     request.formData(),
   ]);
 
-  const { name, projects: project } = validateFormData(
+  const {
+    name,
+    slug,
+    projects: project,
+  } = await FormDataHandler.validateFormData(
     formData,
     z.object({
       name: z.string().nonempty(),
+      slug: z.string().optional(),
       projects: z.union([z.string(), z.array(z.string())]).optional(),
     })
   );
@@ -59,6 +66,7 @@ export const action: ActionFunction = async ({ request }) => {
   const album = await createAlbum({
     userId: user.id,
     name,
+    slug: slug || null,
     projectIds: projects,
   });
 
@@ -66,20 +74,73 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export default function NewAlbum() {
-  const { projects } = useLoaderData<LoaderData>();
+  const { projects, currentUser } = useLoaderData<LoaderData>();
 
   const [projectIds, setProjectIds] = useState<string[]>([]);
+
+  const [slug, setSlug] = useState('');
+  const dirtyRef = useRef(false);
+
+  const [link, setLink] = useState('');
+
+  useEffect(() => {
+    setLink(`${location.host}/${getUserPath(currentUser)}/albums/${slug}`);
+  }, [currentUser, slug]);
 
   return (
     <Form className="flex flex-col gap-4 max-w-2xl pt-10" method="post">
       <Typography variant="h3">Create new album</Typography>
 
       <Paper className="p-4 flex flex-col gap-3" elevation={3}>
-        <TextField autoFocus name="name" label="Album name" required />
+        <TextField
+          autoFocus
+          name="name"
+          label="Album name"
+          required
+          onChange={({ target }) => {
+            if (!dirtyRef.current) {
+              setSlug(getURI(target.value));
+            }
+          }}
+        />
+
+        <TextField
+          name="slug"
+          label="Slug"
+          value={slug}
+          helperText={
+            link ? (
+              <span className="inline-flex flex-col">
+                <span>
+                  Short name for your album. This should be unique within your
+                  account.
+                </span>
+                {slug && (
+                  <span>
+                    <span>Your album could be accessed at</span>{' '}
+                    <span className="py-1 px-2 bg-slate-100 rounded self-start">
+                      {link}
+                    </span>
+                  </span>
+                )}
+              </span>
+            ) : null
+          }
+          onChange={({ target }) => {
+            setSlug(getURI(target.value));
+
+            if (!dirtyRef.current) {
+              dirtyRef.current = true;
+            }
+          }}
+        />
+
         {projectIds.map((id) => (
           <input key={id} type="hidden" name="projects" value={id} />
         ))}
+
         <ProjectsAutocomplete projects={projects} onChange={setProjectIds} />
+
         <Button variant="contained" className="self-end" type="submit">
           Create
         </Button>

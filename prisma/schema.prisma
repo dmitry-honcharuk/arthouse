@@ -134,11 +134,15 @@ model Album {
 
   name String
 
+  slug String?
+
   projects Project[]
 
   user User @relation(fields: [userId], references: [id])
 
   userId String @map("user_id") @db.Uuid
 
+
+  @@unique([userId, slug])
   @@map("albums")
 }

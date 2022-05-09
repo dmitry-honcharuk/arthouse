@@ -1,8 +1,10 @@
+import { GppGoodOutlined } from '@mui/icons-material';
 import {
   Autocomplete,
   Chip,
   ListItemButton,
   ListItemText,
+  Stack,
   TextField,
 } from '@mui/material';
 import type { Project } from '@prisma/client';
@@ -29,21 +31,33 @@ export const ProjectsAutocomplete: FC<Props> = ({
       options={projects.map(({ id }) => id)}
       defaultValue={defaultProjects ? defaultProjects.map(({ id }) => id) : []}
       renderTags={(value, getTagProps) =>
-        value.map((option, index) => (
-          <Chip
-            {...getTagProps({ index })}
-            label={projectIdMap.current.get(option)?.name ?? 'unknown project'}
-            variant="outlined"
-            color="primary"
-          />
-        ))
+        value.map((option, index) => {
+          const project = projectIdMap.current.get(option);
+
+          return (
+            <Chip
+              {...getTagProps({ index })}
+              label={
+                <Stack direction="row" alignItems="center">
+                  {project?.isSecure && <GppGoodOutlined fontSize="small" />}
+                  <span>{project?.name ?? 'unknown project'}</span>
+                </Stack>
+              }
+              variant="outlined"
+              color="primary"
+            />
+          );
+        })
       }
       renderOption={(props, option) => {
         const project = projectIdMap.current.get(option);
 
         return (
           <ListItemButton {...props} component="li" key={project?.id ?? option}>
-            <ListItemText primary={project?.name ?? 'unknown project'} />
+            <Stack direction="row" alignItems="center" gap={1}>
+              <ListItemText primary={project?.name ?? 'unknown project'} />
+              {project?.isSecure && <GppGoodOutlined fontSize="small" />}
+            </Stack>
           </ListItemButton>
         );
       }}
