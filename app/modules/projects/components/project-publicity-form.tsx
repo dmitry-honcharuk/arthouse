@@ -13,9 +13,14 @@ import type { WithUser } from '~/modules/users/types/with-user';
 type props = {
   project: ProjectWithItems & WithUser & WithProjectSecurity;
   action: string;
+  settingsPath: string;
 };
 
-export const ProjectPublicityForm: FC<props> = ({ project, action }) => {
+export const ProjectPublicityForm: FC<props> = ({
+  project,
+  action,
+  settingsPath,
+}) => {
   const fetcher = useFetcher();
 
   const [pending, setPending] = useState(fetcher.state !== 'idle');
@@ -50,7 +55,7 @@ export const ProjectPublicityForm: FC<props> = ({ project, action }) => {
               </div>
               <div>
                 This could be done{' '}
-                <Link to="settings" className="underline">
+                <Link to={settingsPath} className="underline">
                   in settings
                 </Link>
               </div>

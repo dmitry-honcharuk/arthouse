@@ -9,6 +9,7 @@ import * as React from 'react';
 import { z } from 'zod';
 import { AlbumProjectsForm } from '~/modules/albums/components/album-projects-form';
 import { AlbumTitleForm } from '~/modules/albums/components/album-title-form';
+import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import type { Details as UpdateAlbumDetails } from '~/modules/albums/update-album';
@@ -186,7 +187,10 @@ export default function AlbumScreen() {
                       project={project}
                       showStatus={isCurrentUser}
                       showIsSecured={isCurrentUser}
-                      link={`/${getProjectPath(project, album.user)}`}
+                      link={`/${getAlbumPath(
+                        album,
+                        album.user
+                      )}/${getProjectPath(project)}`}
                     />
                   ))}
                 </Projects>

@@ -26,11 +26,14 @@ import React, { useRef, useState } from 'react';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
 import { YoutubeFrame } from '~/modules/common/youtube-frame';
 import { ItemForm } from '~/modules/projects/components/item-form';
+import type { FullProject } from '~/modules/projects/types/full-project';
 
 export const ProjectItemCard: FC<{
+  project: FullProject;
   item: ProjectItem;
   isCurrentUser: boolean;
-}> = ({ item, isCurrentUser }) => {
+  deleteLink: string;
+}> = ({ project, item, isCurrentUser, deleteLink }) => {
   const deleteFormRef = useRef<HTMLFormElement | null>(null);
   const fetcher = useFetcher();
   const [edit, toggleEdit] = useToggle();
@@ -61,6 +64,7 @@ export const ProjectItemCard: FC<{
         <ItemForm
           type={item.type}
           item={item}
+          project={project}
           onSuccess={() => toggleEdit()}
           onCancel={() => toggleEdit()}
         />
@@ -158,7 +162,7 @@ export const ProjectItemCard: FC<{
             fetcher.submit(
               {},
               {
-                action: `${location.pathname}/${item.id}`,
+                action: deleteLink,
                 method: 'delete',
               }
             );

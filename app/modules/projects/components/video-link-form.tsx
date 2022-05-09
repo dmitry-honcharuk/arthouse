@@ -11,9 +11,15 @@ interface Props {
   onSuccess: () => void;
   onCancel?: () => void;
   item?: ProjectItem;
+  action?: string;
 }
 
-export const VideoLinkForm: FC<Props> = ({ item, onSuccess, onCancel }) => {
+export const VideoLinkForm: FC<Props> = ({
+  item,
+  onSuccess,
+  onCancel,
+  action,
+}) => {
   const fetcher = useFetcher();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -29,7 +35,7 @@ export const VideoLinkForm: FC<Props> = ({ item, onSuccess, onCancel }) => {
     <fetcher.Form
       ref={formRef}
       method={item ? 'put' : 'post'}
-      action={item?.id}
+      action={action}
       className="flex flex-col gap-3 w-full h-full"
     >
       <input type="hidden" name="type" value={ProjectItemType.YOUTUBE} />
