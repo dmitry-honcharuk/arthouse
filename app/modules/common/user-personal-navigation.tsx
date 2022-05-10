@@ -1,7 +1,7 @@
 import {
+  BadgeOutlined,
   FavoriteBorderOutlined,
-  PersonPin,
-  Shop2Outlined,
+  FolderCopyOutlined,
 } from '@mui/icons-material';
 import { Tab, Tabs } from '@mui/material';
 import { Link, useMatches } from '@remix-run/react';
@@ -31,14 +31,20 @@ export const UserPersonalNavigation: FC = () => {
       value={tab}
       onChange={(_, newValue) => setTab(newValue)}
       aria-label="icon position tabs example"
+      orientation="vertical"
     >
       <Tab
-        icon={<Shop2Outlined />}
+        icon={<FolderCopyOutlined />}
         to={`/${userPath}`}
         component={Link}
         value={Nav.Projects}
         iconPosition="end"
         label="projects"
+        sx={{
+          '&.MuiButtonBase-root': {
+            justifyContent: 'flex-end',
+          },
+        }}
       />
       {isCurrentUser && (
         <Tab
@@ -48,15 +54,25 @@ export const UserPersonalNavigation: FC = () => {
           component={Link}
           iconPosition="end"
           label="favorites"
+          sx={{
+            '&.MuiButtonBase-root': {
+              justifyContent: 'flex-end',
+            },
+          }}
         />
       )}
       <Tab
-        icon={<PersonPin />}
+        icon={<BadgeOutlined />}
         to={`/${userPath}/profile`}
         value={Nav.Profile}
         component={Link}
         iconPosition="end"
         label="profile"
+        sx={{
+          '&.MuiButtonBase-root': {
+            justifyContent: 'flex-end',
+          },
+        }}
       />
     </Tabs>
   );

@@ -1,9 +1,14 @@
-import { Add, ArrowBackIosNew } from '@mui/icons-material';
+import {
+  Add,
+  FolderCopyOutlined,
+  GridViewOutlined,
+  PersonPin,
+} from '@mui/icons-material';
 import { Button, Paper, Typography } from '@mui/material';
 import type { Album, Project } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { Link, useLoaderData } from '@remix-run/react';
+import { useLoaderData } from '@remix-run/react';
 import { castArray } from 'lodash';
 import * as React from 'react';
 import { z } from 'zod';
@@ -14,7 +19,9 @@ import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import type { Details as UpdateAlbumDetails } from '~/modules/albums/update-album';
 import { updateAlbum } from '~/modules/albums/update-album';
+import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditButton } from '~/modules/common/edit-button';
+import PageLayout from '~/modules/common/page-layout';
 import { TogglableContent } from '~/modules/common/togglable-content';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
@@ -135,14 +142,28 @@ export default function AlbumScreen() {
   const { album, isCurrentUser, projects } = useLoaderData<LoaderData>();
 
   return (
-    <>
-      <div className="pt-4">
-        <Link to={`/${getUserPath(album.user)}`}>
-          <Button startIcon={<ArrowBackIosNew />} color="inherit">
-            {isCurrentUser ? 'Your Projects' : 'User Projects'}
-          </Button>
-        </Link>
-      </div>
+    <PageLayout
+      breadcrumbs={
+        <Breadcrumbs
+          items={[
+            {
+              icon: <GridViewOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Browse',
+              link: '/',
+            },
+            {
+              icon: <PersonPin sx={{ mr: 0.5 }} fontSize="small" />,
+              label: album.user.profile?.nickname ?? null,
+              link: `/${getUserPath(album.user)}`,
+            },
+            {
+              icon: <FolderCopyOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: album.name,
+            },
+          ]}
+        />
+      }
+    >
       <div className="flex flex-col gap-8">
         <div className="flex gap-2 items-center">
           <TogglableContent>
@@ -216,20 +237,28 @@ export default function AlbumScreen() {
               return (
                 <>
                   <div className="flex justify-between mb-3">
-                    <Typography variant="h5">Projects</Typography>
+                    {isCurrentUser && (
+                      <Typography variant="h5">Projects</Typography>
+                    )}
                     {isCurrentUser && !isEnabled && (
                       <EditButton onClick={enable} />
                     )}
                   </div>
-                  <Paper className="p-4" variant="outlined">
-                    {isEnabled ? form : displayProjects}
-                  </Paper>
+                  {isCurrentUser ? (
+                    <Paper className="p-4" variant="outlined">
+                      {isEnabled ? form : displayProjects}
+                    </Paper>
+                  ) : isEnabled ? (
+                    form
+                  ) : (
+                    displayProjects
+                  )}
                 </>
               );
             }}
           </TogglableContent>
         </div>
       </div>
-    </>
+    </PageLayout>
   );
 }

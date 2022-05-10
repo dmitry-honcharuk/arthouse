@@ -1,6 +1,5 @@
 import {
   Add,
-  ArrowBackIosNew,
   Favorite,
   FavoriteBorderOutlined,
   GppGoodOutlined,
@@ -28,11 +27,12 @@ import {
 import { ProjectItemType } from '@prisma/client';
 import { Link } from '@remix-run/react';
 import format from 'date-fns/format';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 import * as React from 'react';
 import { useState } from 'react';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
+import PageLayout from '~/modules/common/page-layout';
 import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
 import { HappyMessage } from '~/modules/favorites/components/happy-message';
 import { UnhappyMessage } from '~/modules/favorites/components/unhappy-message';
@@ -57,6 +57,7 @@ interface Props {
   favouritesCount: number;
   currentUser: UserWithProfile | null;
   project: ProjectWithItems & WithUser & WithProjectSecurity;
+  breadcrumbs?: ReactNode;
 }
 
 export const ProjectScreen: FC<Props> = ({
@@ -65,6 +66,7 @@ export const ProjectScreen: FC<Props> = ({
   favouritesCount,
   isCurrentUser,
   isFavorite,
+  breadcrumbs,
 }) => {
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
@@ -72,14 +74,7 @@ export const ProjectScreen: FC<Props> = ({
   const settingsPath = `/${getProjectPath(project, project.user)}/settings`;
 
   return (
-    <>
-      <div className="pt-4">
-        <Link to={`/${getUserPath(project.user)}`}>
-          <Button startIcon={<ArrowBackIosNew />} color="inherit">
-            {isCurrentUser ? 'Your Projects' : 'User Projects'}
-          </Button>
-        </Link>
-      </div>
+    <PageLayout breadcrumbs={breadcrumbs}>
       <Layout>
         <Box gridArea="main" component="main" className="flex flex-col gap-10">
           {isCurrentUser && (
@@ -277,7 +272,7 @@ export const ProjectScreen: FC<Props> = ({
           )}
         </Box>
       </Layout>
-    </>
+    </PageLayout>
   );
 };
 

@@ -16,7 +16,7 @@ export default function Layout({
   return (
     <>
       <Header user={currentUser} />
-      <div className={cn('px-4 md:px-8 pb-8', className)}>{children}</div>
+      <div className={cn('px-4 pb-8', className)}>{children}</div>
     </>
   );
 }
