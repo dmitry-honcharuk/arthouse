@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, styled } from '@mui/material';
 import type { ReactNode } from 'react';
 import * as React from 'react';
 
@@ -12,8 +12,16 @@ export default function PageLayout({
 }: React.PropsWithChildren<Props>) {
   return (
     <Box paddingTop={2}>
-      {breadcrumbs && <Box marginBottom={5}>{breadcrumbs}</Box>}
+      {breadcrumbs && <Breadcrumbs>{breadcrumbs}</Breadcrumbs>}
       {children}
     </Box>
   );
 }
+
+const Breadcrumbs = styled('div')(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+
+  [theme.breakpoints.up('sm')]: {
+    marginBottom: theme.spacing(5),
+  },
+}));
