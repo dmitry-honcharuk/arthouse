@@ -24,6 +24,7 @@ export async function getUserAlbum(
       ...(isUUID ? { id: albumIdentifier } : { slug: albumIdentifier }),
     },
     include: {
+      security: true,
       projects: {
         include: {
           user: {

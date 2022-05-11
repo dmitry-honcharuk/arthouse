@@ -18,7 +18,7 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { z } from 'zod';
 import { TogglableContent } from '~/modules/common/togglable-content';
-import { getDecryptedProjectSecurity } from '~/modules/projects/get-decrypted-project-security';
+import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import { ActionBuilder } from '~/server/action-builder.server';
@@ -48,8 +48,8 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   if (
     !project.isSecure ||
-    !project.projectSecurity ||
-    session.get(project.id) === project.projectSecurity.passwordVersion
+    !project.security ||
+    session.get(project.id) === project.security.passwordVersion
   ) {
     return redirect(`/${getProjectPath(project, project.user)}`);
   }
@@ -86,21 +86,16 @@ export const action: ActionFunction = async (actionDetails) => {
           })
         );
 
-      if (!project.projectSecurity) {
+      if (!project.security) {
         return redirect(`/${getProjectPath(project, project.user)}`);
       }
 
-      const { password } = await getDecryptedProjectSecurity(
-        project.projectSecurity
-      );
+      const { password } = await getDecryptedSecurity(project.security);
 
       const isPasswordValid = passwordAttempt === password;
 
       if (isPasswordValid) {
-        projectAuthSession.set(
-          projectId,
-          project.projectSecurity.passwordVersion
-        );
+        projectAuthSession.set(projectId, project.security.passwordVersion);
       } else {
         projectAuthSession.unset(projectId);
       }

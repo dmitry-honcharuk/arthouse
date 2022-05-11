@@ -10,20 +10,28 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import type { Project } from '@prisma/client';
 import { Form } from '@remix-run/react';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 import * as React from 'react';
 import { useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { TogglableContent } from '~/modules/common/togglable-content';
-import type { WithDecryptedProjectSecurity } from '~/modules/projects/types/with-decrypted-project-security';
 
-export const PasswordSetting: FC<{
-  project: Project & WithDecryptedProjectSecurity;
+interface Props {
+  item: { security: { password: string } | null };
   isEdit: boolean;
   onSuccess: () => void;
-}> = ({ project, isEdit, onSuccess }) => {
+  noPasswordMessage: ReactNode;
+  helperText?: ReactNode;
+}
+
+export const PasswordSetting: FC<Props> = ({
+  item,
+  isEdit,
+  onSuccess,
+  helperText,
+  noPasswordMessage,
+}) => {
   const [copied, setCopied] = useState(false);
 
   if (isEdit) {
@@ -45,8 +53,8 @@ export const PasswordSetting: FC<{
               variant="outlined"
               name="password"
               type={isHidden ? 'password' : 'text'}
-              defaultValue={project.projectSecurity?.password}
-              helperText="Password is required to access secured project"
+              defaultValue={item.security?.password}
+              helperText={helperText}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -80,20 +88,16 @@ export const PasswordSetting: FC<{
     );
   }
 
-  if (!project.projectSecurity || !project.projectSecurity.password) {
+  if (!item.security || !item.security.password) {
     return (
       <div>
-        <Typography>
-          You didn't specify password for this project yet
-        </Typography>
-        <Typography variant="caption">
-          Password is required to access secured project
-        </Typography>
+        <Typography>{noPasswordMessage}</Typography>
+        <Typography variant="caption">{helperText}</Typography>
       </div>
     );
   }
 
-  const { password } = project.projectSecurity;
+  const { password } = item.security;
 
   return (
     <>
@@ -118,7 +122,7 @@ export const PasswordSetting: FC<{
           )}
         </TogglableContent>
         <Typography variant="caption">
-          Password is required to access secured project
+          Password is required to access secured album.
         </Typography>
       </span>
       <Snackbar

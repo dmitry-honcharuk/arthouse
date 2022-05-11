@@ -24,7 +24,7 @@ export async function getFavorites(userIdentifier: string | Pick<User, 'id'>) {
     include: {
       project: {
         include: {
-          projectSecurity: true,
+          security: true,
           user: { include: { profile: true } },
         },
       },

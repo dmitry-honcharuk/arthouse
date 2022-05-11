@@ -66,8 +66,8 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   if (
     !isCurrentUser &&
     project.isSecure &&
-    project.projectSecurity &&
-    session.get(project.id) !== project.projectSecurity.passwordVersion
+    project.security &&
+    session.get(project.id) !== project.security.passwordVersion
   ) {
     return redirect(`/${getProjectPath(project, project.user)}/authorize`);
   }

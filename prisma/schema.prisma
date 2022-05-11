@@ -73,10 +73,9 @@ model Project {
 
   Favorite Favorite[]
 
-  projectSecurity ProjectSecurity?
+  security ProjectSecurity?
 
   isSecure Boolean @default(false) @map("is_secure")
-
 
   @@unique([userId, slug])
   @@map("projects")
@@ -142,7 +141,23 @@ model Album {
 
   userId String @map("user_id") @db.Uuid
 
+  security AlbumSecurity?
+
+  isSecure Boolean @default(false) @map("is_secure")
 
   @@unique([userId, slug])
   @@map("albums")
+}
+
+model AlbumSecurity {
+  albumId String @id @map("album_id") @db.Uuid
+
+  album Album @relation(fields: [albumId], references: [id])
+
+  passwordHash String @map("password_hash")
+  passwordIv   String @map("password_iv")
+
+  passwordVersion Int @default(1)
+
+  @@map("album_security")
 }

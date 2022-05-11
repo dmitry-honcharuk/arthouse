@@ -1,5 +1,5 @@
 import {
-  FolderOutlined,
+  FolderCopyOutlined,
   GridViewOutlined,
   Key,
   LockOutlined,
@@ -7,28 +7,33 @@ import {
   SettingsOutlined,
 } from '@mui/icons-material';
 import { Box, Card, CardContent } from '@mui/material';
-import type { Project } from '@prisma/client';
-import { ProjectStatus } from '@prisma/client';
+import type { Album } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useFetcher, useLoaderData } from '@remix-run/react';
+import {
+  useActionData,
+  useFetcher,
+  useLoaderData,
+  useNavigate,
+} from '@remix-run/react';
 import { castArray } from 'lodash';
 import type { FC } from 'react';
 import * as React from 'react';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { z } from 'zod';
+import { GeneralSection } from '~/modules/albums/components/settings/general-section';
+import { getAlbumPath } from '~/modules/albums/get-album-path';
+import { getUserAlbum } from '~/modules/albums/get-user-album';
+import { setAlbumPassword } from '~/modules/albums/set-album-password.server';
+import type { WithDecryptedAlbumSecurity } from '~/modules/albums/types/with-decrypted-album-security';
+import { updateAlbum } from '~/modules/albums/update-album';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditableCardSection } from '~/modules/common/editable-card-section';
 import PageLayout from '~/modules/common/page-layout';
 import { SecuritySwitch } from '~/modules/common/security-switch';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
+import type { WithDecryptedSecurity } from '~/modules/crypto/types/with-decrypted-security';
 import { PasswordSetting } from '~/modules/projects/components/project-settings/password-setting';
-import { getProjectPath } from '~/modules/projects/get-project-path';
-import { getUserProject } from '~/modules/projects/get-user-project';
-import { setProjectPassword } from '~/modules/projects/set-project-password.server';
-import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
-import type { WithDecryptedProjectSecurity } from '~/modules/projects/types/with-decrypted-project-security';
-import { updateProject } from '~/modules/projects/update-project';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import { getUserPath } from '~/modules/users/get-user-path';
 import type { WithUser } from '~/modules/users/types/with-user';
@@ -37,37 +42,37 @@ import { FormDataHandler } from '~/server/form-data-handler.server';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
 interface LoaderData {
-  project: ProjectWithItems & WithUser & WithDecryptedProjectSecurity;
+  album: Album & WithUser & WithDecryptedAlbumSecurity;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const { user, project: projectID } = z
+  const { user, album: albumID } = z
     .object({
       user: z.string(),
-      project: z.string(),
+      album: z.string(),
     })
     .parse(params);
 
-  const [project, currentUser] = await Promise.all([
-    getUserProject(user, projectID),
+  const [album, currentUser] = await Promise.all([
+    getUserAlbum(user, albumID),
     requireLoggedInUser(request),
   ]);
 
-  if (!project) {
+  if (!album) {
     throw new Response(null, { status: 404 });
   }
 
-  const isCurrentUser = currentUser.id === project.userId;
+  const isCurrentUser = currentUser.id === album.userId;
 
   if (!isCurrentUser) {
     throw new Response(null, { status: 404 });
   }
 
   return json<LoaderData>({
-    project: {
-      ...project,
-      security: project.security
-        ? await getDecryptedSecurity(project.security)
+    album: {
+      ...album,
+      security: album.security
+        ? await getDecryptedSecurity(album.security)
         : null,
     },
   });
@@ -76,19 +81,19 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export const action: ActionFunction = async (actionDetails) => {
   const { request, params } = actionDetails;
 
-  const { user: userID, project: projectID } = z
+  const { user: userID, album: albumID } = z
     .object({
       user: z.string(),
-      project: z.string(),
+      album: z.string(),
     })
     .parse(params);
 
-  const [currentUser, project] = await Promise.all([
+  const [currentUser, album] = await Promise.all([
     requireLoggedInUser(request),
-    getUserProject(userID, projectID),
+    getUserAlbum(userID, albumID),
   ]);
 
-  if (!currentUser || !project) {
+  if (!currentUser || !album) {
     throw new Response(null, { status: 401 });
   }
 
@@ -111,38 +116,18 @@ export const action: ActionFunction = async (actionDetails) => {
           })
         );
 
-        const currentPassword = project.security
-          ? (await getDecryptedSecurity(project.security)).password
+        const currentPassword = album.security
+          ? (await getDecryptedSecurity(album.security)).password
           : null;
 
         return json(
           password !== currentPassword
-            ? await setProjectPassword(project.id, password)
+            ? await setAlbumPassword(album.id, password)
             : {}
         );
       }
 
-      const projectDetails: Partial<Project> = {};
-
-      if (fields.includes('status')) {
-        const { status } = await formDataHandler.validate(
-          z.object({
-            status: z.nativeEnum(ProjectStatus),
-          })
-        );
-
-        projectDetails.status = status;
-      }
-
-      if (fields.includes('preview')) {
-        const { preview } = await formDataHandler.validate(
-          z.object({
-            preview: z.string(),
-          })
-        );
-
-        projectDetails.preview = preview;
-      }
+      const albumDetails: Partial<Album> = {};
 
       if (fields.includes('secure')) {
         const { secure } = await formDataHandler.validate(
@@ -151,16 +136,43 @@ export const action: ActionFunction = async (actionDetails) => {
           })
         );
 
-        projectDetails.isSecure = secure === 'true';
+        albumDetails.isSecure = secure === 'true';
       }
 
-      return json(await updateProject(project.id, projectDetails));
+      if (fields.includes('name')) {
+        const { name, slug } = await formDataHandler.validate(
+          z.object({
+            name: z.string(),
+            slug: z.string().optional(),
+          })
+        );
+
+        albumDetails.name = name;
+        albumDetails.slug = slug || null;
+      }
+
+      return json(await updateAlbum(album.id, albumDetails));
     })
     .build();
 };
 
-export default function ProjectSettings() {
-  const { project } = useLoaderData<LoaderData>();
+export default function AlbumSettings() {
+  const { album } = useLoaderData<LoaderData>();
+  const actionAlbum = useActionData<Album>();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!actionAlbum) {
+      return;
+    }
+
+    if (album.slug === actionAlbum.slug) {
+      return;
+    }
+
+    navigate(`/${getAlbumPath(actionAlbum, album.user)}/settings`);
+  }, [actionAlbum, album.slug, album.user, navigate]);
 
   return (
     <PageLayout
@@ -174,13 +186,13 @@ export default function ProjectSettings() {
             },
             {
               icon: <PersonPin sx={{ mr: 0.5 }} fontSize="small" />,
-              label: project.user.profile?.nickname ?? null,
-              link: `/${getUserPath(project.user)}`,
+              label: album.user.profile?.nickname ?? null,
+              link: `/${getUserPath(album.user)}`,
             },
             {
-              icon: <FolderOutlined sx={{ mr: 0.5 }} fontSize="small" />,
-              label: project.name,
-              link: `/${getProjectPath(project, project.user)}`,
+              icon: <FolderCopyOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: album.name,
+              link: `/${getAlbumPath(album, album.user)}`,
             },
             {
               icon: <SettingsOutlined sx={{ mr: 0.5 }} fontSize="small" />,
@@ -191,32 +203,26 @@ export default function ProjectSettings() {
       }
     >
       <main className="flex flex-col gap-10">
-        <Card variant="outlined">
-          <CardContent>
-            <div>Project general settings</div>
-            <div>Name</div>
-            <div>Caption</div>
-          </CardContent>
-        </Card>
+        <GeneralSection album={album} />
         <EditableCardSection
           renderTitle={({ isEdit, toggleIsEdit }) => (
             <SectionTitle variant="h5" onEdit={toggleIsEdit} isEdit={isEdit}>
-              Project security
+              Album security
             </SectionTitle>
           )}
           render={({ isEdit, setIsEdit }) => (
             <Box display="grid" gridTemplateColumns="auto 1fr" gap={2}>
               <Key />
               <PasswordSetting
-                item={project}
+                item={album}
                 isEdit={isEdit}
                 onSuccess={() => setIsEdit(false)}
-                helperText="Password is required to access secured project"
-                noPasswordMessage="You didn't specify password for this project yet"
+                helperText="Password is required to access secured album"
+                noPasswordMessage="You didn't specify password for this album yet"
               />
               <LockOutlined />
               <SecuritySwitchSetting
-                project={project}
+                item={album}
                 onSuccess={() => setIsEdit(false)}
               />
             </Box>
@@ -224,7 +230,7 @@ export default function ProjectSettings() {
         />
         <Card variant="outlined">
           <CardContent>
-            <div>Project danger area</div>
+            <div>Album danger area</div>
           </CardContent>
         </Card>
       </main>
@@ -233,9 +239,9 @@ export default function ProjectSettings() {
 }
 
 const SecuritySwitchSetting: FC<{
-  project: Project & WithDecryptedProjectSecurity;
+  item: WithDecryptedSecurity;
   onSuccess: () => void;
-}> = ({ project, onSuccess }) => {
+}> = ({ item, onSuccess }) => {
   const fetcher = useFetcher();
 
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -244,9 +250,9 @@ const SecuritySwitchSetting: FC<{
     <fetcher.Form method="put" ref={formRef}>
       <input type="hidden" name="fields" value="secure" />
       <SecuritySwitch
-        tooltip="You need to setup a password in order to secure this project."
-        isSecure={project.isSecure}
-        disabled={!project.security}
+        tooltip="You need to setup a password in order to secure this album."
+        isSecure={item.isSecure}
+        disabled={!item.security}
         onChange={(secure) => {
           const formData = new FormData(formRef.current!);
 

@@ -90,7 +90,9 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     projects,
     favouriteIds: favorites.map(({ projectId }) => projectId),
     isCurrentUser,
-    albums: albums.filter(({ projects }) => !!projects.length),
+    albums: isCurrentUser
+      ? albums
+      : albums.filter(({ projects }) => !!projects.length),
     user,
   });
 };
