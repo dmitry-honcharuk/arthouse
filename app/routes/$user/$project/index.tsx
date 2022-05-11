@@ -1,9 +1,15 @@
+import {
+  FolderOutlined,
+  GridViewOutlined,
+  PersonPin,
+} from '@mui/icons-material';
 import { ProjectItemType, ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { z } from 'zod';
+import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { countFavourites } from '~/modules/favorites/count-favourites';
 import { getFavorites } from '~/modules/favorites/get-favorites';
 import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
@@ -14,6 +20,7 @@ import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import type { WithProjectSecurity } from '~/modules/projects/types/with-project-security';
 import { validateCreateItemFormData } from '~/modules/projects/utils/validate-create-item-form-data';
+import { getUserPath } from '~/modules/users/get-user-path';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { ActionBuilder } from '~/server/action-builder.server';
@@ -119,6 +126,26 @@ export default function ProjectPage() {
       isFavorite={isFavorite}
       currentUser={currentUser}
       favouritesCount={favouritesCount}
+      breadcrumbs={
+        <Breadcrumbs
+          items={[
+            {
+              icon: <GridViewOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Browse',
+              link: '/',
+            },
+            {
+              icon: <PersonPin sx={{ mr: 0.5 }} fontSize="small" />,
+              label: project.user.profile?.nickname ?? null,
+              link: `/${getUserPath(project.user)}`,
+            },
+            {
+              icon: <FolderOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: project.name,
+            },
+          ]}
+        />
+      }
     />
   );
 }
