@@ -1,3 +1,8 @@
+import {
+  AddBoxOutlined,
+  GridViewOutlined,
+  PersonPin,
+} from '@mui/icons-material';
 import { Button, Paper, TextField, Typography } from '@mui/material';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect, Response } from '@remix-run/node';
@@ -8,6 +13,8 @@ import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { createAlbum } from '~/modules/albums/create-album';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
+import { Breadcrumbs } from '~/modules/common/breadcrumbs';
+import PageLayout from '~/modules/common/page-layout';
 import { getURI } from '~/modules/common/utils/getURI';
 import { ProjectsAutocomplete } from '~/modules/projects/components/projects-autocomplete';
 import { getProjects } from '~/modules/projects/get-projects';
@@ -88,63 +95,86 @@ export default function NewAlbum() {
   }, [currentUser, slug]);
 
   return (
-    <Form className="flex flex-col gap-4 max-w-2xl pt-10" method="post">
-      <Typography variant="h3">Create new album</Typography>
-
-      <Paper className="p-4 flex flex-col gap-3" elevation={3}>
-        <TextField
-          autoFocus
-          name="name"
-          label="Album name"
-          required
-          onChange={({ target }) => {
-            if (!dirtyRef.current) {
-              setSlug(getURI(target.value));
-            }
-          }}
+    <PageLayout
+      breadcrumbs={
+        <Breadcrumbs
+          items={[
+            {
+              icon: <GridViewOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Browse',
+              link: '/',
+            },
+            {
+              icon: <PersonPin sx={{ mr: 0.5 }} fontSize="small" />,
+              label: currentUser.profile?.nickname ?? null,
+              link: `/${getUserPath(currentUser)}`,
+            },
+            {
+              icon: <AddBoxOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Album',
+            },
+          ]}
         />
+      }
+    >
+      <Form className="flex flex-col gap-4 max-w-2xl" method="post">
+        <Typography variant="h3">Create new album</Typography>
 
-        <TextField
-          name="slug"
-          label="Slug"
-          value={slug}
-          helperText={
-            link ? (
-              <span className="inline-flex flex-col">
-                <span>
-                  Short name for your album. This should be unique within your
-                  account.
-                </span>
-                {slug && (
+        <Paper className="p-4 flex flex-col gap-3" elevation={3}>
+          <TextField
+            autoFocus
+            name="name"
+            label="Album name"
+            required
+            onChange={({ target }) => {
+              if (!dirtyRef.current) {
+                setSlug(getURI(target.value));
+              }
+            }}
+          />
+
+          <TextField
+            name="slug"
+            label="Slug"
+            value={slug}
+            helperText={
+              link ? (
+                <span className="inline-flex flex-col">
                   <span>
-                    <span>Your album could be accessed at</span>{' '}
-                    <span className="py-1 px-2 bg-slate-100 rounded self-start">
-                      {link}
-                    </span>
+                    Short name for your album. This should be unique within your
+                    account.
                   </span>
-                )}
-              </span>
-            ) : null
-          }
-          onChange={({ target }) => {
-            setSlug(getURI(target.value));
-
-            if (!dirtyRef.current) {
-              dirtyRef.current = true;
+                  {slug && (
+                    <span>
+                      <span>Your album could be accessed at</span>{' '}
+                      <span className="py-1 px-2 bg-slate-100 rounded self-start">
+                        {link}
+                      </span>
+                    </span>
+                  )}
+                </span>
+              ) : null
             }
-          }}
-        />
+            onChange={({ target }) => {
+              setSlug(getURI(target.value));
 
-        {projectIds.map((id) => (
-          <input key={id} type="hidden" name="projects" value={id} />
-        ))}
+              if (!dirtyRef.current) {
+                dirtyRef.current = true;
+              }
+            }}
+          />
 
-        <ProjectsAutocomplete projects={projects} onChange={setProjectIds} />
+          {projectIds.map((id) => (
+            <input key={id} type="hidden" name="projects" value={id} />
+          ))}
 
-        <Button variant="contained" className="self-end" type="submit">
-          Create
-        </Button>
-      </Paper>
-    </Form>
+          <ProjectsAutocomplete projects={projects} onChange={setProjectIds} />
+
+          <Button variant="contained" className="self-end" type="submit">
+            Create
+          </Button>
+        </Paper>
+      </Form>
+    </PageLayout>
   );
 }

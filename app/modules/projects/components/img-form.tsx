@@ -14,9 +14,10 @@ interface Props {
   onSuccess: () => void;
   onCancel?: () => void;
   item?: ProjectItem;
+  action?: string;
 }
 
-export const ImageForm: FC<Props> = ({ item, onSuccess, onCancel }) => {
+export const ImageForm: FC<Props> = ({ item, onSuccess, onCancel, action }) => {
   const [images, setImages] = useState<ImageListType>([]);
   const fetcher = useFetcher<ProjectItem>();
 
@@ -51,7 +52,7 @@ export const ImageForm: FC<Props> = ({ item, onSuccess, onCancel }) => {
         }
 
         fetcher.submit(formData, {
-          ...(item && { action: `${location.pathname}/${item.id}` }),
+          action,
           method: item ? 'put' : 'post',
           encType: 'multipart/form-data',
         });

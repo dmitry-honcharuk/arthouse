@@ -1,16 +1,25 @@
-import { ArrowBackIosNew, Key, LockOutlined } from '@mui/icons-material';
-import { Box, Button, Card, CardContent } from '@mui/material';
+import {
+  FolderOutlined,
+  GridViewOutlined,
+  Key,
+  LockOutlined,
+  PersonPin,
+  SettingsOutlined,
+} from '@mui/icons-material';
+import { Box, Card, CardContent } from '@mui/material';
 import type { Project } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { Link, useFetcher, useLoaderData } from '@remix-run/react';
+import { useFetcher, useLoaderData } from '@remix-run/react';
 import { castArray } from 'lodash';
 import type { FC } from 'react';
 import * as React from 'react';
 import { useRef } from 'react';
 import { z } from 'zod';
+import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditableCardSection } from '~/modules/common/editable-card-section';
+import PageLayout from '~/modules/common/page-layout';
 import { SecuritySwitch } from '~/modules/common/security-switch';
 import { PasswordSetting } from '~/modules/projects/components/project-settings/password-setting';
 import { getDecryptedProjectSecurity } from '~/modules/projects/get-decrypted-project-security';
@@ -22,6 +31,7 @@ import type { ProjectWithItems } from '~/modules/projects/types/project-with-ite
 import type { WithDecryptedProjectSecurity } from '~/modules/projects/types/with-decrypted-project-security';
 import { updateProject } from '~/modules/projects/update-project';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
+import { getUserPath } from '~/modules/users/get-user-path';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { ActionBuilder } from '~/server/action-builder.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
@@ -154,14 +164,33 @@ export default function ProjectSettings() {
   const { project } = useLoaderData<LoaderData>();
 
   return (
-    <>
-      <div className="pt-4">
-        <Link to={`/${getProjectPath(project, project.user)}`}>
-          <Button startIcon={<ArrowBackIosNew />} color="inherit">
-            {project.name}
-          </Button>
-        </Link>
-      </div>
+    <PageLayout
+      breadcrumbs={
+        <Breadcrumbs
+          items={[
+            {
+              icon: <GridViewOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Browse',
+              link: '/',
+            },
+            {
+              icon: <PersonPin sx={{ mr: 0.5 }} fontSize="small" />,
+              label: project.user.profile?.nickname ?? null,
+              link: `/${getUserPath(project.user)}`,
+            },
+            {
+              icon: <FolderOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: project.name,
+              link: `/${getProjectPath(project, project.user)}`,
+            },
+            {
+              icon: <SettingsOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Settings',
+            },
+          ]}
+        />
+      }
+    >
       <main className="flex flex-col gap-10">
         <Card variant="outlined">
           <CardContent>
@@ -211,7 +240,7 @@ export default function ProjectSettings() {
           </CardContent>
         </Card>
       </main>
-    </>
+    </PageLayout>
   );
 }
 

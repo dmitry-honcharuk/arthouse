@@ -1,4 +1,9 @@
-import { AddBoxOutlined } from '@mui/icons-material';
+import {
+  AddBoxOutlined,
+  FolderCopyOutlined,
+  GridViewOutlined,
+  PersonPin,
+} from '@mui/icons-material';
 import {
   Button,
   Card,
@@ -9,6 +14,7 @@ import {
   MenuItem,
   OutlinedInput,
   Select,
+  Stack,
   Typography,
 } from '@mui/material';
 import type { Album, Project } from '@prisma/client';
@@ -23,13 +29,15 @@ import { z } from 'zod';
 import { prisma } from '~/db.server';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
-import { UserPersonalNavigation } from '~/modules/common/user-personal-navigation';
+import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import type { WithProjects } from '~/modules/projects/types/with-projects';
+import { UserLayout } from '~/modules/users/components/user-layout';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
+import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getSessionUser } from '~/server/get-session.user.server';
 
@@ -40,6 +48,7 @@ interface LoaderData {
   projects: (Project & WithUser)[];
   favouriteIds: string[];
   albums: FullAlbum[];
+  user: UserWithProfile;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -82,11 +91,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     favouriteIds: favorites.map(({ projectId }) => projectId),
     isCurrentUser,
     albums: albums.filter(({ projects }) => !!projects.length),
+    user,
   });
 };
 
 export default function UserProjects() {
-  const { projects, isCurrentUser, albums, favouriteIds } =
+  const { projects, isCurrentUser, albums, favouriteIds, user } =
     useLoaderData<LoaderData>();
 
   const [selectedAlbum, setSelectedAlbum] = useState<FullAlbum | 'all'>('all');
@@ -94,88 +104,113 @@ export default function UserProjects() {
   const showAll = selectedAlbum === 'all';
 
   return (
-    <>
-      <UserPersonalNavigation />
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {showAll ? (
-            <Typography variant="h4">All projects</Typography>
-          ) : (
-            <MaterialLink
-              component={Link}
-              variant="h4"
-              color="inherit"
-              to={`/${getAlbumPath(selectedAlbum, selectedAlbum.user)}`}
-            >
-              {selectedAlbum.name}
-            </MaterialLink>
-          )}
-        </div>
-
-        {isCurrentUser && (
-          <Link to="/albums/new" className="block h-full">
-            <Button variant="outlined" startIcon={<AddBoxOutlined />}>
-              Album
-            </Button>
-          </Link>
-        )}
-      </div>
-      <FormControl>
-        <InputLabel id="demo-multiple-name-label">Album</InputLabel>
-        <Select
-          labelId="demo-multiple-name-label"
-          id="demo-multiple-name"
-          value={showAll ? 'all' : selectedAlbum.id}
-          onChange={({ target }) => {
-            const selected =
-              target.value === 'all'
-                ? 'all'
-                : albums.find(({ id }) => id === target.value);
-
-            setSelectedAlbum(selected!);
-          }}
-          input={<OutlinedInput label="Name" />}
+    <UserLayout
+      breadcrumbs={
+        <Breadcrumbs
+          items={[
+            {
+              icon: <GridViewOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Browse',
+              link: '/',
+            },
+            {
+              icon: <PersonPin sx={{ mr: 0.5 }} fontSize="small" />,
+              label: user.profile?.nickname ?? null,
+            },
+            {
+              icon: <FolderCopyOutlined sx={{ mr: 0.5 }} fontSize="small" />,
+              label: 'Projects',
+            },
+          ]}
+        />
+      }
+    >
+      <Stack gap={3}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
         >
-          <MenuItem value="all">All projects</MenuItem>
-          {albums.map(({ id, name }) => (
-            <MenuItem key={id} value={id}>
-              {name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      <Projects>
-        {isCurrentUser && (
-          <Card sx={{ minHeight: 200 }} variant="outlined">
-            <Link to="/projects/new" className="block h-full">
-              <CardActionArea className="flex h-full items-center">
-                <Typography
-                  color="primary"
-                  className="flex items-center gap-1 justify-center text-lg"
-                >
-                  <AddBoxOutlined />
-                  <span>New Project</span>
-                </Typography>
-              </CardActionArea>
-            </Link>
-          </Card>
-        )}
+          <div className="flex items-center gap-2">
+            {showAll ? (
+              <Typography variant="h4">All projects</Typography>
+            ) : (
+              <MaterialLink
+                component={Link}
+                variant="h4"
+                color="inherit"
+                to={`/${getAlbumPath(selectedAlbum, selectedAlbum.user)}`}
+              >
+                {selectedAlbum.name}
+              </MaterialLink>
+            )}
+          </div>
 
-        {(showAll ? projects : selectedAlbum.projects).map(
-          ({ user, ...project }) => {
-            return (
-              <ProjectCard
-                link={getProjectPath(project)}
-                key={project.id}
-                showStatus={isCurrentUser}
-                showIsSecured={isCurrentUser}
-                showFavourite={favouriteIds.includes(project.id)}
-                project={project}
-              />
-            );
-          }
-        )}
-      </Projects>
-    </>
+          {isCurrentUser && (
+            <Link to="/albums/new" className="block h-full">
+              <Button variant="outlined" startIcon={<AddBoxOutlined />}>
+                Album
+              </Button>
+            </Link>
+          )}
+        </Stack>
+        <FormControl>
+          <InputLabel id="demo-multiple-name-label">Album</InputLabel>
+          <Select
+            labelId="demo-multiple-name-label"
+            id="demo-multiple-name"
+            value={showAll ? 'all' : selectedAlbum.id}
+            onChange={({ target }) => {
+              const selected =
+                target.value === 'all'
+                  ? 'all'
+                  : albums.find(({ id }) => id === target.value);
+
+              setSelectedAlbum(selected!);
+            }}
+            input={<OutlinedInput label="Name" />}
+          >
+            <MenuItem value="all">All projects</MenuItem>
+            {albums.map(({ id, name }) => (
+              <MenuItem key={id} value={id}>
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Projects>
+          {isCurrentUser && (
+            <Card sx={{ minHeight: 200 }} variant="outlined">
+              <Link to="/projects/new" className="block h-full">
+                <CardActionArea className="flex h-full items-center">
+                  <Typography
+                    color="primary"
+                    className="flex items-center gap-1 justify-center text-lg"
+                  >
+                    <AddBoxOutlined />
+                    <span>New Project</span>
+                  </Typography>
+                </CardActionArea>
+              </Link>
+            </Card>
+          )}
+
+          {(showAll ? projects : selectedAlbum.projects).map(
+            ({ user, ...project }) => {
+              return (
+                <ProjectCard
+                  link={getProjectPath(project)}
+                  key={project.id}
+                  showStatus={isCurrentUser}
+                  showIsSecured={isCurrentUser}
+                  showFavourite={favouriteIds.includes(project.id)}
+                  project={project}
+                />
+              );
+            }
+          )}
+        </Projects>
+      </Stack>
+    </UserLayout>
   );
 }
