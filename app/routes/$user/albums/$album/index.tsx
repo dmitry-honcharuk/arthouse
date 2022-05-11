@@ -8,7 +8,7 @@ import {
 import { Button, Paper, Stack, Typography } from '@mui/material';
 import type { Album, Project } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import { castArray } from 'lodash';
 import * as React from 'react';
@@ -31,6 +31,7 @@ import type { WithProjects } from '~/modules/projects/types/with-projects';
 import { getUserPath } from '~/modules/users/get-user-path';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { WithUser } from '~/modules/users/types/with-user';
+import { getAlbumAuthSession } from '~/server/album-auth-session.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
@@ -66,6 +67,21 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   }
 
   const isCurrentUser = currentUser?.id === album.userId;
+
+  const session = await getAlbumAuthSession(request.headers.get('Cookie'));
+
+  if (!isCurrentUser && album.isSecure && !album.security) {
+    throw new Response(null, { status: 404 });
+  }
+
+  if (
+    !isCurrentUser &&
+    album.isSecure &&
+    album.security &&
+    session.get(album.id) !== album.security.passwordVersion
+  ) {
+    return redirect(`/${getAlbumPath(album, album.user)}/authorize`);
+  }
 
   return json<LoaderData>({
     album,

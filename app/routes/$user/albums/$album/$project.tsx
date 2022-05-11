@@ -6,7 +6,7 @@ import {
 } from '@mui/icons-material';
 import type { Album } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { z } from 'zod';
@@ -24,6 +24,7 @@ import { getUserPath } from '~/modules/users/get-user-path';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
+import { getAlbumAuthSession } from '~/server/album-auth-session.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 interface LoaderData {
@@ -61,11 +62,32 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     getFavorites(user),
   ]);
 
-  if (!album || !project) {
+  if (
+    !album ||
+    !project ||
+    !album.projects.map(({ id }) => id).includes(project.id)
+  ) {
     throw new Response(null, { status: 404 });
   }
 
   const isCurrentUser = currentUser?.id === album.userId;
+
+  const session = await getAlbumAuthSession(request.headers.get('Cookie'));
+
+  if (!isCurrentUser && album.isSecure && !album.security) {
+    throw new Response(null, { status: 404 });
+  }
+
+  if (
+    !isCurrentUser &&
+    album.isSecure &&
+    album.security &&
+    session.get(album.id) !== album.security.passwordVersion
+  ) {
+    return redirect(
+      `/${getAlbumPath(album, album.user)}/authorize?project=${projectID}`
+    );
+  }
 
   return json<LoaderData>({
     project,

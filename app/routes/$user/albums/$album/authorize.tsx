@@ -11,107 +11,142 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import type { Project } from '@prisma/client';
+import type { Album } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { z } from 'zod';
+import { getAlbumPath } from '~/modules/albums/get-album-path';
+import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { TogglableContent } from '~/modules/common/togglable-content';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
-import { getProjectPath } from '~/modules/projects/get-project-path';
-import { getUserProject } from '~/modules/projects/get-user-project';
+import { getUserByIdentifier } from '~/modules/users/getUserById';
 import { ActionBuilder } from '~/server/action-builder.server';
-import { FormDataHandler } from '~/server/form-data-handler.server';
 import {
-  commitProjectAuthSession,
-  getProjectAuthSession,
-} from '~/server/project-auth-session.server';
+  commitAlbumAuthSession,
+  getAlbumAuthSession,
+} from '~/server/album-auth-session.server';
+import { FormDataHandler } from '~/server/form-data-handler.server';
+import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
-type LoaderData = { project: Project };
+interface LoaderData {
+  album: Album;
+  projectIdentifier: string | null;
+}
 
 export const loader: LoaderFunction = async ({ request, params }) => {
-  const { user, project: projectID } = z
+  const projectIdentifier = new URL(request.url).searchParams.get('project');
+
+  const { user: userID, album: albumID } = z
     .object({
+      album: z.string(),
       user: z.string(),
-      project: z.string(),
     })
     .parse(params);
 
-  const project = await getUserProject(user, projectID);
+  const user = await getUserByIdentifier(userID);
 
-  if (!project) {
+  if (!user) {
     throw new Response(null, { status: 404 });
   }
 
-  const session = await getProjectAuthSession(request.headers.get('Cookie'));
+  const [currentUser, album] = await Promise.all([
+    getLoggedInUser(request),
+    getUserAlbum(user, albumID),
+  ]);
 
-  if (
-    !project.isSecure ||
-    !project.security ||
-    session.get(project.id) === project.security.passwordVersion
-  ) {
-    return redirect(`/${getProjectPath(project, project.user)}`);
+  if (!album) {
+    throw new Response(null, { status: 404 });
   }
 
-  return json<LoaderData>({ project });
+  const isCurrentUser = currentUser?.id === album.userId;
+
+  const albumAuthSession = await getAlbumAuthSession(
+    request.headers.get('Cookie')
+  );
+
+  if (
+    isCurrentUser ||
+    !album.isSecure ||
+    !album.security ||
+    albumAuthSession.get(album.id) === album.security.passwordVersion
+  ) {
+    const albumPath = `/${getAlbumPath(album, album.user)}`;
+
+    return redirect(
+      projectIdentifier ? `${albumPath}/${projectIdentifier}` : albumPath
+    );
+  }
+
+  return json<LoaderData>({ album, projectIdentifier });
 };
 
 export const action: ActionFunction = async (actionDetails) => {
   const formDataHandler = new FormDataHandler(actionDetails.request);
-  const projectAuthSession = await getProjectAuthSession(
+  const albumAuthSession = await getAlbumAuthSession(
     actionDetails.request.headers.get('Cookie')
   );
 
-  const { user, project: projectID } = z
+  const { user, album: albumID } = z
     .object({
       user: z.string(),
-      project: z.string(),
+      album: z.string(),
     })
     .parse(actionDetails.params);
 
-  const project = await getUserProject(user, projectID);
+  const album = await getUserAlbum(user, albumID);
 
-  if (!project) {
+  if (!album) {
     throw new Response(null, { status: 404 });
   }
 
   return new ActionBuilder(actionDetails)
     .use('PUT', async () => {
-      const { projectId, password: passwordAttempt } =
-        await formDataHandler.validate(
-          z.object({
-            projectId: z.string(),
-            password: z.string(),
-          })
-        );
+      const {
+        albumId,
+        password: passwordAttempt,
+        projectIdentifier,
+      } = await formDataHandler.validate(
+        z.object({
+          albumId: z.string(),
+          password: z.string(),
+          projectIdentifier: z.string().optional(),
+        })
+      );
 
-      if (!project.security) {
-        return redirect(`/${getProjectPath(project, project.user)}`);
+      const albumPath = `/${getAlbumPath(album, album.user)}`;
+
+      const redirectPath = projectIdentifier
+        ? `${albumPath}/${projectIdentifier}`
+        : albumPath;
+
+      if (!album.security) {
+        return redirect(redirectPath);
       }
 
-      const { password } = await getDecryptedSecurity(project.security);
+      const { password } = await getDecryptedSecurity(album.security);
 
       const isPasswordValid = passwordAttempt === password;
 
       if (isPasswordValid) {
-        projectAuthSession.set(projectId, project.security.passwordVersion);
+        albumAuthSession.set(albumId, album.security.passwordVersion);
       } else {
-        projectAuthSession.unset(projectId);
+        albumAuthSession.unset(albumId);
       }
 
       const headers = {
-        'Set-Cookie': await commitProjectAuthSession(projectAuthSession),
+        'Set-Cookie': await commitAlbumAuthSession(albumAuthSession),
       };
 
       if (isPasswordValid) {
-        return redirect(`/${getProjectPath(project, project.user)}`, {
+        return redirect(redirectPath, {
           headers,
         });
       }
 
       return json(
-        { password: 'Password is invalid.' },
+        { password: 'Password is invalid.', projectIdentifier },
         {
           status: 401,
           headers,
@@ -122,8 +157,13 @@ export const action: ActionFunction = async (actionDetails) => {
 };
 
 export default function AuthorizeProjectPage() {
-  const { project } = useLoaderData<LoaderData>();
-  const action = useActionData<{ password?: string }>();
+  const { album, projectIdentifier } = useLoaderData<LoaderData>();
+  const action = useActionData<{
+    password?: string;
+    projectIdentifier?: string;
+  }>();
+
+  const projectID = action?.projectIdentifier || projectIdentifier;
 
   return (
     <Stack component="main" alignItems="center" paddingY={8}>
@@ -139,10 +179,10 @@ export default function AuthorizeProjectPage() {
         <Stack gap={4}>
           <div>
             <Typography variant="h4">
-              <span>{project.name}</span>
+              <span>{album.name}</span>
             </Typography>
             <Typography>
-              You need to enter a password in order to see this project
+              You need to enter a password in order to see this album
             </Typography>
           </div>
           <Stack component={Form} method="put" direction="column" gap={2}>
@@ -177,7 +217,10 @@ export default function AuthorizeProjectPage() {
               )}
             </TogglableContent>
 
-            <input type="hidden" name="projectId" value={project.id} />
+            <input type="hidden" name="albumId" value={album.id} />
+            {projectID && (
+              <input type="hidden" name="projectIdentifier" value={projectID} />
+            )}
 
             <div className="text-right">
               <Button type="submit" variant="outlined">
