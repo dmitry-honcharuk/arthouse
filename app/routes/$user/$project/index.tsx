@@ -26,7 +26,7 @@ import type { WithUser } from '~/modules/users/types/with-user';
 import { ActionBuilder } from '~/server/action-builder.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
-import { getProjectAuthSession } from '~/server/project-auth-sessions.server';
+import { getProjectAuthSession } from '~/server/project-auth-session.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -62,6 +62,10 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   }
 
   const session = await getProjectAuthSession(request.headers.get('Cookie'));
+
+  if (!isCurrentUser && project.isSecure && !project.security) {
+    throw new Response(null, { status: 404 });
+  }
 
   if (
     !isCurrentUser &&

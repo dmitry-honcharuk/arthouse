@@ -3,8 +3,13 @@ import { getUserByIdentifier } from '~/modules/users/getUserById';
 
 export async function getUserAlbums(
   userId: string,
-  projectDetails?: {
-    isSecure?: boolean;
+  details?: {
+    albums?: {
+      isSecure?: boolean;
+    };
+    project?: {
+      isSecure?: boolean;
+    };
   }
 ) {
   const user = await getUserByIdentifier(userId);
@@ -14,10 +19,13 @@ export async function getUserAlbums(
   }
 
   return await prisma.album.findMany({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+      isSecure: details?.albums?.isSecure,
+    },
     include: {
       projects: {
-        where: { isSecure: projectDetails?.isSecure },
+        where: { isSecure: details?.project?.isSecure },
         include: { user: { include: { profile: true } } },
       },
       user: { include: { profile: true } },

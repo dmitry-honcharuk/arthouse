@@ -3,7 +3,7 @@ import {
   FavoriteBorderOutlined,
   FolderCopyOutlined,
 } from '@mui/icons-material';
-import { Tab, Tabs } from '@mui/material';
+import { Hidden, Tab, Tabs } from '@mui/material';
 import { Link, useMatches } from '@remix-run/react';
 import type { FC } from 'react';
 import * as React from 'react';
@@ -27,54 +27,115 @@ export const UserPersonalNavigation: FC = () => {
   const userPath = getUserPath(user);
 
   return (
-    <Tabs
-      value={tab}
-      onChange={(_, newValue) => setTab(newValue)}
-      aria-label="icon position tabs example"
-      orientation="vertical"
-    >
-      <Tab
-        icon={<FolderCopyOutlined />}
-        to={`/${userPath}`}
-        component={Link}
-        value={Nav.Projects}
-        iconPosition="end"
-        label="projects"
-        sx={{
-          '&.MuiButtonBase-root': {
-            justifyContent: 'flex-end',
-          },
-        }}
-      />
-      {isCurrentUser && (
-        <Tab
-          icon={<FavoriteBorderOutlined />}
-          to={`/${userPath}/favorites`}
-          value={Nav.Favourites}
-          component={Link}
-          iconPosition="end"
-          label="favorites"
+    <>
+      <Hidden smDown>
+        <Tabs
+          value={tab}
+          onChange={(_, newValue) => setTab(newValue)}
+          aria-label="icon position tabs example"
+          orientation="vertical"
+        >
+          <Tab
+            icon={<FolderCopyOutlined />}
+            to={`/${userPath}`}
+            component={Link}
+            value={Nav.Projects}
+            iconPosition="end"
+            label="projects"
+            sx={{
+              '&.MuiButtonBase-root': {
+                justifyContent: 'flex-end',
+              },
+            }}
+          />
+          {isCurrentUser && (
+            <Tab
+              icon={<FavoriteBorderOutlined />}
+              to={`/${userPath}/favorites`}
+              value={Nav.Favourites}
+              component={Link}
+              iconPosition="end"
+              label="favorites"
+              sx={{
+                '&.MuiButtonBase-root': {
+                  justifyContent: 'flex-end',
+                },
+              }}
+            />
+          )}
+          <Tab
+            icon={<BadgeOutlined />}
+            to={`/${userPath}/profile`}
+            value={Nav.Profile}
+            component={Link}
+            iconPosition="end"
+            label="profile"
+            sx={{
+              '&.MuiButtonBase-root': {
+                justifyContent: 'flex-end',
+              },
+            }}
+          />
+        </Tabs>
+      </Hidden>
+      <Hidden smUp>
+        <Tabs
+          value={tab}
+          onChange={(_, newValue) => setTab(newValue)}
+          aria-label="icon position tabs example"
+          variant="scrollable"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{
-            '&.MuiButtonBase-root': {
-              justifyContent: 'flex-end',
+            '.MuiTabs-scrollButtons.Mui-disabled': {
+              opacity: 0.3,
             },
           }}
-        />
-      )}
-      <Tab
-        icon={<BadgeOutlined />}
-        to={`/${userPath}/profile`}
-        value={Nav.Profile}
-        component={Link}
-        iconPosition="end"
-        label="profile"
-        sx={{
-          '&.MuiButtonBase-root': {
-            justifyContent: 'flex-end',
-          },
-        }}
-      />
-    </Tabs>
+        >
+          <Tab
+            icon={<FolderCopyOutlined />}
+            to={`/${userPath}`}
+            component={Link}
+            value={Nav.Projects}
+            iconPosition="end"
+            label="projects"
+            sx={{
+              '&.MuiButtonBase-root': {
+                justifyContent: 'flex-end',
+              },
+            }}
+          />
+          {isCurrentUser && (
+            <Tab
+              icon={<FavoriteBorderOutlined />}
+              to={`/${userPath}/favorites`}
+              value={Nav.Favourites}
+              component={Link}
+              iconPosition="end"
+              label="favorites"
+              sx={{
+                '&.MuiButtonBase-root': {
+                  justifyContent: 'flex-end',
+                },
+              }}
+            />
+          )}
+          <Tab
+            icon={<BadgeOutlined />}
+            to={`/${userPath}/profile`}
+            value={Nav.Profile}
+            component={Link}
+            iconPosition="end"
+            label="profile"
+            sx={{
+              '&.MuiButtonBase-root': {
+                justifyContent: 'flex-end',
+              },
+            }}
+          />
+        </Tabs>
+      </Hidden>
+    </>
   );
 };
 

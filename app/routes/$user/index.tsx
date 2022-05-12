@@ -81,7 +81,10 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   });
 
   const albums = await getUserAlbums(user.id, {
-    ...(!isCurrentUser && { isSecure: false }),
+    ...(!isCurrentUser && {
+      project: { isSecure: false },
+      albums: { isSecure: false },
+    }),
   });
 
   const favorites = currentUser ? await getFavorites(currentUser.id) : [];
