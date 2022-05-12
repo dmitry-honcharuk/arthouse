@@ -7,12 +7,14 @@ export interface Details extends Partial<Omit<Album, 'id' | 'userId'>> {
 
 export async function updateAlbum(
   albumId: string,
-  { projectIds, name }: Details
+  { projectIds, name, slug, isSecure }: Details
 ) {
   return prisma.album.update({
     where: { id: albumId },
     data: {
       name,
+      slug,
+      isSecure,
       projects: {
         set: projectIds?.map((id) => ({ id })),
       },

@@ -62,7 +62,7 @@ export const ProjectPublicityForm: FC<props> = ({
             </div>
           }
           isSecure={project.isSecure}
-          disabled={!project.projectSecurity}
+          disabled={!project.security}
           onChange={(secure) => {
             fetcher.submit(
               { fields: 'secure', secure: String(secure) },

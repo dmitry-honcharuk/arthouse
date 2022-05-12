@@ -3,17 +3,17 @@ import {
   FolderCopyOutlined,
   GridViewOutlined,
   PersonPin,
+  SettingsOutlined,
 } from '@mui/icons-material';
-import { Button, Paper, Typography } from '@mui/material';
+import { Button, Paper, Stack, Typography } from '@mui/material';
 import type { Album, Project } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
+import { Link, useLoaderData } from '@remix-run/react';
 import { castArray } from 'lodash';
 import * as React from 'react';
 import { z } from 'zod';
 import { AlbumProjectsForm } from '~/modules/albums/components/album-projects-form';
-import { AlbumTitleForm } from '~/modules/albums/components/album-title-form';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
@@ -165,28 +165,25 @@ export default function AlbumScreen() {
       }
     >
       <div className="flex flex-col gap-8">
-        <div className="flex gap-2 items-center">
-          <TogglableContent>
-            {({ isEnabled, disable, enable }) => {
-              if (!isEnabled) {
-                return (
-                  <div className="flex items-center gap-2">
-                    <Typography variant="h4">{album.name}</Typography>
-                    {isCurrentUser && <EditButton onClick={enable} />}
-                  </div>
-                );
-              }
-
-              return (
-                <AlbumTitleForm
-                  onSubmit={disable}
-                  onCancel={disable}
-                  album={album}
-                />
-              );
-            }}
-          </TogglableContent>
-        </div>
+        <Stack
+          direction="row"
+          gap={1}
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Typography variant="h4">{album.name}</Typography>
+          {isCurrentUser && (
+            <Link to={`/${getAlbumPath(album, album.user)}/settings`}>
+              <Button
+                type="submit"
+                startIcon={<SettingsOutlined />}
+                variant="outlined"
+              >
+                Album Settings
+              </Button>
+            </Link>
+          )}
+        </Stack>
 
         <div>
           <TogglableContent>
@@ -236,7 +233,7 @@ export default function AlbumScreen() {
 
               return (
                 <>
-                  <div className="flex justify-between mb-3">
+                  <div className="flex gap-4 mb-3">
                     {isCurrentUser && (
                       <Typography variant="h5">Projects</Typography>
                     )}

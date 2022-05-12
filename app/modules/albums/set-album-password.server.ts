@@ -2,13 +2,13 @@ import { z } from 'zod';
 import { prisma } from '~/db.server';
 import { encrypt } from '~/modules/crypto/encrypt.server';
 
-export async function setProjectPassword(projectId: string, password: string) {
+export async function setAlbumPassword(albumId: string, password: string) {
   const secretKey = z.string().parse(process.env.PROJECT_PASSWORD_KEY);
 
   const { content, iv } = await encrypt(password, secretKey);
 
-  return prisma.project.update({
-    where: { id: projectId },
+  return prisma.album.update({
+    where: { id: albumId },
     data: {
       security: {
         upsert: {

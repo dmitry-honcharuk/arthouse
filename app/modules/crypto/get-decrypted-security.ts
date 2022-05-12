@@ -1,13 +1,13 @@
-import type { ProjectSecurity } from '@prisma/client';
 import { z } from 'zod';
 import { decrypt } from '~/modules/crypto/decrypt.server';
-import type { DecryptedProjectSecurity } from '~/modules/projects/types/decrypted-project-security';
+import type { WithDecryptedPassword } from '~/modules/crypto/types/with-decrypted-password';
+import type { WithEncryptedPassword } from '~/modules/crypto/types/with-encrypted-password';
 
-export async function getDecryptedProjectSecurity({
+export async function getDecryptedSecurity<T extends WithEncryptedPassword>({
   passwordIv,
   passwordHash,
   ...security
-}: ProjectSecurity): Promise<DecryptedProjectSecurity> {
+}: T): Promise<WithDecryptedPassword<T>> {
   const secretKey = z.string().parse(process.env.PROJECT_PASSWORD_KEY);
 
   return {

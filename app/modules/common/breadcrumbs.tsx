@@ -24,7 +24,7 @@ export const Breadcrumbs: FC<Props> = ({ items }) => {
         {items.map(({ icon, label, link }, index) =>
           link ? (
             <MuiLink
-              key={link ?? label ?? index}
+              key={link ?? index}
               component={Link}
               to={link}
               underline="hover"
@@ -36,6 +36,7 @@ export const Breadcrumbs: FC<Props> = ({ items }) => {
             </MuiLink>
           ) : (
             <Typography
+              key={index}
               sx={{ display: 'flex', alignItems: 'center' }}
               color="text.primary"
             >
