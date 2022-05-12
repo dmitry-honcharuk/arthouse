@@ -73,7 +73,7 @@ export const ProfileDetailsSection: FC<{
               <Form
                 onSubmit={() => setIsEdit(false)}
                 className="flex items-start gap-4 grow"
-                method="post"
+                method="put"
               >
                 <input type="hidden" name="fields" value="nickname" />
                 <input type="hidden" name="nickname" value={nickname ?? ''} />

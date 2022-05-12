@@ -6,8 +6,9 @@ import {
 import { Button, Paper, TextField, Typography } from '@mui/material';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
-import { Form, useLoaderData } from '@remix-run/react';
+import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import PageLayout from '~/modules/common/page-layout';
@@ -16,8 +17,9 @@ import { createProject } from '~/modules/projects/create-project';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserPath } from '~/modules/users/get-user-path';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
+import { ActionBuilder } from '~/server/action-builder.server';
+import { FormDataHandler } from '~/server/form-data-handler.server';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
-import { validateFormData } from '~/server/validate-form-data.server';
 
 interface LoaderData {
   currentUser: UserWithProfile;
@@ -29,38 +31,40 @@ export const loader: LoaderFunction = async ({ request }) => {
   });
 };
 
-export const action: ActionFunction = async ({ request }) => {
-  const [user, formData] = await Promise.all([
-    requireLoggedInUser(request),
-    request.formData(),
-  ]);
+export const action: ActionFunction = async (actionDetails) => {
+  return new ActionBuilder(actionDetails)
+    .use('POST', async ({ request }) => {
+      const user = await requireLoggedInUser(request);
+      const formDataHandler = new FormDataHandler(request);
 
-  const { name, caption, slug } = validateFormData(
-    formData,
-    z.object({
-      name: z.string().nonempty(),
-      caption: z.string().optional(),
-      slug: z.string().optional(),
+      const { name, caption, slug } = await formDataHandler.validate(
+        z.object({
+          name: z.string().nonempty('Name is required'),
+          caption: z.string().optional(),
+          slug: z.string().optional(),
+        })
+      );
+
+      const project = await createProject(user.id, {
+        name,
+        caption: caption || null,
+        slug: slug || null,
+      });
+
+      return redirect(getProjectPath(project, user));
     })
-  );
-
-  const project = await createProject(user.id, {
-    name,
-    caption: caption || null,
-    slug: slug || null,
-  });
-
-  return redirect(getProjectPath(project, user));
+    .build();
 };
 
 export default function NewProject() {
   const { currentUser } = useLoaderData<LoaderData>();
-  const [slug, setSlug] = React.useState('');
-  const dirtyRef = React.useRef(false);
+  const actionData = useActionData<{ name: string[] }>();
+  const [slug, setSlug] = useState('');
+  const dirtyRef = useRef(false);
 
-  const [link, setLink] = React.useState('');
+  const [link, setLink] = useState('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     setLink(`${location.host}/${getUserPath(currentUser)}/${slug}`);
   }, [currentUser, slug]);
 
@@ -95,6 +99,9 @@ export default function NewProject() {
             autoFocus
             name="name"
             label="Project name"
+            error={!!actionData?.name}
+            helperText={actionData?.name}
+            required
             onChange={({ target }) => {
               if (!dirtyRef.current) {
                 setSlug(getURI(target.value));

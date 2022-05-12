@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { deleteProjectItem } from '~/modules/projects/delete-project-item';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import { updateProjectItem } from '~/modules/projects/update-project-item';
-import { validateUpdateItemFormData } from '~/modules/projects/utils/validate-update-item-form-data';
 import { ActionBuilder } from '~/server/action-builder.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
 import { requireSessionUser } from '~/server/require-session-user.server';
@@ -51,9 +50,27 @@ export const action: ActionFunction = async (actionDetails) => {
       return json({});
     })
     .use('PUT', async () => {
-      const formData = await FormDataHandler.getRequestFormData(request);
+      const formDataHandler = new FormDataHandler(request);
 
-      const data = validateUpdateItemFormData(formData);
+      const commonFields = {
+        title: z.ostring(),
+        caption: z.ostring(),
+      };
+
+      const data = await formDataHandler.validate(
+        z.union([
+          z.object({
+            ...commonFields,
+            type: z.literal(ProjectItemType.IMAGE),
+            image: z.string().optional(),
+          }),
+          z.object({
+            ...commonFields,
+            type: z.literal(ProjectItemType.YOUTUBE),
+            url: z.string().optional(),
+          }),
+        ])
+      );
 
       await updateProjectItem(item.id, {
         value: data.type === ProjectItemType.IMAGE ? data.image : data.url,

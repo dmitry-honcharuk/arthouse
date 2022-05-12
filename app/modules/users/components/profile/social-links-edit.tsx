@@ -33,7 +33,7 @@ export const SocialLinksEdit: FC<{
 
   return (
     <fetcher.Form
-      method="post"
+      method="put"
       className="flex flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault();
