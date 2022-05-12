@@ -153,7 +153,7 @@ export const ProjectPreviewForm: FC<{ project: Project; action: string }> = ({
                 disabled={fetcher.type === 'actionSubmission'}
                 onClick={() => {
                   fetcher.submit(
-                    { preview: '' },
+                    { fields: 'preview', preview: '' },
                     {
                       method: 'put',
                       action,
