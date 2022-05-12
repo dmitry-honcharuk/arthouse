@@ -17,45 +17,49 @@ import { UserLayout } from '~/modules/users/components/user-layout';
 import { getUserPath } from '~/modules/users/get-user-path';
 import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-context';
 import { updateProfile } from '~/modules/users/update-profile';
+import { ActionBuilder } from '~/server/action-builder.server';
+import { FormDataHandler } from '~/server/form-data-handler.server';
 import { requireSessionUser } from '~/server/require-session-user.server';
-import { validateFormData } from '~/server/validate-form-data.server';
 
-export const action: ActionFunction = async ({ request }) => {
-  const formData = await request.formData();
-  const user = await requireSessionUser(request);
+export const action: ActionFunction = async (actionDetails) => {
+  return new ActionBuilder(actionDetails)
+    .use('PUT', async ({ request }) => {
+      const profileFields: Partial<Omit<Profile, 'id'>> = {};
 
-  const profileFields: Partial<Omit<Profile, 'id'>> = {};
+      const user = await requireSessionUser(request);
+      const formDataHandler = new FormDataHandler(request);
 
-  const {
-    fields: field,
-    nickname,
-    summary,
-    socialLinks,
-  } = validateFormData(
-    formData,
-    z.object({
-      fields: z.union([z.string(), z.array(z.string())]),
-      nickname: z.string().optional(),
-      summary: z.string().optional(),
-      socialLinks: z.union([z.string(), z.array(z.string())]).optional(),
+      const {
+        fields: field,
+        nickname,
+        summary,
+        socialLinks,
+      } = await formDataHandler.validate(
+        z.object({
+          fields: z.union([z.string(), z.array(z.string())]),
+          nickname: z.string().optional(),
+          summary: z.string().optional(),
+          socialLinks: z.union([z.string(), z.array(z.string())]).optional(),
+        })
+      );
+
+      const fields = castArray(field);
+
+      if (fields.includes('summary') && summary) {
+        profileFields.summary = summary;
+      }
+
+      if (fields.includes('socialLinks')) {
+        profileFields.socialLinks = socialLinks ? castArray(socialLinks) : [];
+      }
+
+      if (fields.includes('nickname')) {
+        profileFields.nickname = nickname || null;
+      }
+
+      return json(await updateProfile(user.id, profileFields));
     })
-  );
-
-  const fields = castArray(field);
-
-  if (fields.includes('summary') && summary) {
-    profileFields.summary = summary;
-  }
-
-  if (fields.includes('socialLinks')) {
-    profileFields.socialLinks = socialLinks ? castArray(socialLinks) : [];
-  }
-
-  if (fields.includes('nickname')) {
-    profileFields.nickname = nickname || null;
-  }
-
-  return json(await updateProfile(user.id, profileFields));
+    .build();
 };
 
 export default function UserProfile() {

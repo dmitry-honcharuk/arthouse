@@ -5,8 +5,8 @@ import {
 } from '@mui/icons-material';
 import { Button, Paper, TextField, Typography } from '@mui/material';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
-import { json, redirect, Response } from '@remix-run/node';
-import { Form, useLoaderData } from '@remix-run/react';
+import { json, redirect } from '@remix-run/node';
+import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import { castArray } from 'lodash';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
@@ -21,6 +21,7 @@ import { getProjects } from '~/modules/projects/get-projects';
 import type { FullProject } from '~/modules/projects/types/full-project';
 import { getUserPath } from '~/modules/users/get-user-path';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
+import { ActionBuilder } from '~/server/action-builder.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
 import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
@@ -39,49 +40,51 @@ export const loader: LoaderFunction = async ({ request }) => {
   });
 };
 
-export const action: ActionFunction = async ({ request }) => {
-  const [user, formData] = await Promise.all([
-    requireLoggedInUser(request),
-    request.formData(),
-  ]);
+export const action: ActionFunction = async (actionDetails) => {
+  return new ActionBuilder(actionDetails)
+    .use('POST', async ({ request }) => {
+      const user = await requireLoggedInUser(request, { shouldThrow: true });
+      const formDataHandler = new FormDataHandler(request);
 
-  const {
-    name,
-    slug,
-    projects: project,
-  } = await FormDataHandler.validateFormData(
-    formData,
-    z.object({
-      name: z.string().nonempty(),
-      slug: z.string().optional(),
-      projects: z.union([z.string(), z.array(z.string())]).optional(),
+      const {
+        name,
+        slug,
+        projects: project,
+      } = await formDataHandler.validate(
+        z.object({
+          name: z.string().nonempty('Name is required'),
+          slug: z.string().optional(),
+          projects: z.union([z.string(), z.array(z.string())]).optional(),
+        })
+      );
+
+      const projects = project ? castArray(project) : [];
+
+      if (projects.length) {
+        const userProjectIds = await getProjects({ userId: user.id }).then(
+          (projects) => projects.map(({ id }) => id)
+        );
+
+        if (!projects.every((id) => userProjectIds.includes(id))) {
+          return json({ message: 'Invalid projects' }, { status: 401 });
+        }
+      }
+
+      const album = await createAlbum({
+        userId: user.id,
+        name,
+        slug: slug || null,
+        projectIds: projects,
+      });
+
+      return redirect(getAlbumPath(album, user));
     })
-  );
-
-  const projects = project ? castArray(project) : [];
-
-  if (projects.length) {
-    const userProjectIds = await getProjects({ userId: user.id }).then(
-      (projects) => projects.map(({ id }) => id)
-    );
-
-    if (!projects.every((id) => userProjectIds.includes(id))) {
-      throw new Response('Invalid projects', { status: 401 });
-    }
-  }
-
-  const album = await createAlbum({
-    userId: user.id,
-    name,
-    slug: slug || null,
-    projectIds: projects,
-  });
-
-  return redirect(getAlbumPath(album, user));
+    .build();
 };
 
 export default function NewAlbum() {
   const { projects, currentUser } = useLoaderData<LoaderData>();
+  const actionData = useActionData<{ name: string[] }>();
 
   const [projectIds, setProjectIds] = useState<string[]>([]);
 
@@ -125,6 +128,8 @@ export default function NewAlbum() {
             autoFocus
             name="name"
             label="Album name"
+            error={!!actionData?.name}
+            helperText={actionData?.name}
             required
             onChange={({ target }) => {
               if (!dirtyRef.current) {

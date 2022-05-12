@@ -19,7 +19,6 @@ import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import type { WithProjectSecurity } from '~/modules/projects/types/with-project-security';
-import { validateCreateItemFormData } from '~/modules/projects/utils/validate-create-item-form-data';
 import { getUserPath } from '~/modules/users/get-user-path';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
@@ -103,8 +102,24 @@ export const action: ActionFunction = async (context) => {
 
   return new ActionBuilder(context)
     .use('POST', async () => {
-      const data = validateCreateItemFormData(
-        await formDataHandler.getFormData()
+      const commonFields = {
+        title: z.ostring(),
+        caption: z.ostring(),
+      };
+
+      const data = await formDataHandler.validate(
+        z.union([
+          z.object({
+            ...commonFields,
+            type: z.literal(ProjectItemType.IMAGE),
+            image: z.string(),
+          }),
+          z.object({
+            ...commonFields,
+            type: z.literal(ProjectItemType.YOUTUBE),
+            url: z.string(),
+          }),
+        ])
       );
 
       return json(

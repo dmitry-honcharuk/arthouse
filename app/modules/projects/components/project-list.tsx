@@ -5,10 +5,10 @@ export const Projects = styled('div')(({ theme }) => ({
   gap: theme.spacing(3),
 
   [theme.breakpoints.up('md')]: {
-    gridTemplateColumns: 'repeat(4, 1fr)',
+    gridTemplateColumns: 'repeat(3, 1fr)',
   },
 
   [theme.breakpoints.up('lg')]: {
-    gridTemplateColumns: 'repeat(5, 1fr)',
+    gridTemplateColumns: 'repeat(4, 1fr)',
   },
 }));

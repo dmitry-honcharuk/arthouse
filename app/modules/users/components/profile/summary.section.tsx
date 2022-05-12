@@ -22,7 +22,7 @@ export const SummarySection: FC<{
       render={({ isEdit, setIsEdit }) =>
         isEdit ? (
           <Form
-            method="post"
+            method="put"
             className="flex flex-col gap-2"
             onSubmit={() => setIsEdit(false)}
           >
