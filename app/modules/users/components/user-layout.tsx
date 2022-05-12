@@ -11,7 +11,9 @@ export const UserLayout: FC<{ breadcrumbs?: ReactNode }> = ({
   return (
     <PageLayout breadcrumbs={breadcrumbs}>
       <Stack gap={2} direction={{ xs: 'column', sm: 'row' }}>
-        <UserPersonalNavigation />
+        <div>
+          <UserPersonalNavigation />
+        </div>
 
         <Hidden smDown>
           <Divider orientation="vertical" flexItem variant="middle" />
