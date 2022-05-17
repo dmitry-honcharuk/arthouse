@@ -6,12 +6,25 @@ import {
   PersonPin,
   SettingsOutlined,
 } from '@mui/icons-material';
-import { Box, Card, CardContent } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Typography,
+} from '@mui/material';
 import type { Project } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import {
+  Form,
   useActionData,
   useFetcher,
   useLoaderData,
@@ -20,7 +33,7 @@ import {
 import { castArray } from 'lodash';
 import type { FC } from 'react';
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditableCardSection } from '~/modules/common/editable-card-section';
@@ -29,6 +42,7 @@ import { SecuritySwitch } from '~/modules/common/security-switch';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
 import { GeneralSection } from '~/modules/projects/components/project-settings/general-settings';
 import { PasswordSetting } from '~/modules/projects/components/project-settings/password-setting';
+import { deleteProject } from '~/modules/projects/delete-project';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import { setProjectPassword } from '~/modules/projects/set-project-password.server';
@@ -90,11 +104,11 @@ export const action: ActionFunction = async (actionDetails) => {
     .parse(params);
 
   const [currentUser, project] = await Promise.all([
-    requireLoggedInUser(request),
+    requireLoggedInUser(request, { shouldThrow: true }),
     getUserProject(userID, projectID),
   ]);
 
-  if (!currentUser || !project) {
+  if (!project || project.userId !== currentUser.id) {
     throw new Response(null, { status: 401 });
   }
 
@@ -176,12 +190,22 @@ export const action: ActionFunction = async (actionDetails) => {
 
       return json(await updateProject(project.id, projectDetails));
     })
+    .use('DELETE', async () => {
+      await deleteProject(project.id);
+
+      return redirect(`/${getUserPath(currentUser)}`);
+    })
     .build();
 };
 
 export default function ProjectSettings() {
   const { project } = useLoaderData<LoaderData>();
   const actionProject = useActionData<Project>();
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
 
   const navigate = useNavigate();
 
@@ -251,12 +275,84 @@ export default function ProjectSettings() {
             </Box>
           )}
         />
-        <Card variant="outlined">
-          <CardContent>
-            <div>Project danger area</div>
-          </CardContent>
-        </Card>
+
+        <section>
+          <Typography variant="h5" color="error" gutterBottom>
+            Danger area
+          </Typography>
+          <Card
+            variant="outlined"
+            sx={({ palette }) => ({
+              '&.MuiPaper-root': {
+                borderColor: palette.error.main,
+              },
+            })}
+          >
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Delete project
+              </Typography>
+              <Typography variant="body2" gutterBottom>
+                This action is not reversible.
+              </Typography>
+              <Typography>
+                All associated slides would also be deleted.
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button
+                variant="outlined"
+                color="error"
+                fullWidth
+                onClick={() => setModalOpen(true)}
+                sx={({ breakpoints }) => ({
+                  [breakpoints.up('sm')]: {
+                    width: '50%',
+                  },
+                })}
+              >
+                Delete this project
+              </Button>
+            </CardActions>
+          </Card>
+        </section>
       </main>
+      <Dialog
+        open={modalOpen}
+        onClose={handleModalClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Delete {project.name} project
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete this project?
+            <br />
+            <br />
+            <strong>This action is not reversible.</strong>
+            <br />
+            <br />
+            <p>All associated slides would also be deleted.</p>
+          </DialogContentText>
+        </DialogContent>
+        <Form
+          method="delete"
+          onSubmit={() => {
+            handleModalClose();
+          }}
+        >
+          <DialogActions>
+            <Button onClick={handleModalClose} variant="outlined" type="button">
+              Cancel
+            </Button>
+            <Button type="submit" autoFocus variant="contained" color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Form>
+      </Dialog>
     </PageLayout>
   );
 }

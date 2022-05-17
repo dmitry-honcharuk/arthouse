@@ -22,7 +22,7 @@ import type { ProjectItem } from '@prisma/client';
 import { ProjectItemType } from '@prisma/client';
 import { useFetcher } from '@remix-run/react';
 import type { FC, MouseEvent } from 'react';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
 import { YoutubeFrame } from '~/modules/common/youtube-frame';
 import { ItemForm } from '~/modules/projects/components/item-form';
@@ -34,7 +34,6 @@ export const ProjectItemCard: FC<{
   isCurrentUser: boolean;
   deleteLink: string;
 }> = ({ project, item, isCurrentUser, deleteLink }) => {
-  const deleteFormRef = useRef<HTMLFormElement | null>(null);
   const fetcher = useFetcher();
   const [edit, toggleEdit] = useToggle();
 
@@ -149,13 +148,12 @@ export const ProjectItemCard: FC<{
           <DialogContentText id="alert-dialog-description">
             Are you sure you want to delete this slide?
             <br />
-            <strong>This action is not revertable.</strong>
+            <strong>This action is not reversible.</strong>
           </DialogContentText>
         </DialogContent>
         <fetcher.Form
           action={`delete`}
           method="post"
-          ref={deleteFormRef}
           onSubmit={(e) => {
             e.preventDefault();
 

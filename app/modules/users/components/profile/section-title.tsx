@@ -12,7 +12,7 @@ export const SectionTitle: FC<{
     <div className="mb-1 relative">
       <Typography variant={variant}>{children}</Typography>
       {onEdit && (
-        <div className="invisible absolute right-0 bottom-0">
+        <div className="absolute right-0 bottom-0 lg:invisible">
           <Button
             size="small"
             color="primary"
