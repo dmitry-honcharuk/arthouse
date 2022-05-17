@@ -93,7 +93,9 @@ export const ProjectScreen: FC<Props> = ({
                   </ProjectStatusLabel>
                 </div>
               </div>
-              {project.caption && <Typography>{project.caption}</Typography>}
+              {project.caption && (
+                <span className="whitespace-pre-wrap">{project.caption}</span>
+              )}
               <ProjectPreviewForm project={project} action={settingsPath} />
             </div>
           )}

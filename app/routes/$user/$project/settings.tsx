@@ -11,17 +11,23 @@ import type { Project } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useFetcher, useLoaderData } from '@remix-run/react';
+import {
+  useActionData,
+  useFetcher,
+  useLoaderData,
+  useNavigate,
+} from '@remix-run/react';
 import { castArray } from 'lodash';
 import type { FC } from 'react';
 import * as React from 'react';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditableCardSection } from '~/modules/common/editable-card-section';
 import PageLayout from '~/modules/common/page-layout';
 import { SecuritySwitch } from '~/modules/common/security-switch';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
+import { GeneralSection } from '~/modules/projects/components/project-settings/general-settings';
 import { PasswordSetting } from '~/modules/projects/components/project-settings/password-setting';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserProject } from '~/modules/projects/get-user-project';
@@ -154,6 +160,20 @@ export const action: ActionFunction = async (actionDetails) => {
         projectDetails.isSecure = secure === 'true';
       }
 
+      if (fields.includes('general')) {
+        const { name, caption, slug } = await formDataHandler.validate(
+          z.object({
+            name: z.string(),
+            caption: z.string().optional(),
+            slug: z.string().optional(),
+          })
+        );
+
+        projectDetails.name = name;
+        projectDetails.slug = slug || null;
+        projectDetails.caption = caption || null;
+      }
+
       return json(await updateProject(project.id, projectDetails));
     })
     .build();
@@ -161,6 +181,21 @@ export const action: ActionFunction = async (actionDetails) => {
 
 export default function ProjectSettings() {
   const { project } = useLoaderData<LoaderData>();
+  const actionProject = useActionData<Project>();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!actionProject) {
+      return;
+    }
+
+    if (project.slug === actionProject.slug) {
+      return;
+    }
+
+    navigate(`/${getProjectPath(actionProject, project.user)}/settings`);
+  }, [actionProject, project.slug, project.user, navigate]);
 
   return (
     <PageLayout
@@ -191,13 +226,7 @@ export default function ProjectSettings() {
       }
     >
       <main className="flex flex-col gap-10">
-        <Card variant="outlined">
-          <CardContent>
-            <div>Project general settings</div>
-            <div>Name</div>
-            <div>Caption</div>
-          </CardContent>
-        </Card>
+        <GeneralSection project={project} />
         <EditableCardSection
           renderTitle={({ isEdit, toggleIsEdit }) => (
             <SectionTitle variant="h5" onEdit={toggleIsEdit} isEdit={isEdit}>

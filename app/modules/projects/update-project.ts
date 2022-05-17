@@ -3,12 +3,15 @@ import { prisma } from '~/db.server';
 
 export async function updateProject(
   projectId: string,
-  { status, preview, isSecure }: Partial<Project>
+  { status, preview, isSecure, name, slug, caption }: Partial<Project>
 ) {
   return prisma.project.update({
     where: { id: projectId },
     data: {
       status,
+      name,
+      slug,
+      caption,
       isSecure,
       ...(typeof preview !== 'undefined' && preview === ''
         ? { preview: null }
