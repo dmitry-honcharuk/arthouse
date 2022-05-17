@@ -89,11 +89,11 @@ export const action: ActionFunction = async (actionDetails) => {
     .parse(params);
 
   const [currentUser, album] = await Promise.all([
-    requireLoggedInUser(request),
+    requireLoggedInUser(request, { shouldThrow: true }),
     getUserAlbum(userID, albumID),
   ]);
 
-  if (!currentUser || !album) {
+  if (!album || album.userId !== currentUser.id) {
     throw new Response(null, { status: 401 });
   }
 
