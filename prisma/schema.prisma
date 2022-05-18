@@ -84,7 +84,7 @@ model Project {
 model ProjectSecurity {
   projectId String @id @map("project_id") @db.Uuid
 
-  project Project @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   passwordHash String @map("password_hash")
   passwordIv   String @map("password_iv")
@@ -102,7 +102,7 @@ enum ProjectItemType {
 model ProjectItem {
   id String @id @default(uuid()) @db.Uuid
 
-  project Project @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   projectId String @map("project_id") @db.Uuid
 
@@ -121,7 +121,7 @@ model Favorite {
   projectId String @db.Uuid
   userId    String @db.Uuid
 
-  project Project @relation(fields: [projectId], references: [id])
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
 
   @@id([projectId, userId])
@@ -152,7 +152,7 @@ model Album {
 model AlbumSecurity {
   albumId String @id @map("album_id") @db.Uuid
 
-  album Album @relation(fields: [albumId], references: [id])
+  album Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
 
   passwordHash String @map("password_hash")
   passwordIv   String @map("password_iv")

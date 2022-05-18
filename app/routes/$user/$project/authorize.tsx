@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { TogglableContent } from '~/modules/common/togglable-content';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
 import { getProjectPath } from '~/modules/projects/get-project-path';
+import { getProjectSecretKey } from '~/modules/projects/get-project-secret-key';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import { ActionBuilder } from '~/server/action-builder.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
@@ -90,7 +91,10 @@ export const action: ActionFunction = async (actionDetails) => {
         return redirect(`/${getProjectPath(project, project.user)}`);
       }
 
-      const { password } = await getDecryptedSecurity(project.security);
+      const { password } = await getDecryptedSecurity(
+        project.security,
+        getProjectSecretKey()
+      );
 
       const isPasswordValid = passwordAttempt === password;
 

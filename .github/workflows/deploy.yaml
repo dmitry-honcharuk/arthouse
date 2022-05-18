@@ -88,6 +88,7 @@ jobs:
               --from-literal=AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
               --from-literal=AWS_SECRET_ACCESS_KEY_ID=${{ secrets.AWS_SECRET_ACCESS_KEY_ID }} \
               --from-literal=PROJECT_PASSWORD_KEY=${{ secrets.PROJECT_PASSWORD_KEY }} \
+              --from-literal=ALBUM_PASSWORD_KEY=${{ secrets.ALBUM_PASSWORD_KEY }} \
 
   deploy:
     runs-on: ubuntu-latest

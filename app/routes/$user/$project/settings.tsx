@@ -26,24 +26,23 @@ import { json, redirect } from '@remix-run/node';
 import {
   Form,
   useActionData,
-  useFetcher,
   useLoaderData,
   useNavigate,
 } from '@remix-run/react';
 import { castArray } from 'lodash';
-import type { FC } from 'react';
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditableCardSection } from '~/modules/common/editable-card-section';
 import PageLayout from '~/modules/common/page-layout';
-import { SecuritySwitch } from '~/modules/common/security-switch';
+import { SecuritySwitchSetting } from '~/modules/common/security-switch-setting';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
 import { GeneralSection } from '~/modules/projects/components/project-settings/general-settings';
 import { PasswordSetting } from '~/modules/projects/components/project-settings/password-setting';
 import { deleteProject } from '~/modules/projects/delete-project';
 import { getProjectPath } from '~/modules/projects/get-project-path';
+import { getProjectSecretKey } from '~/modules/projects/get-project-secret-key';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import { setProjectPassword } from '~/modules/projects/set-project-password.server';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
@@ -87,7 +86,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     project: {
       ...project,
       security: project.security
-        ? await getDecryptedSecurity(project.security)
+        ? await getDecryptedSecurity(project.security, getProjectSecretKey())
         : null,
     },
   });
@@ -132,7 +131,12 @@ export const action: ActionFunction = async (actionDetails) => {
         );
 
         const currentPassword = project.security
-          ? (await getDecryptedSecurity(project.security)).password
+          ? (
+              await getDecryptedSecurity(
+                project.security,
+                getProjectSecretKey()
+              )
+            ).password
           : null;
 
         return json(
@@ -269,8 +273,9 @@ export default function ProjectSettings() {
               />
               <LockOutlined />
               <SecuritySwitchSetting
-                project={project}
+                item={project}
                 onSuccess={() => setIsEdit(false)}
+                tooltip="You need to setup a password in order to secure this project."
               />
             </Box>
           )}
@@ -358,32 +363,3 @@ export default function ProjectSettings() {
     </PageLayout>
   );
 }
-
-const SecuritySwitchSetting: FC<{
-  project: Project & WithDecryptedProjectSecurity;
-  onSuccess: () => void;
-}> = ({ project, onSuccess }) => {
-  const fetcher = useFetcher();
-
-  const formRef = useRef<HTMLFormElement | null>(null);
-
-  return (
-    <fetcher.Form method="put" ref={formRef}>
-      <input type="hidden" name="fields" value="secure" />
-      <SecuritySwitch
-        tooltip="You need to setup a password in order to secure this project."
-        isSecure={project.isSecure}
-        disabled={!project.security}
-        onChange={(secure) => {
-          const formData = new FormData(formRef.current!);
-
-          formData.set('secure', secure ? 'true' : 'false');
-
-          fetcher.submit(formData, { method: 'put' });
-
-          onSuccess();
-        }}
-      />
-    </fetcher.Form>
-  );
-};

@@ -1,9 +1,9 @@
-import { z } from 'zod';
 import { prisma } from '~/db.server';
 import { encrypt } from '~/modules/crypto/encrypt.server';
+import { getProjectSecretKey } from '~/modules/projects/get-project-secret-key';
 
 export async function setProjectPassword(projectId: string, password: string) {
-  const secretKey = z.string().parse(process.env.PROJECT_PASSWORD_KEY);
+  const secretKey = getProjectSecretKey();
 
   const { content, iv } = await encrypt(password, secretKey);
 

@@ -13,14 +13,23 @@ export class ActionBuilder {
 
   static handleError(error: Error) {
     if (error instanceof ZodError) {
-      return json(error.flatten().fieldErrors, { status: 422 });
+      const flattened = error.flatten();
+
+      return json(
+        flattened.formErrors.length
+          ? {
+              error: { message: flattened.formErrors[0] },
+            }
+          : flattened.fieldErrors,
+        { status: 422 }
+      );
     }
 
     return json(
       {
         error: { message: error.message },
       },
-      { status: 422 }
+      { status: 500 }
     );
   }
 
