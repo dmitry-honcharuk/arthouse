@@ -77,6 +77,8 @@ model Project {
 
   isSecure Boolean @default(false) @map("is_secure")
 
+  tags Tag[]
+
   @@unique([userId, slug])
   @@map("projects")
 }
@@ -160,4 +162,14 @@ model AlbumSecurity {
   passwordVersion Int @default(1)
 
   @@map("album_security")
+}
+
+model Tag {
+  id Int @id @default(autoincrement())
+
+  name String @unique
+
+  projects Project[]
+
+  @@map("tags")
 }
