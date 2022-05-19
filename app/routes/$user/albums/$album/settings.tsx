@@ -6,23 +6,36 @@ import {
   PersonPin,
   SettingsOutlined,
 } from '@mui/icons-material';
-import { Box, Card, CardContent } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Typography,
+} from '@mui/material';
 import type { Album } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
-import { json } from '@remix-run/node';
+import { json, redirect } from '@remix-run/node';
 import {
+  Form,
   useActionData,
-  useFetcher,
   useLoaderData,
   useNavigate,
 } from '@remix-run/react';
 import { castArray } from 'lodash';
-import type { FC } from 'react';
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { GeneralSection } from '~/modules/albums/components/settings/general-section';
+import { deleteAlbum } from '~/modules/albums/delete-album';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
+import { getAlbumSecretKey } from '~/modules/albums/get-album-secret-key';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { setAlbumPassword } from '~/modules/albums/set-album-password.server';
 import type { WithDecryptedAlbumSecurity } from '~/modules/albums/types/with-decrypted-album-security';
@@ -30,9 +43,8 @@ import { updateAlbum } from '~/modules/albums/update-album';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditableCardSection } from '~/modules/common/editable-card-section';
 import PageLayout from '~/modules/common/page-layout';
-import { SecuritySwitch } from '~/modules/common/security-switch';
+import { SecuritySwitchSetting } from '~/modules/common/security-switch-setting';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
-import type { WithDecryptedSecurity } from '~/modules/crypto/types/with-decrypted-security';
 import { PasswordSetting } from '~/modules/projects/components/project-settings/password-setting';
 import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import { getUserPath } from '~/modules/users/get-user-path';
@@ -72,7 +84,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     album: {
       ...album,
       security: album.security
-        ? await getDecryptedSecurity(album.security)
+        ? await getDecryptedSecurity(album.security, getAlbumSecretKey())
         : null,
     },
   });
@@ -117,7 +129,8 @@ export const action: ActionFunction = async (actionDetails) => {
         );
 
         const currentPassword = album.security
-          ? (await getDecryptedSecurity(album.security)).password
+          ? (await getDecryptedSecurity(album.security, getAlbumSecretKey()))
+              .password
           : null;
 
         return json(
@@ -153,6 +166,11 @@ export const action: ActionFunction = async (actionDetails) => {
 
       return json(await updateAlbum(album.id, albumDetails));
     })
+    .use('DELETE', async () => {
+      await deleteAlbum(album.id);
+
+      return redirect(`/${getUserPath(currentUser)}`);
+    })
     .build();
 };
 
@@ -173,6 +191,12 @@ export default function AlbumSettings() {
 
     navigate(`/${getAlbumPath(actionAlbum, album.user)}/settings`);
   }, [actionAlbum, album.slug, album.user, navigate]);
+
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+  };
 
   return (
     <PageLayout
@@ -224,45 +248,84 @@ export default function AlbumSettings() {
               <SecuritySwitchSetting
                 item={album}
                 onSuccess={() => setIsEdit(false)}
+                tooltip="You need to setup a password in order to secure this album."
               />
             </Box>
           )}
         />
-        <Card variant="outlined">
-          <CardContent>
-            <div>Album danger area</div>
-          </CardContent>
-        </Card>
+        <section>
+          <Typography variant="h5" color="error" gutterBottom>
+            Danger area
+          </Typography>
+          <Card
+            variant="outlined"
+            sx={({ palette }) => ({
+              '&.MuiPaper-root': {
+                borderColor: palette.error.main,
+              },
+            })}
+          >
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Delete album
+              </Typography>
+              <Typography variant="body2" gutterBottom>
+                This action is not reversible.
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button
+                variant="outlined"
+                color="error"
+                fullWidth
+                onClick={() => setModalOpen(true)}
+                sx={({ breakpoints }) => ({
+                  [breakpoints.up('sm')]: {
+                    width: '50%',
+                  },
+                })}
+              >
+                Delete this album
+              </Button>
+            </CardActions>
+          </Card>
+        </section>
       </main>
+      <Dialog
+        open={modalOpen}
+        onClose={handleModalClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Delete {album.name} album
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            <Typography gutterBottom>
+              Are you sure you want to delete this album?
+            </Typography>
+            <Typography fontWeight="bold" gutterBottom>
+              This action is not reversible.
+            </Typography>
+          </DialogContentText>
+        </DialogContent>
+        <Form
+          method="delete"
+          onSubmit={() => {
+            handleModalClose();
+          }}
+        >
+          <DialogActions>
+            <Button onClick={handleModalClose} variant="outlined" type="button">
+              Cancel
+            </Button>
+            <Button type="submit" autoFocus variant="contained" color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Form>
+      </Dialog>
     </PageLayout>
   );
 }
-
-const SecuritySwitchSetting: FC<{
-  item: WithDecryptedSecurity;
-  onSuccess: () => void;
-}> = ({ item, onSuccess }) => {
-  const fetcher = useFetcher();
-
-  const formRef = useRef<HTMLFormElement | null>(null);
-
-  return (
-    <fetcher.Form method="put" ref={formRef}>
-      <input type="hidden" name="fields" value="secure" />
-      <SecuritySwitch
-        tooltip="You need to setup a password in order to secure this album."
-        isSecure={item.isSecure}
-        disabled={!item.security}
-        onChange={(secure) => {
-          const formData = new FormData(formRef.current!);
-
-          formData.set('secure', secure ? 'true' : 'false');
-
-          fetcher.submit(formData, { method: 'put' });
-
-          onSuccess();
-        }}
-      />
-    </fetcher.Form>
-  );
-};

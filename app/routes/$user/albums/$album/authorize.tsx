@@ -18,6 +18,7 @@ import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { z } from 'zod';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
+import { getAlbumSecretKey } from '~/modules/albums/get-album-secret-key';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { TogglableContent } from '~/modules/common/togglable-content';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
@@ -125,7 +126,10 @@ export const action: ActionFunction = async (actionDetails) => {
         return redirect(redirectPath);
       }
 
-      const { password } = await getDecryptedSecurity(album.security);
+      const { password } = await getDecryptedSecurity(
+        album.security,
+        getAlbumSecretKey()
+      );
 
       const isPasswordValid = passwordAttempt === password;
 
