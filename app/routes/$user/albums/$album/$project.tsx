@@ -20,6 +20,7 @@ import { ProjectScreen } from '~/modules/projects/components/project-screen';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import type { WithProjectSecurity } from '~/modules/projects/types/with-project-security';
+import type { WithTags } from '~/modules/tags/types/with-tags';
 import { getUserPath } from '~/modules/users/get-user-path';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
@@ -29,7 +30,7 @@ import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
-  project: ProjectWithItems & WithUser & WithProjectSecurity;
+  project: ProjectWithItems & WithUser & WithProjectSecurity & WithTags;
   currentUser: UserWithProfile | null;
   isFavorite: boolean;
   favouritesCount: number;

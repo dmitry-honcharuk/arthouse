@@ -45,6 +45,7 @@ import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getProjectSecretKey } from '~/modules/projects/get-project-secret-key';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import { setProjectPassword } from '~/modules/projects/set-project-password.server';
+import { setTags } from '~/modules/projects/set-tags';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import type { WithDecryptedProjectSecurity } from '~/modules/projects/types/with-decrypted-project-security';
 import { updateProject } from '~/modules/projects/update-project';
@@ -190,6 +191,16 @@ export const action: ActionFunction = async (actionDetails) => {
         projectDetails.name = name;
         projectDetails.slug = slug || null;
         projectDetails.caption = caption || null;
+      }
+
+      if (fields.includes('tags')) {
+        const { tags } = await formDataHandler.validate(
+          z.object({
+            tags: z.union([z.string(), z.array(z.string())]).optional(),
+          })
+        );
+
+        return json(await setTags(project.id, tags ? castArray(tags) : []));
       }
 
       return json(await updateProject(project.id, projectDetails));

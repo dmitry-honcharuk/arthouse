@@ -19,6 +19,7 @@ import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import type { WithProjectSecurity } from '~/modules/projects/types/with-project-security';
+import type { WithTags } from '~/modules/tags/types/with-tags';
 import { getUserPath } from '~/modules/users/get-user-path';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
@@ -32,7 +33,7 @@ interface LoaderData {
   isFavorite: boolean;
   favouritesCount: number;
   currentUser: UserWithProfile | null;
-  project: ProjectWithItems & WithUser & WithProjectSecurity;
+  project: ProjectWithItems & WithUser & WithProjectSecurity & WithTags;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {

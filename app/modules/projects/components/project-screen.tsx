@@ -41,10 +41,12 @@ import { ProjectItems } from '~/modules/projects/components/project-items';
 import { ProjectPreviewForm } from '~/modules/projects/components/project-preview-form';
 import { ProjectPublicityForm } from '~/modules/projects/components/project-publicity-form';
 import { ProjectStatusLabel } from '~/modules/projects/components/project-status-label';
+import { TagsCard } from '~/modules/projects/components/tags-card';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
 import type { WithProjectSecurity } from '~/modules/projects/types/with-project-security';
 import { getStatusLabel } from '~/modules/projects/utils/get-status-label';
+import type { WithTags } from '~/modules/tags/types/with-tags';
 import { NicknameTag } from '~/modules/users/components/profile/nickname-tag';
 import { SocialLink } from '~/modules/users/components/profile/social-link';
 import { getUserPath } from '~/modules/users/get-user-path';
@@ -56,7 +58,7 @@ interface Props {
   isFavorite: boolean;
   favouritesCount: number;
   currentUser: UserWithProfile | null;
-  project: ProjectWithItems & WithUser & WithProjectSecurity;
+  project: ProjectWithItems & WithUser & WithProjectSecurity & WithTags;
   breadcrumbs?: ReactNode;
 }
 
@@ -244,6 +246,17 @@ export const ProjectScreen: FC<Props> = ({
               )}
             </CardContent>
           </Card>
+          {(isCurrentUser || !!project.tags.length) && (
+            <Card elevation={3}>
+              <CardContent>
+                <TagsCard
+                  project={project}
+                  action={settingsPath}
+                  isCurrentUser={isCurrentUser}
+                />
+              </CardContent>
+            </Card>
+          )}
           {!!project.user.profile?.socialLinks.length && (
             <Card elevation={3}>
               <CardContent>
@@ -278,7 +291,7 @@ export const ProjectScreen: FC<Props> = ({
   );
 };
 
-export const Layout = styled('div')(({ theme }) => ({
+const Layout = styled('div')(({ theme }) => ({
   display: 'grid',
   gap: theme.spacing(2),
 
