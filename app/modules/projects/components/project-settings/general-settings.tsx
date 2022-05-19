@@ -21,7 +21,7 @@ export const GeneralSection: FC<{ project: Project & WithUser }> = ({
     <LocalOfferOutlined color={project.slug ? 'inherit' : 'disabled'} />
   );
   const captionLabel = (
-    <SubtitlesOutlined color={project.slug ? 'inherit' : 'disabled'} />
+    <SubtitlesOutlined color={project.caption ? 'inherit' : 'disabled'} />
   );
 
   return (
@@ -73,7 +73,7 @@ export const GeneralSection: FC<{ project: Project & WithUser }> = ({
                 multiline
                 className="grow"
                 fullWidth
-                label="Caption"
+                label="Description"
                 size="small"
                 variant="outlined"
                 name="caption"
@@ -106,7 +106,9 @@ export const GeneralSection: FC<{ project: Project & WithUser }> = ({
             </Stack>
 
             {captionLabel}
-            <p className="whitespace-pre-wrap">{project.caption}</p>
+            <p className="whitespace-pre-wrap">
+              {project.caption || "You didn't specify project description yet"}
+            </p>
           </Box>
         )
       }

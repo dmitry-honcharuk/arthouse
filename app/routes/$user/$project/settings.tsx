@@ -328,13 +328,15 @@ export default function ProjectSettings() {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete this project?
-            <br />
-            <br />
-            <strong>This action is not reversible.</strong>
-            <br />
-            <br />
-            <p>All associated slides would also be deleted.</p>
+            <Typography gutterBottom>
+              Are you sure you want to delete this project?
+            </Typography>
+            <Typography fontWeight="bold" gutterBottom>
+              This action is not reversible.
+            </Typography>
+            <Typography>
+              All associated slides would also be deleted.
+            </Typography>
           </DialogContentText>
         </DialogContent>
         <Form
