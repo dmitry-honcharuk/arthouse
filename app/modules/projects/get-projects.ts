@@ -2,13 +2,20 @@ import type { ProjectStatus } from '@prisma/client';
 import { prisma } from '~/db.server';
 import type { FullProject } from '~/modules/projects/types/full-project';
 
-export async function getProjects(details?: {
+interface Details {
+  name?: string;
   statuses?: ProjectStatus[];
   userId?: string;
   isSecure?: boolean;
-}): Promise<FullProject[]> {
+}
+
+export async function getProjects(details?: Details): Promise<FullProject[]> {
   return prisma.project.findMany({
     where: {
+      name: {
+        contains: details?.name,
+        mode: 'insensitive',
+      },
       ...(details?.statuses && {
         status: { in: details.statuses },
       }),
