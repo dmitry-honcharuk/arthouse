@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/64-tags
 
     paths:
       - package.json
