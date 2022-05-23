@@ -1,6 +1,5 @@
 import { AddBoxOutlined } from '@mui/icons-material';
 import {
-  Chip,
   CircularProgress,
   IconButton,
   InputAdornment,
@@ -14,6 +13,7 @@ import { orderBy } from 'lodash';
 import type { FC } from 'react';
 import * as React from 'react';
 import { useRef, useState } from 'react';
+import { TagChip } from '~/modules/tags/components/tag-chip';
 import type { WithTags } from '~/modules/tags/types/with-tags';
 
 type Props = {
@@ -37,9 +37,10 @@ export const ProjectTagsForm: FC<Props> = ({
   const tagDisplay = project.tags.length ? (
     <Stack direction="row" gap={1} flexWrap="wrap">
       {orderBy(project.tags, ['name'], ['asc']).map(({ name }) => (
-        <Chip
+        <TagChip
           key={name}
-          label={name}
+          tag={name}
+          link={!isEdit ? `/search?tags=${name}` : undefined}
           onDelete={
             isCurrentUser && isEdit
               ? () => {

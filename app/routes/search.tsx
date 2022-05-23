@@ -11,27 +11,33 @@ import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getProjects } from '~/modules/projects/get-projects';
 import type { FullProject } from '~/modules/projects/types/full-project';
 import { SearchPageLayout } from '~/modules/search/components/search-page-layout';
+import { normalizeTags } from '~/modules/tags/normalize-tags';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 type LoaderData = {
   currentUser: UserWithProfile | null;
   query: string | null;
+  tags: string[];
   projects?: FullProject[];
   favouriteIds?: string[];
 };
 
 export const loader: LoaderFunction = async ({ request }) => {
   const query = new URL(request.url).searchParams.get('q');
+  const tagsSearch = new URL(request.url).searchParams.getAll('tags');
+
+  const tags = normalizeTags(tagsSearch);
 
   const currentUser = await getLoggedInUser(request);
 
-  if (!query) {
-    return json<LoaderData>({ currentUser, query });
+  if (!query && !tags.length) {
+    return json<LoaderData>({ currentUser, query, tags });
   }
 
   const projects = await getProjects({
-    name: query,
+    ...(query && { name: query }),
+    ...(tags.length && { tags }),
     statuses: [ProjectStatus.PUBLISHED],
     isSecure: false,
   });
@@ -43,6 +49,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     favouriteIds: favorites.map(({ projectId }) => projectId),
     projects,
     query,
+    tags,
   });
 };
 
@@ -52,11 +59,16 @@ export default function SearchPage() {
     projects,
     favouriteIds,
     query: initialQuery,
+    tags,
   } = useLoaderData<LoaderData>();
 
   if (!projects) {
     return (
-      <SearchPageLayout currentUser={currentUser} initialQuery={initialQuery}>
+      <SearchPageLayout
+        currentUser={currentUser}
+        initialQuery={initialQuery}
+        tags={tags}
+      >
         <Typography>What would you like to look up?</Typography>
       </SearchPageLayout>
     );
@@ -64,7 +76,11 @@ export default function SearchPage() {
 
   if (!projects.length) {
     return (
-      <SearchPageLayout currentUser={currentUser} initialQuery={initialQuery}>
+      <SearchPageLayout
+        currentUser={currentUser}
+        initialQuery={initialQuery}
+        tags={tags}
+      >
         <Typography>
           ¯\_(ツ)_/¯ Nothing was found to satisfy your request.
         </Typography>
@@ -74,13 +90,17 @@ export default function SearchPage() {
   }
 
   return (
-    <SearchPageLayout currentUser={currentUser} initialQuery={initialQuery}>
+    <SearchPageLayout
+      currentUser={currentUser}
+      initialQuery={initialQuery}
+      tags={tags}
+    >
       <Projects>
         {projects.map((project) => (
           <ProjectCard
             key={project.id}
             project={project}
-            link={getProjectPath(project, project.user)}
+            link={`/${getProjectPath(project, project.user)}`}
             showFavourite={favouriteIds?.includes(project.id)}
           />
         ))}

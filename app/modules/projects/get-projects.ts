@@ -7,6 +7,7 @@ interface Details {
   statuses?: ProjectStatus[];
   userId?: string;
   isSecure?: boolean;
+  tags?: string[];
 }
 
 export async function getProjects(details?: Details): Promise<FullProject[]> {
@@ -21,6 +22,9 @@ export async function getProjects(details?: Details): Promise<FullProject[]> {
       }),
       userId: details?.userId,
       isSecure: details?.isSecure,
+      AND: details?.tags?.map((tag) => ({
+        tags: { some: { name: tag } },
+      })),
     },
     include: {
       items: true,
