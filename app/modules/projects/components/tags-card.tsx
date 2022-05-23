@@ -1,7 +1,7 @@
 import {
   EditOffOutlined,
-  LocalOfferOutlined,
   ModeEditOutlined,
+  TagOutlined,
 } from '@mui/icons-material';
 import { IconButton, Stack, Typography } from '@mui/material';
 import type { Project } from '@prisma/client';
@@ -23,7 +23,7 @@ export const TagsCard: FC<{
           <Typography component="h5" gutterBottom variant="overline">
             <Stack direction="row" justifyContent="space-between">
               <span>
-                <LocalOfferOutlined fontSize="small" /> <span>Tags</span>
+                <TagOutlined fontSize="small" /> <span>Tags</span>
               </span>
               {isCurrentUser && (
                 <IconButton onClick={toggle} size="small">
