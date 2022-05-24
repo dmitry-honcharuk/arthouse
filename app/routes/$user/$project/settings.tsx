@@ -44,6 +44,7 @@ import { deleteProject } from '~/modules/projects/delete-project';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getProjectSecretKey } from '~/modules/projects/get-project-secret-key';
 import { getUserProject } from '~/modules/projects/get-user-project';
+import { setCategories } from '~/modules/projects/set-categories';
 import { setProjectPassword } from '~/modules/projects/set-project-password.server';
 import { setTags } from '~/modules/projects/set-tags';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
@@ -201,6 +202,26 @@ export const action: ActionFunction = async (actionDetails) => {
         );
 
         return json(await setTags(project.id, tags ? castArray(tags) : []));
+      }
+
+      if (fields.includes('categories')) {
+        const { categories } = await formDataHandler.validate(
+          z.object({
+            categories: z.union([z.string(), z.array(z.string())]).optional(),
+          })
+        );
+
+        return json(
+          await setCategories(
+            project.id,
+            categories
+              ? castArray(categories)
+                  .filter(Boolean)
+                  .map(Number)
+                  .filter((id) => !Number.isNaN(id))
+              : []
+          )
+        );
       }
 
       return json(await updateProject(project.id, projectDetails));

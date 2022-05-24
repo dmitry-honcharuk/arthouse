@@ -4,12 +4,15 @@ import {
   PersonPin,
 } from '@mui/icons-material';
 import { Button, Paper, TextField, Typography } from '@mui/material';
+import type { Category } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
+import { CategoriesAutocompleteField } from '~/modules/categories/components/categories-autocomplete-field';
+import { getCategories } from '~/modules/categories/get-categories';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import PageLayout from '~/modules/common/page-layout';
 import { getURI } from '~/modules/common/utils/getURI';
@@ -23,11 +26,18 @@ import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
 interface LoaderData {
   currentUser: UserWithProfile;
+  categories: Category[];
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
+  const [currentUser, categories] = await Promise.all([
+    requireLoggedInUser(request),
+    getCategories(),
+  ]);
+
   return json<LoaderData>({
-    currentUser: await requireLoggedInUser(request),
+    currentUser,
+    categories,
   });
 };
 
@@ -37,18 +47,24 @@ export const action: ActionFunction = async (actionDetails) => {
       const user = await requireLoggedInUser(request);
       const formDataHandler = new FormDataHandler(request);
 
-      const { name, caption, slug } = await formDataHandler.validate(
-        z.object({
-          name: z.string().nonempty('Name is required'),
-          caption: z.string().optional(),
-          slug: z.string().optional(),
-        })
-      );
+      const { name, caption, slug, categories } =
+        await formDataHandler.validate(
+          z.object({
+            name: z.string().nonempty('Name is required'),
+            caption: z.string().optional(),
+            slug: z.string().optional(),
+            categories: z.array(z.string()).optional(),
+          })
+        );
 
       const project = await createProject(user.id, {
         name,
         caption: caption || null,
         slug: slug || null,
+        categories: categories
+          ?.filter(Boolean)
+          .map(Number)
+          .filter((id) => !Number.isNaN(id)),
       });
 
       return redirect(getProjectPath(project, user));
@@ -57,7 +73,7 @@ export const action: ActionFunction = async (actionDetails) => {
 };
 
 export default function NewProject() {
-  const { currentUser } = useLoaderData<LoaderData>();
+  const { currentUser, categories } = useLoaderData<LoaderData>();
   const actionData = useActionData<{ name: string[] }>();
   const [slug, setSlug] = useState('');
   const dirtyRef = useRef(false);
@@ -138,7 +154,9 @@ export default function NewProject() {
               }
             }}
           />
-          <TextField name="caption" label="Description" />
+          <TextField multiline name="caption" label="Description" />
+
+          <CategoriesAutocompleteField allCategories={categories} />
 
           <Button variant="contained" className="self-end" type="submit">
             Create

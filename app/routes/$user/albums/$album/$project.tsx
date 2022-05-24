@@ -4,7 +4,7 @@ import {
   GridViewOutlined,
   PersonPin,
 } from '@mui/icons-material';
-import type { Album } from '@prisma/client';
+import type { Album, Category } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
@@ -12,6 +12,8 @@ import * as React from 'react';
 import { z } from 'zod';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
+import { getCategories } from '~/modules/categories/get-categories';
+import type { WithCategories } from '~/modules/categories/types/with-categories';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { countFavourites } from '~/modules/favorites/count-favourites';
 import { getFavorites } from '~/modules/favorites/get-favorites';
@@ -30,11 +32,16 @@ import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
-  project: ProjectWithItems & WithUser & WithProjectSecurity & WithTags;
+  project: ProjectWithItems &
+    WithUser &
+    WithProjectSecurity &
+    WithTags &
+    WithCategories;
   currentUser: UserWithProfile | null;
   isFavorite: boolean;
   favouritesCount: number;
   album: Album;
+  categories: Category[];
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -90,13 +97,19 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     );
   }
 
+  const [favouritesCount, categories] = await Promise.all([
+    countFavourites(project.id),
+    getCategories(),
+  ]);
+
   return json<LoaderData>({
     project,
     isFavorite: isFavorite({ projectId: project.id, favorites }),
     isCurrentUser,
     currentUser,
-    favouritesCount: await countFavourites(project.id),
+    favouritesCount,
     album,
+    categories,
   });
 };
 
@@ -108,6 +121,7 @@ export default function AlbumScreen() {
     favouritesCount,
     isFavorite,
     album,
+    categories,
   } = useLoaderData<LoaderData>();
 
   return (
@@ -117,6 +131,7 @@ export default function AlbumScreen() {
       isFavorite={isFavorite}
       currentUser={currentUser}
       favouritesCount={favouritesCount}
+      categories={categories}
       breadcrumbs={
         <Breadcrumbs
           items={[
