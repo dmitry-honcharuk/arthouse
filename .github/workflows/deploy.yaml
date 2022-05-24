@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat-68/dashboard
 
     paths:
       - package.json
