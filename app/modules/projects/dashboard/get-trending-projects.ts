@@ -32,6 +32,8 @@ export async function getTrendingProjects(): Promise<FullProject[]> {
       ids: {
         exclude: trendingIds,
       },
+      statuses: [ProjectStatus.PUBLISHED],
+      isSecure: false,
       order: { favoriteCount: 'desc' },
     }),
   ]);
