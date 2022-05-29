@@ -2,17 +2,25 @@ import type { ProjectStatus } from '@prisma/client';
 import { prisma } from '~/db.server';
 import type { FullProject } from '~/modules/projects/types/full-project';
 
+type SortOrder = 'asc' | 'desc';
+
 interface Details {
   name?: string;
   statuses?: ProjectStatus[];
   userId?: string;
   isSecure?: boolean;
   tags?: string[];
+  ids?: { include?: string[]; exclude?: string[] };
+  order?: { favoriteCount?: SortOrder; createdAt?: SortOrder };
 }
 
 export async function getProjects(details?: Details): Promise<FullProject[]> {
   return prisma.project.findMany({
     where: {
+      id: {
+        in: details?.ids?.include,
+        notIn: details?.ids?.exclude,
+      },
       name: {
         contains: details?.name,
         mode: 'insensitive',
@@ -34,5 +42,6 @@ export async function getProjects(details?: Details): Promise<FullProject[]> {
         },
       },
     },
+    orderBy: details?.order,
   });
 }
