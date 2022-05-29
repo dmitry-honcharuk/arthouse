@@ -1,34 +1,41 @@
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { Autocomplete, Checkbox, TextField } from '@mui/material';
+import type { AutocompleteRenderGetTagProps } from '@mui/material/Autocomplete/Autocomplete';
 import type { Category } from '@prisma/client';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 import * as React from 'react';
 import { useRef } from 'react';
 
 type Props = {
-  categories: Category[];
+  allCategories: Category[];
   onChange: (ids: number[]) => void;
+  selectedCategories?: Category[];
   defaultCategories?: Category[];
+  renderTags?: (
+    value: number[],
+    getTagProps: AutocompleteRenderGetTagProps
+  ) => ReactNode;
 };
 
 const icon = <CheckBoxOutlineBlank fontSize="small" />;
 const checkedIcon = <CheckBox fontSize="small" />;
 
 export const CategoriesAutocomplete: FC<Props> = ({
-  categories,
+  allCategories,
   onChange,
+  selectedCategories,
   defaultCategories,
+  renderTags,
 }) => {
-  const idMap = useRef(new Map(categories.map((c) => [c.id, c])));
+  const idMap = useRef(new Map(allCategories.map((c) => [c.id, c])));
 
   return (
     <Autocomplete
       multiple
-      options={categories.map(({ id }) => id)}
-      defaultValue={
-        defaultCategories ? defaultCategories.map(({ id }) => id) : []
-      }
-      renderTags={() => null}
+      options={allCategories.map(({ id }) => id)}
+      value={selectedCategories?.map(({ id }) => id)}
+      defaultValue={defaultCategories?.map(({ id }) => id)}
+      renderTags={renderTags}
       renderOption={(props, option, { selected }) => {
         const category = idMap.current.get(option);
 

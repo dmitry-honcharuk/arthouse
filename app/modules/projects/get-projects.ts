@@ -8,6 +8,7 @@ interface Details {
   userId?: string;
   isSecure?: boolean;
   tags?: string[];
+  categories?: number[];
 }
 
 export async function getProjects(details?: Details): Promise<FullProject[]> {
@@ -22,9 +23,17 @@ export async function getProjects(details?: Details): Promise<FullProject[]> {
       }),
       userId: details?.userId,
       isSecure: details?.isSecure,
-      AND: details?.tags?.map((tag) => ({
-        tags: { some: { name: tag } },
-      })),
+      AND:
+        details?.tags || details?.categories
+          ? [
+              ...(details?.tags?.map((tag) => ({
+                tags: { some: { name: tag } },
+              })) ?? []),
+              ...(details?.categories?.map((categoryId) => ({
+                categories: { some: { id: categoryId } },
+              })) ?? []),
+            ]
+          : undefined,
     },
     include: {
       items: true,

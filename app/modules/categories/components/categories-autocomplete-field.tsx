@@ -16,7 +16,7 @@ export const CategoriesAutocompleteField: FC<{
         <input key={id} type="hidden" name="categories" value={id} />
       ))}
       <CategoriesAutocomplete
-        categories={allCategories}
+        allCategories={allCategories}
         defaultCategories={defaultCategories}
         onChange={setIds}
       />
