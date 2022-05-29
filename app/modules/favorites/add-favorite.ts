@@ -1,10 +1,11 @@
 import { prisma } from '~/db.server';
 
 export async function addFavorite(userId: string, projectId: string) {
-  return prisma.favorite.create({
+  return prisma.project.update({
+    where: { id: projectId },
     data: {
-      userId,
-      projectId,
+      favorites: { create: { userId } },
+      favoriteCount: { increment: 1 },
     },
   });
 }
