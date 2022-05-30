@@ -4,17 +4,17 @@ import type { AutocompleteRenderGetTagProps } from '@mui/material/Autocomplete/A
 import type { Category } from '@prisma/client';
 import type { FC, ReactNode } from 'react';
 import * as React from 'react';
-import { useRef } from 'react';
 
 type Props = {
   allCategories: Category[];
-  onChange: (ids: number[]) => void;
+  onChange: (categories: Category[]) => void;
   selectedCategories?: Category[];
   defaultCategories?: Category[];
   renderTags?: (
-    value: number[],
+    value: Category[],
     getTagProps: AutocompleteRenderGetTagProps
   ) => ReactNode;
+  limitTags?: number;
 };
 
 const icon = <CheckBoxOutlineBlank fontSize="small" />;
@@ -26,19 +26,18 @@ export const CategoriesAutocomplete: FC<Props> = ({
   selectedCategories,
   defaultCategories,
   renderTags,
+  limitTags,
 }) => {
-  const idMap = useRef(new Map(allCategories.map((c) => [c.id, c])));
-
   return (
     <Autocomplete
       multiple
-      options={allCategories.map(({ id }) => id)}
-      value={selectedCategories?.map(({ id }) => id)}
-      defaultValue={defaultCategories?.map(({ id }) => id)}
+      options={allCategories}
+      value={selectedCategories}
+      defaultValue={defaultCategories}
+      limitTags={limitTags}
       renderTags={renderTags}
+      isOptionEqualToValue={(option, value) => option.id === value.id}
       renderOption={(props, option, { selected }) => {
-        const category = idMap.current.get(option);
-
         return (
           <li {...props}>
             <Checkbox
@@ -47,13 +46,11 @@ export const CategoriesAutocomplete: FC<Props> = ({
               sx={{ mr: 1 }}
               checked={selected}
             />
-            {category?.name}
+            {option.name}
           </li>
         );
       }}
-      getOptionLabel={(option) =>
-        idMap.current.get(option)?.name ?? 'unknown category'
-      }
+      getOptionLabel={(option) => option.name ?? 'unknown category'}
       onChange={(_, value) => onChange(value)}
       disableCloseOnSelect
       renderInput={(params) => (

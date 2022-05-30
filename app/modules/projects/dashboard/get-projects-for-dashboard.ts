@@ -3,14 +3,20 @@ import { getLatestProjects } from '~/modules/projects/dashboard/get-latest-proje
 import { getTrendingProjects } from '~/modules/projects/dashboard/get-trending-projects';
 import type { FullProject } from '~/modules/projects/types/full-project';
 
-export async function getProjectsForDashboard(
-  sorting: DashboardSorting
-): Promise<FullProject[]> {
+interface Filters {
+  sorting: DashboardSorting;
+  categories: number[];
+}
+
+export async function getProjectsForDashboard({
+  sorting,
+  categories,
+}: Filters): Promise<FullProject[]> {
   switch (sorting) {
     case DashboardSorting.Latest:
-      return getLatestProjects();
+      return getLatestProjects({ categories });
 
     default:
-      return getTrendingProjects();
+      return getTrendingProjects({ categories });
   }
 }

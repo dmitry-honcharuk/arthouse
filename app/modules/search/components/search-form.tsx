@@ -52,6 +52,7 @@ export const SearchForm: FC<Props> = ({
   return (
     <Stack
       component={Form}
+      maxWidth={400}
       gap={2}
       onSubmit={() => {
         if (tag) {
@@ -171,6 +172,9 @@ export const SearchForm: FC<Props> = ({
         </div>
         <Card variant="outlined">
           <CardContent className="flex flex-col gap-3">
+            {categories.map(({ id }) => (
+              <input key={id} type="hidden" name="categories" value={id} />
+            ))}
             <CategoriesAutocomplete
               allCategories={allCategories}
               selectedCategories={categories}
@@ -181,7 +185,7 @@ export const SearchForm: FC<Props> = ({
                   search: getSearchParams({
                     query: initialQuery,
                     tags,
-                    categories,
+                    categories: categories.map(({ id }) => id),
                   }).toString(),
                 });
               }}

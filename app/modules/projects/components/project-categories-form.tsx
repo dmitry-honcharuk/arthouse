@@ -31,7 +31,24 @@ export const ProjectCategoriesForm: FC<Props> = ({
         <CategoryChip
           key={id}
           category={name}
-          link={`/search?categories=${id}`}
+          link={!isEdit ? `/search?categories=${id}` : undefined}
+          onDelete={
+            isCurrentUser && isEdit
+              ? () => {
+                  const formData = new FormData();
+
+                  formData.set('fields', 'categories');
+
+                  project.categories
+                    .filter((cat) => cat.id !== id)
+                    .forEach((cat) =>
+                      formData.append('categories', `${cat.id}`)
+                    );
+
+                  fetcher.submit(formData, { method: 'put', action });
+                }
+              : undefined
+          }
         />
       ))}
     </Stack>
@@ -56,7 +73,9 @@ export const ProjectCategoriesForm: FC<Props> = ({
 
               form.set('fields', 'categories');
 
-              categories.forEach((id) => form.append('categories', `${id}`));
+              categories.forEach(({ id }) =>
+                form.append('categories', `${id}`)
+              );
 
               fetcher.submit(form, { method: 'put', action });
             }}
