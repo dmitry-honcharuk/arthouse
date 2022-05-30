@@ -1,10 +1,26 @@
 import { S3 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import type { UploadHandler } from '@remix-run/node';
+import { writeAsyncIterableToWritable } from '@remix-run/node';
 import cuid from 'cuid';
+import { PassThrough } from 'stream';
 import { z } from 'zod';
 
-export const uploadHandler: UploadHandler = async ({ stream, filename }) => {
+export const uploadHandler: UploadHandler = async ({ data, filename }) => {
+  if (!filename) {
+    // This is regular, non-file fields which were passed along with files
+
+    let result = '';
+
+    for await (const chunk of data) {
+      result += Buffer.from(chunk).toString('utf8');
+    }
+
+    return result;
+  }
+
+  const stream = new PassThrough();
+
   const { accessKeyId, secretAccessKey, bucket, region } = z
     .object({
       region: z.string(),
@@ -36,7 +52,10 @@ export const uploadHandler: UploadHandler = async ({ stream, filename }) => {
     },
   });
 
-  await upload.done();
+  await Promise.all([
+    writeAsyncIterableToWritable(data, stream),
+    upload.done(),
+  ]);
 
   return getObjectUrl({
     filename: name,
