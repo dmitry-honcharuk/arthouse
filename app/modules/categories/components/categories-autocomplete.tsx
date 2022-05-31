@@ -1,37 +1,43 @@
 import { CheckBox, CheckBoxOutlineBlank } from '@mui/icons-material';
 import { Autocomplete, Checkbox, TextField } from '@mui/material';
+import type { AutocompleteRenderGetTagProps } from '@mui/material/Autocomplete/Autocomplete';
 import type { Category } from '@prisma/client';
-import type { FC } from 'react';
+import type { FC, ReactNode } from 'react';
 import * as React from 'react';
-import { useRef } from 'react';
 
 type Props = {
-  categories: Category[];
-  onChange: (ids: number[]) => void;
+  allCategories: Category[];
+  onChange: (categories: Category[]) => void;
+  selectedCategories?: Category[];
   defaultCategories?: Category[];
+  renderTags?: (
+    value: Category[],
+    getTagProps: AutocompleteRenderGetTagProps
+  ) => ReactNode;
+  limitTags?: number;
 };
 
 const icon = <CheckBoxOutlineBlank fontSize="small" />;
 const checkedIcon = <CheckBox fontSize="small" />;
 
 export const CategoriesAutocomplete: FC<Props> = ({
-  categories,
+  allCategories,
   onChange,
+  selectedCategories,
   defaultCategories,
+  renderTags,
+  limitTags,
 }) => {
-  const idMap = useRef(new Map(categories.map((c) => [c.id, c])));
-
   return (
     <Autocomplete
       multiple
-      options={categories.map(({ id }) => id)}
-      defaultValue={
-        defaultCategories ? defaultCategories.map(({ id }) => id) : []
-      }
-      renderTags={() => null}
+      options={allCategories}
+      value={selectedCategories}
+      defaultValue={defaultCategories}
+      limitTags={limitTags}
+      renderTags={renderTags}
+      isOptionEqualToValue={(option, value) => option.id === value.id}
       renderOption={(props, option, { selected }) => {
-        const category = idMap.current.get(option);
-
         return (
           <li {...props}>
             <Checkbox
@@ -40,13 +46,11 @@ export const CategoriesAutocomplete: FC<Props> = ({
               sx={{ mr: 1 }}
               checked={selected}
             />
-            {category?.name}
+            {option.name}
           </li>
         );
       }}
-      getOptionLabel={(option) =>
-        idMap.current.get(option)?.name ?? 'unknown category'
-      }
+      getOptionLabel={(option) => option.name ?? 'unknown category'}
       onChange={(_, value) => onChange(value)}
       disableCloseOnSelect
       renderInput={(params) => (
