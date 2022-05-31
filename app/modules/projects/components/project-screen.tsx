@@ -24,18 +24,21 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import type { Category } from '@prisma/client';
 import { ProjectItemType } from '@prisma/client';
 import { Link } from '@remix-run/react';
 import format from 'date-fns/format';
 import type { FC, ReactNode } from 'react';
 import * as React from 'react';
 import { useState } from 'react';
+import type { WithCategories } from '~/modules/categories/types/with-categories';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
 import { useToggle } from '~/modules/common/hooks/use-toggle';
 import PageLayout from '~/modules/common/page-layout';
 import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
 import { HappyMessage } from '~/modules/favorites/components/happy-message';
 import { UnhappyMessage } from '~/modules/favorites/components/unhappy-message';
+import { CategoriesCard } from '~/modules/projects/components/categories-card';
 import { ItemForm } from '~/modules/projects/components/item-form';
 import { ProjectItems } from '~/modules/projects/components/project-items';
 import { ProjectPreviewForm } from '~/modules/projects/components/project-preview-form';
@@ -58,8 +61,13 @@ interface Props {
   isFavorite: boolean;
   favouritesCount: number;
   currentUser: UserWithProfile | null;
-  project: ProjectWithItems & WithUser & WithProjectSecurity & WithTags;
+  project: ProjectWithItems &
+    WithUser &
+    WithProjectSecurity &
+    WithTags &
+    WithCategories;
   breadcrumbs?: ReactNode;
+  categories: Category[];
 }
 
 export const ProjectScreen: FC<Props> = ({
@@ -69,6 +77,7 @@ export const ProjectScreen: FC<Props> = ({
   isCurrentUser,
   isFavorite,
   breadcrumbs,
+  categories,
 }) => {
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
@@ -253,6 +262,18 @@ export const ProjectScreen: FC<Props> = ({
                   project={project}
                   action={settingsPath}
                   isCurrentUser={isCurrentUser}
+                />
+              </CardContent>
+            </Card>
+          )}
+          {(isCurrentUser || !!project.categories.length) && (
+            <Card elevation={3}>
+              <CardContent>
+                <CategoriesCard
+                  project={project}
+                  action={settingsPath}
+                  isCurrentUser={isCurrentUser}
+                  categories={categories}
                 />
               </CardContent>
             </Card>

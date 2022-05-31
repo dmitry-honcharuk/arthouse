@@ -1,9 +1,11 @@
 import { Typography } from '@mui/material';
+import type { Category } from '@prisma/client';
 import { ProjectStatus } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import * as React from 'react';
+import { getCategories } from '~/modules/categories/get-categories';
 import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
@@ -19,6 +21,8 @@ type LoaderData = {
   currentUser: UserWithProfile | null;
   query: string | null;
   tags: string[];
+  categories: Category[];
+  allCategories: Category[];
   projects?: FullProject[];
   favouriteIds?: string[];
 };
@@ -26,18 +30,39 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({ request }) => {
   const query = new URL(request.url).searchParams.get('q');
   const tagsSearch = new URL(request.url).searchParams.getAll('tags');
+  const categoriesSearch = new URL(request.url).searchParams.getAll(
+    'categories'
+  );
 
   const tags = normalizeTags(tagsSearch);
+  const categoryIds = categoriesSearch
+    .filter(Boolean)
+    .map(Number)
+    .filter((c) => !Number.isNaN(c));
 
-  const currentUser = await getLoggedInUser(request);
+  const [currentUser, allCategories] = await Promise.all([
+    getLoggedInUser(request),
+    getCategories(),
+  ]);
 
-  if (!query && !tags.length) {
-    return json<LoaderData>({ currentUser, query, tags });
+  const categories = allCategories.filter(({ id }) => categoryIds.includes(id));
+
+  if (!query && !tags.length && !categoriesSearch.length) {
+    return json<LoaderData>({
+      currentUser,
+      query,
+      tags,
+      categories,
+      allCategories,
+    });
   }
 
   const projects = await getProjects({
     ...(query && { name: query }),
     ...(tags.length && { tags }),
+    ...(categoriesSearch && {
+      categories: categoryIds,
+    }),
     statuses: [ProjectStatus.PUBLISHED],
     isSecure: false,
   });
@@ -50,6 +75,8 @@ export const loader: LoaderFunction = async ({ request }) => {
     projects,
     query,
     tags,
+    categories,
+    allCategories,
   });
 };
 
@@ -60,6 +87,8 @@ export default function SearchPage() {
     favouriteIds,
     query: initialQuery,
     tags,
+    categories,
+    allCategories,
   } = useLoaderData<LoaderData>();
 
   if (!projects) {
@@ -68,6 +97,8 @@ export default function SearchPage() {
         currentUser={currentUser}
         initialQuery={initialQuery}
         tags={tags}
+        categories={categories}
+        allCategories={allCategories}
       >
         <Typography>What would you like to look up?</Typography>
       </SearchPageLayout>
@@ -80,6 +111,8 @@ export default function SearchPage() {
         currentUser={currentUser}
         initialQuery={initialQuery}
         tags={tags}
+        categories={categories}
+        allCategories={allCategories}
       >
         <Typography>
           ¯\_(ツ)_/¯ Nothing was found to satisfy your request.
@@ -94,6 +127,8 @@ export default function SearchPage() {
       currentUser={currentUser}
       initialQuery={initialQuery}
       tags={tags}
+      categories={categories}
+      allCategories={allCategories}
     >
       <Projects>
         {projects.map((project) => (

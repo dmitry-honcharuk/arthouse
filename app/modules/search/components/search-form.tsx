@@ -6,21 +6,32 @@ import {
   InputAdornment,
   Stack,
   TextField,
+  Typography,
 } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
+import type { Category } from '@prisma/client';
 import { Form, useNavigate } from '@remix-run/react';
 import type { FC } from 'react';
 import * as React from 'react';
 import { Fragment, useEffect, useRef, useState } from 'react';
+import { CategoriesAutocomplete } from '~/modules/categories/components/categories-autocomplete';
+import { CategoryChip } from '~/modules/categories/components/category-chip';
 import { TagChip } from '~/modules/tags/components/tag-chip';
 import { normalizeTags } from '~/modules/tags/normalize-tags';
 
 interface Props {
   initialQuery: string | null;
   tags: string[];
+  categories: Category[];
+  allCategories: Category[];
 }
 
-export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
+export const SearchForm: FC<Props> = ({
+  initialQuery,
+  tags: initialTags,
+  categories,
+  allCategories,
+}) => {
   const tags = normalizeTags(initialTags);
 
   const [query, setQuery] = useState(initialQuery ?? '');
@@ -41,14 +52,15 @@ export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
   return (
     <Stack
       component={Form}
-      gap={1}
+      maxWidth={400}
+      gap={2}
       onSubmit={() => {
         if (tag) {
           setTag('');
         }
       }}
     >
-      <Stack direction="row" gap={1} marginBottom={2}>
+      <Stack direction="row" gap={1} marginBottom={1}>
         <TextField
           label="Search"
           name="q"
@@ -75,6 +87,7 @@ export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
                       search: getSearchParams({
                         query: null,
                         tags,
+                        categories: categories.map(({ id }) => id),
                       }).toString(),
                     });
                   }}
@@ -90,7 +103,7 @@ export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
           Search
         </Button>
       </Stack>
-      <div className="relative">
+      <Stack className="relative">
         <div className="absolute -top-3 left-2 bg-white px-1">
           <Tag />
         </div>
@@ -118,6 +131,7 @@ export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
                             search: getSearchParams({
                               query: null,
                               tags,
+                              categories: categories.map(({ id }) => id),
                             }).toString(),
                           });
                         }}
@@ -140,6 +154,7 @@ export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
                           search: getSearchParams({
                             query: initialQuery,
                             tags: tags.filter((t) => t !== tag),
+                            categories: categories.map(({ id }) => id),
                           }).toString(),
                         });
                       }}
@@ -150,7 +165,54 @@ export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
             </Stack>
           </CardContent>
         </Card>
-      </div>
+      </Stack>
+      <Stack className="relative">
+        <div className="absolute -top-3 left-2 bg-white px-1">
+          <Typography variant="overline">Categories</Typography>
+        </div>
+        <Card variant="outlined">
+          <CardContent className="flex flex-col gap-3">
+            {categories.map(({ id }) => (
+              <input key={id} type="hidden" name="categories" value={id} />
+            ))}
+            <CategoriesAutocomplete
+              allCategories={allCategories}
+              selectedCategories={categories}
+              renderTags={() => null}
+              onChange={(categories) => {
+                navigate({
+                  pathname: '/search',
+                  search: getSearchParams({
+                    query: initialQuery,
+                    tags,
+                    categories: categories.map(({ id }) => id),
+                  }).toString(),
+                });
+              }}
+            />
+            <Stack direction="row" gap={1} flexWrap="wrap">
+              {categories.map(({ id, name }) => (
+                <CategoryChip
+                  key={id}
+                  category={name}
+                  onDelete={() => {
+                    navigate({
+                      pathname: '/search',
+                      search: getSearchParams({
+                        query: initialQuery,
+                        tags,
+                        categories: categories
+                          .filter((cat) => cat.id !== id)
+                          .map(({ id }) => id),
+                      }).toString(),
+                    });
+                  }}
+                />
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+      </Stack>
     </Stack>
   );
 };
@@ -158,9 +220,11 @@ export const SearchForm: FC<Props> = ({ initialQuery, tags: initialTags }) => {
 function getSearchParams({
   query,
   tags,
+  categories,
 }: {
   query: string | null;
-  tags: string[];
+  tags?: string[];
+  categories?: number[];
 }): URLSearchParams {
   const params = new URLSearchParams();
 
@@ -168,7 +232,8 @@ function getSearchParams({
     params.set('q', query);
   }
 
-  tags.forEach((t) => params.append('tags', t));
+  tags?.forEach((t) => params.append('tags', t));
+  categories?.forEach((c) => params.append('categories', `${c}`));
 
   return params;
 }

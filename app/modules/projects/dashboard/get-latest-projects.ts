@@ -1,11 +1,17 @@
 import { ProjectStatus } from '@prisma/client';
+import { getProjects } from '~/modules/projects/get-projects';
 import type { FullProject } from '~/modules/projects/types/full-project';
-import { getProjects } from '../get-projects';
 
-export async function getLatestProjects(): Promise<FullProject[]> {
+export async function getLatestProjects({
+  categories,
+}: {
+  categories: number[];
+}): Promise<FullProject[]> {
   return getProjects({
     statuses: [ProjectStatus.PUBLISHED],
     isSecure: false,
     order: { createdAt: 'desc' },
+    categories,
+    tagsCategoriesSet: 'union',
   });
 }

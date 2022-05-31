@@ -3,12 +3,15 @@ import {
   GridViewOutlined,
   PersonPin,
 } from '@mui/icons-material';
+import type { Category } from '@prisma/client';
 import { ProjectItemType, ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import * as React from 'react';
 import { z } from 'zod';
+import { getCategories } from '~/modules/categories/get-categories';
+import type { WithCategories } from '~/modules/categories/types/with-categories';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { countFavourites } from '~/modules/favorites/count-favourites';
 import { getFavorites } from '~/modules/favorites/get-favorites';
@@ -33,7 +36,12 @@ interface LoaderData {
   isFavorite: boolean;
   favouritesCount: number;
   currentUser: UserWithProfile | null;
-  project: ProjectWithItems & WithUser & WithProjectSecurity & WithTags;
+  project: ProjectWithItems &
+    WithUser &
+    WithProjectSecurity &
+    WithTags &
+    WithCategories;
+  categories: Category[];
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -76,12 +84,18 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     return redirect(`/${getProjectPath(project, project.user)}/authorize`);
   }
 
+  const [favouritesCount, categories] = await Promise.all([
+    countFavourites(project.id),
+    getCategories(),
+  ]);
+
   return json<LoaderData>({
     project,
     isFavorite: isFavorite({ projectId: project.id, favorites }),
     isCurrentUser,
     currentUser,
-    favouritesCount: await countFavourites(project.id),
+    favouritesCount,
+    categories,
   });
 };
 
@@ -136,8 +150,14 @@ export const action: ActionFunction = async (context) => {
 };
 
 export default function ProjectPage() {
-  const { project, isCurrentUser, isFavorite, currentUser, favouritesCount } =
-    useLoaderData<LoaderData>();
+  const {
+    project,
+    isCurrentUser,
+    isFavorite,
+    currentUser,
+    favouritesCount,
+    categories,
+  } = useLoaderData<LoaderData>();
 
   return (
     <ProjectScreen
@@ -146,6 +166,7 @@ export default function ProjectPage() {
       isFavorite={isFavorite}
       currentUser={currentUser}
       favouritesCount={favouritesCount}
+      categories={categories}
       breadcrumbs={
         <Breadcrumbs
           items={[

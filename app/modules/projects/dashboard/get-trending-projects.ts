@@ -4,7 +4,11 @@ import { prisma } from '~/db.server';
 import { getProjects } from '~/modules/projects/get-projects';
 import type { FullProject } from '~/modules/projects/types/full-project';
 
-export async function getTrendingProjects(): Promise<FullProject[]> {
+export async function getTrendingProjects({
+  categories,
+}: {
+  categories: number[];
+}): Promise<FullProject[]> {
   const countByFavourites = await prisma.favorite.groupBy({
     by: ['projectId'],
     _count: true,
@@ -13,6 +17,9 @@ export async function getTrendingProjects(): Promise<FullProject[]> {
       project: {
         status: ProjectStatus.PUBLISHED,
         isSecure: false,
+        ...(categories.length && {
+          categories: { some: { id: { in: categories } } },
+        }),
       },
     },
   });
@@ -34,6 +41,8 @@ export async function getTrendingProjects(): Promise<FullProject[]> {
       },
       statuses: [ProjectStatus.PUBLISHED],
       isSecure: false,
+      categories,
+      tagsCategoriesSet: 'union',
       order: { favoriteCount: 'desc' },
     }),
   ]);

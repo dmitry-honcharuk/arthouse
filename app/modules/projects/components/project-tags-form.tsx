@@ -87,7 +87,6 @@ export const ProjectTagsForm: FC<Props> = ({
       {tag && <input type="hidden" name="tags" value={tag} />}
 
       <Stack spacing={2}>
-        {tagDisplay}
         {isCurrentUser && (
           <TextField
             autoFocus
@@ -115,6 +114,7 @@ export const ProjectTagsForm: FC<Props> = ({
             }}
           />
         )}
+        {tagDisplay}
       </Stack>
     </fetcher.Form>
   );
