@@ -94,11 +94,16 @@ export default function Dashboard() {
 
   return (
     <Layout currentUser={currentUser}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        gap={{ xs: 2, sm: 0 }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'stratch', sm: 'center' }}
+      >
         <Tabs
           value={tab}
           onChange={(_, newValue) => setTab(newValue)}
-          aria-label="icon position tabs example"
+          aria-label="tabs"
         >
           <Tab
             icon={<WhatshotOutlined />}
@@ -137,7 +142,7 @@ export default function Dashboard() {
             }}
           />
         </Tabs>
-        <Box minWidth={200}>
+        <Box>
           <CategoriesAutocomplete
             allCategories={allCategories}
             selectedCategories={selectedCategories}
