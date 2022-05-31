@@ -30,6 +30,7 @@ export async function getUserProject(
         include: { profile: true },
       },
       items: true,
+      categories: true,
     },
   });
 }

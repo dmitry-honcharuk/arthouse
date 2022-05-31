@@ -77,7 +77,8 @@ model Project {
 
   isSecure Boolean @default(false) @map("is_secure")
 
-  tags Tag[]
+  tags       Tag[]
+  categories Category[]
 
   favoriteCount Int @default(0) @map("favorite_count")
 
@@ -177,4 +178,14 @@ model Tag {
   projects Project[]
 
   @@map("tags")
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+
+  name String @unique
+
+  projects Project[]
+
+  @@map("categories")
 }

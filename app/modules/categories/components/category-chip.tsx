@@ -1,19 +1,19 @@
-import { TagOutlined } from '@mui/icons-material';
+import { GridViewOutlined } from '@mui/icons-material';
 import type { FC } from 'react';
 import * as React from 'react';
 import { Chip } from '~/modules/common/chip';
 
 interface Props {
-  tag: string;
+  category: string;
   onDelete?: () => void;
   link?: string;
 }
 
-export const TagChip: FC<Props> = ({ tag, onDelete, link }) => {
+export const CategoryChip: FC<Props> = ({ category, onDelete, link }) => {
   return (
     <Chip
-      icon={<TagOutlined sx={{ fontSize: '1rem' }} />}
-      label={tag}
+      icon={<GridViewOutlined sx={{ fontSize: '1rem' }} />}
+      label={category}
       onDelete={onDelete}
       link={link}
     />

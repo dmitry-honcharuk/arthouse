@@ -9,12 +9,16 @@ interface Details {
   statuses?: ProjectStatus[];
   userId?: string;
   isSecure?: boolean;
-  tags?: string[];
   ids?: { include?: string[]; exclude?: string[] };
   order?: { favoriteCount?: SortOrder; createdAt?: SortOrder };
+  tags?: string[];
+  categories?: number[];
+  tagsCategoriesSet?: 'intersection' | 'union';
 }
 
 export async function getProjects(details?: Details): Promise<FullProject[]> {
+  const tagsCategoriesSetType = details?.tagsCategoriesSet ?? 'intersection';
+
   return prisma.project.findMany({
     where: {
       id: {
@@ -30,9 +34,25 @@ export async function getProjects(details?: Details): Promise<FullProject[]> {
       }),
       userId: details?.userId,
       isSecure: details?.isSecure,
-      AND: details?.tags?.map((tag) => ({
-        tags: { some: { name: tag } },
-      })),
+      ...(tagsCategoriesSetType === 'intersection'
+        ? {
+            AND: [
+              ...(details?.tags?.map((tag) => ({
+                tags: { some: { name: tag } },
+              })) ?? []),
+              ...(details?.categories?.map((categoryId) => ({
+                categories: { some: { id: categoryId } },
+              })) ?? []),
+            ],
+          }
+        : {
+            ...(details?.categories?.length && {
+              categories: { some: { id: { in: details.categories } } },
+            }),
+            ...(details?.tags?.length && {
+              tags: { some: { name: { in: details.tags } } },
+            }),
+          }),
     },
     include: {
       items: true,
