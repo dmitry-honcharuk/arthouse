@@ -142,7 +142,7 @@ export default function Dashboard() {
             }}
           />
         </Tabs>
-        <Box>
+        <Box minWidth={200}>
           <CategoriesAutocomplete
             allCategories={allCategories}
             selectedCategories={selectedCategories}
