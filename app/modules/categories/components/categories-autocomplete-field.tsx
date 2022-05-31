@@ -8,17 +8,19 @@ export const CategoriesAutocompleteField: FC<{
   allCategories: Category[];
   defaultCategories?: Category[];
 }> = ({ allCategories, defaultCategories }) => {
-  const [ids, setIds] = useState<number[]>([]);
+  const [categories, setCategories] = useState<Category[]>(
+    defaultCategories ?? []
+  );
 
   return (
     <>
-      {ids.map((id) => (
+      {categories.map(({ id }) => (
         <input key={id} type="hidden" name="categories" value={id} />
       ))}
       <CategoriesAutocomplete
         allCategories={allCategories}
         defaultCategories={defaultCategories}
-        onChange={setIds}
+        onChange={setCategories}
       />
     </>
   );
