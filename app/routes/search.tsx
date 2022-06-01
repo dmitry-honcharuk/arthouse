@@ -60,7 +60,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   const projects = await getProjects({
     ...(query && { name: query }),
     ...(tags.length && { tags }),
-    ...(categoriesSearch && {
+    ...(categoriesSearch.length && {
       categories: categoryIds,
     }),
     statuses: [ProjectStatus.PUBLISHED],
