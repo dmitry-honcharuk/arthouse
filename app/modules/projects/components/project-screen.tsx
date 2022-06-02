@@ -12,6 +12,7 @@ import {
   Box,
   Button,
   Card,
+  CardActions,
   CardContent,
   CardMedia,
   ListItemIcon,
@@ -50,6 +51,7 @@ import type { ProjectWithItems } from '~/modules/projects/types/project-with-ite
 import type { WithProjectSecurity } from '~/modules/projects/types/with-project-security';
 import { getStatusLabel } from '~/modules/projects/utils/get-status-label';
 import type { WithTags } from '~/modules/tags/types/with-tags';
+import { FollowButton } from '~/modules/users/components/follow-button';
 import { NicknameTag } from '~/modules/users/components/profile/nickname-tag';
 import { SocialLink } from '~/modules/users/components/profile/social-link';
 import { getUserPath } from '~/modules/users/get-user-path';
@@ -68,6 +70,7 @@ interface Props {
     WithCategories;
   breadcrumbs?: ReactNode;
   categories: Category[];
+  isFollowing: boolean;
 }
 
 export const ProjectScreen: FC<Props> = ({
@@ -78,6 +81,7 @@ export const ProjectScreen: FC<Props> = ({
   isFavorite,
   breadcrumbs,
   categories,
+  isFollowing,
 }) => {
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
@@ -254,6 +258,14 @@ export const ProjectScreen: FC<Props> = ({
                 <p className="text-sm">{project.user.profile.summary}</p>
               )}
             </CardContent>
+            {currentUser && !isCurrentUser && (
+              <CardActions>
+                <FollowButton
+                  isFollowing={isFollowing}
+                  userId={project.user.id}
+                />
+              </CardActions>
+            )}
           </Card>
           {(isCurrentUser || !!project.tags.length) && (
             <Card elevation={3}>
