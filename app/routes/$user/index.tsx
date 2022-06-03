@@ -39,6 +39,7 @@ import { getProjectPath } from '~/modules/projects/get-project-path';
 import { getProjects } from '~/modules/projects/get-projects';
 import type { WithProjects } from '~/modules/projects/types/with-projects';
 import { FollowButton } from '~/modules/users/components/follow-button';
+import { NicknameTag } from '~/modules/users/components/profile/nickname-tag';
 import { UserLayout } from '~/modules/users/components/user-layout';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import { isFollowing } from '~/modules/users/is-following';
@@ -151,7 +152,9 @@ export default function UserProjects() {
               <Stack gap={1}>
                 <Stack direction="row" alignItems="flex-end" gap={2}>
                   <GravatarAvatar email={user.email} />
-                  <Typography variant="h6">{user.profile?.nickname}</Typography>
+                  {user.profile?.nickname && (
+                    <NicknameTag nickname={user.profile.nickname} />
+                  )}
                 </Stack>
                 <Typography>{user.email}</Typography>
               </Stack>
