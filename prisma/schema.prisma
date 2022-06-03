@@ -24,6 +24,9 @@ model User {
 
   Favorite Favorite[]
 
+  followedBy User[] @relation("UserFollows", references: [id])
+  following  User[] @relation("UserFollows", references: [id])
+
   @@map("users")
 }
 

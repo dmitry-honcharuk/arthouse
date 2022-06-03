@@ -8,6 +8,8 @@ import {
   Button,
   Card,
   CardActionArea,
+  CardActions,
+  CardContent,
   FormControl,
   InputLabel,
   Link as MaterialLink,
@@ -26,29 +28,35 @@ import * as React from 'react';
 import { useState } from 'react';
 import invariant from 'tiny-invariant';
 import { z } from 'zod';
-import { prisma } from '~/db.server';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
+import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
 import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
+import { getProjects } from '~/modules/projects/get-projects';
 import type { WithProjects } from '~/modules/projects/types/with-projects';
+import { FollowButton } from '~/modules/users/components/follow-button';
+import { NicknameTag } from '~/modules/users/components/profile/nickname-tag';
 import { UserLayout } from '~/modules/users/components/user-layout';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
+import { isFollowing } from '~/modules/users/is-following';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
-import { getSessionUser } from '~/server/get-session.user.server';
+import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 type FullAlbum = Album & WithProjects & WithUser;
 
 interface LoaderData {
   isCurrentUser: boolean;
+  currentUser: UserWithProfile | null;
   projects: (Project & WithUser)[];
   favouriteIds: string[];
   albums: FullAlbum[];
   user: UserWithProfile;
+  following: boolean;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -59,7 +67,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     .parse(params);
 
   const [currentUser, user] = await Promise.all([
-    getSessionUser(request),
+    getLoggedInUser(request),
     getUserByIdentifier(userIdentifier),
   ]);
 
@@ -67,42 +75,49 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   const isCurrentUser = currentUser?.id === user.id;
 
-  const projects = await prisma.project.findMany({
-    where: {
-      status: isCurrentUser
-        ? { in: [ProjectStatus.DRAFT, ProjectStatus.PUBLISHED] }
-        : ProjectStatus.PUBLISHED,
+  const [projects, albums, favorites, following] = await Promise.all([
+    getProjects({
       userId: user.id,
+      statuses: isCurrentUser
+        ? [ProjectStatus.DRAFT, ProjectStatus.PUBLISHED]
+        : [ProjectStatus.PUBLISHED],
       ...(!isCurrentUser && { isSecure: false }),
-    },
-    include: {
-      user: { include: { profile: true } },
-    },
-  });
-
-  const albums = await getUserAlbums(user.id, {
-    ...(!isCurrentUser && {
-      project: { isSecure: false },
-      albums: { isSecure: false },
     }),
-  });
-
-  const favorites = currentUser ? await getFavorites(currentUser.id) : [];
+    getUserAlbums(user.id, {
+      ...(!isCurrentUser && {
+        project: { isSecure: false },
+        albums: { isSecure: false },
+      }),
+    }),
+    currentUser ? getFavorites(currentUser.id) : [],
+    currentUser && !isCurrentUser
+      ? isFollowing({ userId: user.id, followerId: currentUser.id })
+      : false,
+  ]);
 
   return json<LoaderData>({
     projects,
     favouriteIds: favorites.map(({ projectId }) => projectId),
     isCurrentUser,
+    currentUser,
     albums: isCurrentUser
       ? albums
       : albums.filter(({ projects }) => !!projects.length),
     user,
+    following,
   });
 };
 
 export default function UserProjects() {
-  const { projects, isCurrentUser, albums, favouriteIds, user } =
-    useLoaderData<LoaderData>();
+  const {
+    projects,
+    isCurrentUser,
+    albums,
+    favouriteIds,
+    user,
+    currentUser,
+    following,
+  } = useLoaderData<LoaderData>();
 
   const [selectedAlbum, setSelectedAlbum] = useState<FullAlbum | 'all'>('all');
 
@@ -131,6 +146,24 @@ export default function UserProjects() {
       }
     >
       <Stack gap={3}>
+        {currentUser && !isCurrentUser && (
+          <Card variant="outlined" className="mb-3">
+            <CardContent>
+              <Stack gap={1}>
+                <Stack direction="row" alignItems="flex-end" gap={2}>
+                  <GravatarAvatar email={user.email} />
+                  {user.profile?.nickname && (
+                    <NicknameTag nickname={user.profile.nickname} />
+                  )}
+                </Stack>
+                <Typography>{user.email}</Typography>
+              </Stack>
+            </CardContent>
+            <CardActions>
+              <FollowButton userId={user.id} isFollowing={following} />
+            </CardActions>
+          </Card>
+        )}
         <Stack
           direction="row"
           alignItems="center"
