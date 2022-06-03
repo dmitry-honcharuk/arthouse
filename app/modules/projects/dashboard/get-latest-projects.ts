@@ -11,7 +11,7 @@ export async function getLatestProjects({
     statuses: [ProjectStatus.PUBLISHED],
     isSecure: false,
     order: { createdAt: 'desc' },
-    categories,
-    tagsCategoriesSet: 'union',
+    ...(categories.length && { categories }),
+    categoriesSet: 'union',
   });
 }

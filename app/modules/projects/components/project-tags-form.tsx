@@ -93,7 +93,7 @@ export const ProjectTagsForm: FC<Props> = ({
             size="small"
             label="new tag"
             value={tag}
-            onChange={({ target }) => setTag(target.value.toLowerCase().trim())}
+            onChange={({ target }) => setTag(target.value.trim())}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">

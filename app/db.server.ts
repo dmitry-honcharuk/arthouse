@@ -46,11 +46,33 @@ function getClient() {
     },
   });
 
-  client.$on('query', (e) => {
-    console.log('\x1b[36m%s\x1b[0m', e.query);
-    console.log('Params: ' + e.params);
-    console.log('Duration: ' + e.duration + 'ms');
-  });
+  client.$on(
+    'query',
+    ({ query: parametrizedQuery, params: paramsString, duration, target }) => {
+      try {
+        const params: unknown[] = JSON.parse(paramsString);
+
+        const query = params.reduce<string>(
+          (q, param, index) =>
+            q.replace(
+              `$${index + 1}`,
+              typeof param === 'string' || param instanceof Date
+                ? `'${param}'`
+                : `${param}`
+            ),
+          parametrizedQuery
+        );
+
+        console.log('\x1b[36m%s\x1b[0m', query);
+        console.log('Params:', params);
+      } catch (e) {
+        console.log('\x1b[36m%s\x1b[0m', parametrizedQuery);
+        console.log('Params:', paramsString);
+      }
+
+      console.log(`Duration: ${duration} ms`);
+    }
+  );
 
   client.$connect();
 

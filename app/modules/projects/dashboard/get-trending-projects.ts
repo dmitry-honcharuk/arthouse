@@ -41,8 +41,8 @@ export async function getTrendingProjects({
       },
       statuses: [ProjectStatus.PUBLISHED],
       isSecure: false,
-      categories,
-      tagsCategoriesSet: 'union',
+      ...(categories.length && { categories }),
+      categoriesSet: 'union',
       order: { favoriteCount: 'desc' },
     }),
   ]);
