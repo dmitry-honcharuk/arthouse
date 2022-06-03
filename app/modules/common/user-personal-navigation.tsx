@@ -2,6 +2,7 @@ import {
   BadgeOutlined,
   FavoriteBorderOutlined,
   FolderCopyOutlined,
+  PeopleAltOutlined,
 } from '@mui/icons-material';
 import { Hidden, Tab, Tabs } from '@mui/material';
 import { Link, useMatches } from '@remix-run/react';
@@ -14,6 +15,7 @@ import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-cont
 enum Nav {
   Projects = 'projects',
   Favourites = 'favorites',
+  Following = 'following',
   Profile = 'profile',
 }
 
@@ -56,6 +58,21 @@ export const UserPersonalNavigation: FC = () => {
               component={Link}
               iconPosition="end"
               label="favorites"
+              sx={{
+                '&.MuiButtonBase-root': {
+                  justifyContent: 'flex-end',
+                },
+              }}
+            />
+          )}
+          {isCurrentUser && (
+            <Tab
+              icon={<PeopleAltOutlined />}
+              to={`/${userPath}/following`}
+              value={Nav.Following}
+              component={Link}
+              iconPosition="end"
+              label="following"
               sx={{
                 '&.MuiButtonBase-root': {
                   justifyContent: 'flex-end',
