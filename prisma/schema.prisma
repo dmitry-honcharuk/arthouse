@@ -127,16 +127,29 @@ model ProjectItem {
 }
 
 model Favorite {
+  id String @id @default(uuid()) @db.Uuid
+
   projectId String   @db.Uuid
   userId    String   @db.Uuid
   createdAt DateTime @default(now()) @map("created_at")
 
-
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
 
-  @@id([projectId, userId])
+  collections Collection[]
+
+  @@unique([projectId, userId])
   @@map("favorites")
+}
+
+model Collection {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  name   String
+
+  Favorites Favorite[]
+
+  @@map("collections")
 }
 
 model Album {
