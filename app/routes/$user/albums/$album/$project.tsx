@@ -25,6 +25,7 @@ import type { WithProjectSecurity } from '~/modules/projects/types/with-project-
 import type { WithTags } from '~/modules/tags/types/with-tags';
 import { getUserPath } from '~/modules/users/get-user-path';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
+import { isFollowing } from '~/modules/users/is-following';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getAlbumAuthSession } from '~/server/album-auth-session.server';
@@ -42,6 +43,7 @@ interface LoaderData {
   favouritesCount: number;
   album: Album;
   categories: Category[];
+  following: boolean;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -97,9 +99,12 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     );
   }
 
-  const [favouritesCount, categories] = await Promise.all([
+  const [favouritesCount, categories, following] = await Promise.all([
     countFavourites(project.id),
     getCategories(),
+    currentUser && !isCurrentUser
+      ? isFollowing({ userId: project.user.id, followerId: currentUser.id })
+      : false,
   ]);
 
   return json<LoaderData>({
@@ -110,6 +115,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     favouritesCount,
     album,
     categories,
+    following,
   });
 };
 
@@ -122,6 +128,7 @@ export default function AlbumScreen() {
     isFavorite,
     album,
     categories,
+    following,
   } = useLoaderData<LoaderData>();
 
   return (
@@ -132,6 +139,7 @@ export default function AlbumScreen() {
       currentUser={currentUser}
       favouritesCount={favouritesCount}
       categories={categories}
+      isFollowing={following}
       breadcrumbs={
         <Breadcrumbs
           items={[
