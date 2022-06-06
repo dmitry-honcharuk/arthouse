@@ -16,6 +16,12 @@ spec:
       containers:
         - name: arthouse
           image: dmitryhoncharuk/arthouse:stage
+          readinessProbe:
+            httpGet:
+              port: 3000
+              path: /healthz
+            initialDelaySeconds: 5
+            periodSeconds: 5
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
