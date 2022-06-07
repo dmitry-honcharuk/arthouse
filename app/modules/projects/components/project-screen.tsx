@@ -190,7 +190,9 @@ export const ProjectScreen: FC<Props> = ({
               favorite={favorite}
               projectId={project.id}
               allCollections={allCollections}
-              favoritesLink={`/${getUserPath(currentUser)}/favorites`}
+              favoritesLink={`/${getUserPath(
+                currentUser
+              )}/favorites?section=collections`}
             />
           )}
           {isCurrentUser && (

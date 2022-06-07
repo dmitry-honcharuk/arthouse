@@ -14,6 +14,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
+import { CollectionsView } from '~/modules/favorites/components/favorites-screen/collections-view';
 import { ProjectsView } from '~/modules/favorites/components/favorites-screen/projects-view';
 import { getCollections } from '~/modules/favorites/get-collections';
 import { getFavorites } from '~/modules/favorites/get-favorites';
@@ -135,6 +136,9 @@ export default function UserFavorites() {
         </Tabs>
         {tab === Section.Projects && (
           <ProjectsView collections={collections} favorites={favorites} />
+        )}
+        {tab === Section.Collections && (
+          <CollectionsView collections={collections} />
         )}
       </Stack>
     </UserLayout>
