@@ -3,15 +3,27 @@ import {
   GridViewOutlined,
   PersonPin,
 } from '@mui/icons-material';
-import { Link as MaterialLink, Stack, Typography } from '@mui/material';
-import type { Favorite } from '@prisma/client';
+import {
+  FormControl,
+  InputLabel,
+  Link as MaterialLink,
+  MenuItem,
+  OutlinedInput,
+  Select,
+  Stack,
+  Typography,
+} from '@mui/material';
+import type { Collection, Favorite } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
+import { useState } from 'react';
 import * as React from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
+import { getCollections } from '~/modules/favorites/get-collections';
 import { getFavorites } from '~/modules/favorites/get-favorites';
+import type { WithCollections } from '~/modules/favorites/types/with-collections';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
@@ -23,7 +35,8 @@ import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-cont
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 type LoaderData = {
-  favorites: (Favorite & WithFullProject)[];
+  favorites: (Favorite & WithFullProject & WithCollections)[];
+  collections: Collection[];
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -42,16 +55,29 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response(null, { status: 404 });
   }
 
-  const favorites = await getFavorites(currentUser.id);
+  const [favorites, collections] = await Promise.all([
+    getFavorites(currentUser),
+    getCollections(currentUser),
+  ]);
 
   return json<LoaderData>({
     favorites,
+    collections,
   });
 };
 
 export default function UserFavorites() {
-  const { favorites } = useLoaderData<LoaderData>();
+  const { favorites, collections } = useLoaderData<LoaderData>();
   const { user } = useUserOutletContext();
+
+  const [collection, setCollection] = useState<Collection | 'all'>('all');
+  const showAll = collection === 'all';
+
+  const favoritesToDisplay = showAll
+    ? favorites
+    : favorites.filter(({ collections }) =>
+        collections.some(({ id }) => id === collection.id)
+      );
 
   return (
     <UserLayout
@@ -76,13 +102,33 @@ export default function UserFavorites() {
         />
       }
     >
-      <Stack gap={3}>
-        <main className="flex flex-col gap-10">
-          <Typography variant="h4">Favourites</Typography>
-        </main>
-        {favorites.length ? (
+      <Stack component="main" gap={3}>
+        <Typography variant="h4">Favourites</Typography>
+        <FormControl>
+          <InputLabel>Collection</InputLabel>
+          <Select
+            value={showAll ? 'all' : collection.id}
+            onChange={({ target }) => {
+              const selected =
+                target.value === 'all'
+                  ? 'all'
+                  : collections.find(({ id }) => id === target.value) ?? 'all';
+
+              setCollection(selected === 'all' ? 'all' : selected);
+            }}
+            input={<OutlinedInput label="Collection" />}
+          >
+            <MenuItem value="all">All favorites</MenuItem>
+            {collections.map(({ id, name }) => (
+              <MenuItem key={id} value={id}>
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {favoritesToDisplay.length ? (
           <Projects>
-            {favorites.map(({ project }) => (
+            {favoritesToDisplay.map(({ project }) => (
               <ProjectCard
                 link={`/${getProjectPath(project, project.user)}`}
                 key={project.id}
@@ -93,12 +139,41 @@ export default function UserFavorites() {
           </Projects>
         ) : (
           <Typography>
-            You didn't mark anything as your favourite.
+            <p>
+              You didn't mark anything as your favourite
+              {collection === 'all' ? (
+                ''
+              ) : (
+                <span>
+                  {' '}
+                  within{' '}
+                  <span className="font-bold italic">
+                    {collection.name}
+                  </span>{' '}
+                  collection
+                </span>
+              )}
+              .
+            </p>
             <br />
-            <Link to="/">
-              <MaterialLink>Browse all projects</MaterialLink>
-            </Link>{' '}
-            to find something you like.
+            {showAll ? (
+              ''
+            ) : (
+              <span>
+                <MaterialLink
+                  className="cursor-pointer"
+                  onClick={() => setCollection('all')}
+                >
+                  Check all your favourites
+                </MaterialLink>{' '}
+                or{' '}
+              </span>
+            )}
+            <MaterialLink component={Link} to="/">
+              {showAll ? 'Browse' : 'browse'} all projects
+            </MaterialLink>{' '}
+            to find something{' '}
+            {showAll ? 'you like' : 'that matches your vision'}.
           </Typography>
         )}
       </Stack>
