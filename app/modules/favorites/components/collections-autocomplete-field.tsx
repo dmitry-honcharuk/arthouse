@@ -15,35 +15,44 @@ export const CollectionsAutocompleteField: FC<Props> = ({
   allCollections,
 }) => {
   const newCollectionFetcher = useFetcher<Collection>();
-  const setCollectionsFetcher = useFetcher();
+  const { submit: setCollectionsFetcherSubmit } = useFetcher();
 
   const updateCollections = useCallback(
-    (collections: Collection[]) => {
+    (collections: string[]) => {
       const form = new FormData();
 
       form.set('fields', 'collections');
 
-      collections.forEach(({ id }) => form.append('collections', `${id}`));
+      collections.forEach((id) => form.append('collections', `${id}`));
 
-      setCollectionsFetcher.submit(form, {
+      setCollectionsFetcherSubmit(form, {
         method: 'put',
         action: `/favorites/${favorite.projectId}`,
       });
     },
-    [favorite.projectId, setCollectionsFetcher]
+    [favorite.projectId, setCollectionsFetcherSubmit]
   );
 
+  const collectionIds = favorite.collections.map(({ id }) => id);
+  const collectionsKey = collectionIds.join(',');
+
   useEffect(() => {
-    if (newCollectionFetcher.data) {
-      updateCollections([...favorite.collections, newCollectionFetcher.data]);
+    if (
+      newCollectionFetcher.data &&
+      !collectionIds.includes(newCollectionFetcher.data.id)
+    ) {
+      updateCollections([...collectionIds, newCollectionFetcher.data.id]);
     }
-  }, [favorite.collections, newCollectionFetcher.data, updateCollections]);
+    // favorite.collections always has new reference
+  }, [collectionsKey, newCollectionFetcher.data, updateCollections]);
 
   return (
     <CollectionsAutocomplete
       allCollections={allCollections}
       selectedCollections={favorite.collections}
-      onChange={updateCollections}
+      onChange={(collections) =>
+        updateCollections(collections.map(({ id }) => id))
+      }
       onNewCollection={(name) => {
         newCollectionFetcher.submit(
           { name },
