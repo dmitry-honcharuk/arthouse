@@ -3,7 +3,7 @@ import {
   GridViewOutlined,
   PersonPin,
 } from '@mui/icons-material';
-import type { Category } from '@prisma/client';
+import type { Category, Collection, Favorite } from '@prisma/client';
 import { ProjectItemType, ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
@@ -14,8 +14,10 @@ import { getCategories } from '~/modules/categories/get-categories';
 import type { WithCategories } from '~/modules/categories/types/with-categories';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { countFavourites } from '~/modules/favorites/count-favourites';
+import { getCollections } from '~/modules/favorites/get-collections';
 import { getFavorites } from '~/modules/favorites/get-favorites';
-import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
+import { findFavorite } from '~/modules/favorites/helpers/find-favorite';
+import type { WithCollections } from '~/modules/favorites/types/with-collections';
 import { ProjectScreen } from '~/modules/projects/components/project-screen';
 import { createProjectItem } from '~/modules/projects/create-project-item';
 import { getProjectPath } from '~/modules/projects/get-project-path';
@@ -34,7 +36,7 @@ import { getProjectAuthSession } from '~/server/project-auth-session.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
-  isFavorite: boolean;
+  favorite: null | (Favorite & WithCollections);
   favouritesCount: number;
   currentUser: UserWithProfile | null;
   project: ProjectWithItems &
@@ -44,6 +46,7 @@ interface LoaderData {
     WithCategories;
   categories: Category[];
   following: boolean;
+  allCollections: Collection[];
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -86,22 +89,25 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     return redirect(`/${getProjectPath(project, project.user)}/authorize`);
   }
 
-  const [favouritesCount, categories, following] = await Promise.all([
-    countFavourites(project.id),
-    getCategories(),
-    currentUser && !isCurrentUser
-      ? isFollowing({ userId: project.user.id, followerId: currentUser.id })
-      : false,
-  ]);
+  const [favouritesCount, categories, following, allCollections] =
+    await Promise.all([
+      countFavourites(project.id),
+      getCategories(),
+      currentUser && !isCurrentUser
+        ? isFollowing({ userId: project.user.id, followerId: currentUser.id })
+        : false,
+      currentUser ? getCollections(currentUser) : [],
+    ]);
 
   return json<LoaderData>({
     project,
-    isFavorite: isFavorite({ projectId: project.id, favorites }),
+    favorite: findFavorite({ projectId: project.id, favorites }),
     isCurrentUser,
     currentUser,
     favouritesCount,
     categories,
     following,
+    allCollections,
   });
 };
 
@@ -159,22 +165,24 @@ export default function ProjectPage() {
   const {
     project,
     isCurrentUser,
-    isFavorite,
+    favorite,
     currentUser,
     favouritesCount,
     categories,
     following,
+    allCollections,
   } = useLoaderData<LoaderData>();
 
   return (
     <ProjectScreen
       project={project}
       isCurrentUser={isCurrentUser}
-      isFavorite={isFavorite}
+      favorite={favorite}
       currentUser={currentUser}
       favouritesCount={favouritesCount}
       categories={categories}
       isFollowing={following}
+      allCollections={allCollections}
       breadcrumbs={
         <Breadcrumbs
           items={[
