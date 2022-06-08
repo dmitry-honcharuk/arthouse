@@ -9,6 +9,7 @@ import { SectionTitle } from '~/modules/users/components/profile/section-title';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { getURI } from '../../../common/utils/getURI';
 import { NicknameTag } from './nickname-tag';
+import * as React from 'react';
 
 export const ProfileDetailsSection: FC<{
   user: UserWithProfile;
@@ -16,8 +17,14 @@ export const ProfileDetailsSection: FC<{
   isCurrentUser: boolean;
 }> = ({ editable, user, isCurrentUser }) => {
   const [nickname, setNickname] = useState(user.profile?.nickname);
+  const [firstName, setFirstName] = useState(user.profile?.firstName);
+  const [lastName, setLastName] = useState(user.profile?.lastName);
   const navigate = useNavigate();
   const profile = useActionData<Profile>();
+  const nameLabel = <span className="text-xs font-bold self-center">FN</span>;
+  const lastNameLabel = (
+    <span className="text-xs font-bold self-center">LN</span>
+  );
 
   useEffect(() => {
     if (!profile) {
@@ -46,6 +53,52 @@ export const ProfileDetailsSection: FC<{
       )}
       render={({ isEdit, setIsEdit }) => (
         <div className="flex flex-col gap-8">
+          <div className="flex items-start gap-4">
+            {nameLabel}
+            {isEdit ? (
+              <Form
+                onSubmit={() => setIsEdit(false)}
+                className="flex items-start gap-4 grow"
+                method="put"
+              >
+                <input type="hidden" name="fields" value="firstName" />
+                <input type="hidden" name="firstName" value={firstName ?? ''} />
+
+                <TextField
+                  label="First Name"
+                  size="small"
+                  variant="outlined"
+                  defaultValue={firstName}
+                  onChange={({ target }) => setFirstName(target.value)}
+                />
+              </Form>
+            ) : (
+              firstName
+            )}
+          </div>
+          <div className="flex items-start gap-4">
+            {lastNameLabel}
+            {isEdit ? (
+              <Form
+                onSubmit={() => setIsEdit(false)}
+                className="flex items-start gap-4 grow"
+                method="put"
+              >
+                <input type="hidden" name="fields" value="lastName" />
+                <input type="hidden" name="lastName" value={lastName ?? ''} />
+
+                <TextField
+                  label="Last Name"
+                  size="small"
+                  variant="outlined"
+                  defaultValue={lastName}
+                  onChange={({ target }) => setLastName(target.value)}
+                />
+              </Form>
+            ) : (
+              lastName
+            )}
+          </div>
           <div className="flex items-start gap-4">
             <MailOutline />
             {isEdit ? (
