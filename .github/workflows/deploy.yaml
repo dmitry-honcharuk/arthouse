@@ -18,6 +18,7 @@ on:
 
 concurrency:
   group: arthouse
+  cancel-in-progress: true
 
 jobs:
   build:
