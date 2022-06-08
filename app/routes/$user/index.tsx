@@ -193,10 +193,8 @@ export default function UserProjects() {
           )}
         </Stack>
         <FormControl>
-          <InputLabel id="demo-multiple-name-label">Album</InputLabel>
+          <InputLabel>Album</InputLabel>
           <Select
-            labelId="demo-multiple-name-label"
-            id="demo-multiple-name"
             value={showAll ? 'all' : selectedAlbum.id}
             onChange={({ target }) => {
               const selected =
@@ -206,7 +204,7 @@ export default function UserProjects() {
 
               setSelectedAlbum(selected!);
             }}
-            input={<OutlinedInput label="Name" />}
+            input={<OutlinedInput label="Album" />}
           >
             <MenuItem value="all">All projects</MenuItem>
             {albums.map(({ id, name }) => (

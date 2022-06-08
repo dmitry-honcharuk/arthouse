@@ -1,20 +1,24 @@
 import {
+  CollectionsBookmarkOutlined,
   Favorite as FavoriteIcon,
+  FolderCopyOutlined,
   GridViewOutlined,
   PersonPin,
 } from '@mui/icons-material';
-import { Link as MaterialLink, Stack, Typography } from '@mui/material';
-import type { Favorite } from '@prisma/client';
+import { Stack, Tab, Tabs } from '@mui/material';
+import type { Collection, Favorite } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import * as React from 'react';
+import { useState } from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
+import { CollectionsView } from '~/modules/favorites/components/favorites-screen/collections-view';
+import { ProjectsView } from '~/modules/favorites/components/favorites-screen/projects-view';
+import { getCollections } from '~/modules/favorites/get-collections';
 import { getFavorites } from '~/modules/favorites/get-favorites';
-import { ProjectCard } from '~/modules/projects/components/project-card';
-import { Projects } from '~/modules/projects/components/project-list';
-import { getProjectPath } from '~/modules/projects/get-project-path';
+import type { WithCollections } from '~/modules/favorites/types/with-collections';
 import type { WithFullProject } from '~/modules/projects/types/with-full-project';
 import { UserLayout } from '~/modules/users/components/user-layout';
 import { getUserPath } from '~/modules/users/get-user-path';
@@ -22,8 +26,15 @@ import { getUserByIdentifier } from '~/modules/users/getUserById';
 import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-context';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
+enum Section {
+  Projects = 'projects',
+  Collections = 'collections',
+}
+
 type LoaderData = {
-  favorites: (Favorite & WithFullProject)[];
+  favorites: (Favorite & WithFullProject & WithCollections)[];
+  collections: Collection[];
+  section: Section;
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -32,6 +43,13 @@ export const loader: LoaderFunction = async ({ request, params }) => {
       user: z.string(),
     })
     .parse(params);
+
+  const sectionQuery = new URL(request.url).searchParams.get('section');
+
+  const section =
+    sectionQuery && Object.values(Section).includes(sectionQuery as Section)
+      ? (sectionQuery as Section)
+      : Section.Projects;
 
   const [currentUser, requestedUser] = await Promise.all([
     getLoggedInUser(request),
@@ -42,16 +60,24 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response(null, { status: 404 });
   }
 
-  const favorites = await getFavorites(currentUser.id);
+  const [favorites, collections] = await Promise.all([
+    getFavorites(currentUser),
+    getCollections(currentUser),
+  ]);
 
   return json<LoaderData>({
     favorites,
+    collections,
+    section,
   });
 };
 
 export default function UserFavorites() {
-  const { favorites } = useLoaderData<LoaderData>();
+  const { favorites, collections, section } = useLoaderData<LoaderData>();
+
   const { user } = useUserOutletContext();
+
+  const [tab, setTab] = useState(section);
 
   return (
     <UserLayout
@@ -76,30 +102,43 @@ export default function UserFavorites() {
         />
       }
     >
-      <Stack gap={3}>
-        <main className="flex flex-col gap-10">
-          <Typography variant="h4">Favourites</Typography>
-        </main>
-        {favorites.length ? (
-          <Projects>
-            {favorites.map(({ project }) => (
-              <ProjectCard
-                link={`/${getProjectPath(project, project.user)}`}
-                key={project.id}
-                project={project}
-                showIsSecured
-              />
-            ))}
-          </Projects>
-        ) : (
-          <Typography>
-            You didn't mark anything as your favourite.
-            <br />
-            <Link to="/">
-              <MaterialLink>Browse all projects</MaterialLink>
-            </Link>{' '}
-            to find something you like.
-          </Typography>
+      <Stack component="main" gap={3}>
+        <Tabs
+          value={tab}
+          onChange={(_, newValue) => setTab(newValue)}
+          aria-label="tabs"
+          variant="fullWidth"
+        >
+          <Tab
+            icon={<FolderCopyOutlined />}
+            iconPosition="start"
+            to={{
+              search: new URLSearchParams({
+                section: Section.Projects,
+              }).toString(),
+            }}
+            component={Link}
+            value={Section.Projects}
+            label="Projects"
+          />
+          <Tab
+            icon={<CollectionsBookmarkOutlined />}
+            iconPosition="start"
+            to={{
+              search: new URLSearchParams({
+                section: Section.Collections,
+              }).toString(),
+            }}
+            component={Link}
+            value={Section.Collections}
+            label="Collections"
+          />
+        </Tabs>
+        {tab === Section.Projects && (
+          <ProjectsView collections={collections} favorites={favorites} />
+        )}
+        {tab === Section.Collections && (
+          <CollectionsView collections={collections} />
         )}
       </Stack>
     </UserLayout>

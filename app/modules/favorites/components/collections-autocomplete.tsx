@@ -53,17 +53,18 @@ export const CollectionsAutocomplete: FC<Props> = ({
         }}
         noOptionsText={
           value ? (
-            <Box px={2}>
-              <NewCollectionButton
-                onClick={() => onNewCollection(value)}
-                disabled={!value}
-                className="inline-flex flex-col text-sm w-full border border-gray-400"
-              >
-                <span>Create new collection</span>
-                <b>{value}</b>
-              </NewCollectionButton>
-            </Box>
-          ) : null
+            <NewCollectionButton
+              onClick={() => onNewCollection(value)}
+              disabled={!value}
+              className="inline-flex flex-col text-sm w-full border border-gray-400"
+              sx={{ px: 2, py: 1 }}
+            >
+              <span>Create new collection</span>
+              <b>{value}</b>
+            </NewCollectionButton>
+          ) : (
+            <Box px={2}>Start typing collection name</Box>
+          )
         }
         TextFieldProps={{
           label: 'Collections',
