@@ -22,6 +22,7 @@ export async function getFavorites(userIdentifier: string | Pick<User, 'id'>) {
       },
     },
     include: {
+      collections: true,
       project: {
         include: {
           security: true,

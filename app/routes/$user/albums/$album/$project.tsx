@@ -4,7 +4,7 @@ import {
   GridViewOutlined,
   PersonPin,
 } from '@mui/icons-material';
-import type { Album, Category } from '@prisma/client';
+import type { Album, Category, Collection, Favorite } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
@@ -16,8 +16,10 @@ import { getCategories } from '~/modules/categories/get-categories';
 import type { WithCategories } from '~/modules/categories/types/with-categories';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { countFavourites } from '~/modules/favorites/count-favourites';
+import { getCollections } from '~/modules/favorites/get-collections';
 import { getFavorites } from '~/modules/favorites/get-favorites';
-import { isFavorite } from '~/modules/favorites/helpers/is-favorite';
+import { findFavorite } from '~/modules/favorites/helpers/find-favorite';
+import type { WithCollections } from '~/modules/favorites/types/with-collections';
 import { ProjectScreen } from '~/modules/projects/components/project-screen';
 import { getUserProject } from '~/modules/projects/get-user-project';
 import type { ProjectWithItems } from '~/modules/projects/types/project-with-items';
@@ -39,11 +41,12 @@ interface LoaderData {
     WithTags &
     WithCategories;
   currentUser: UserWithProfile | null;
-  isFavorite: boolean;
+  favorite: null | (Favorite & WithCollections);
   favouritesCount: number;
   album: Album;
   categories: Category[];
   following: boolean;
+  allCollections: Collection[];
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -59,17 +62,20 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     })
     .parse(params);
 
-  const user = await getUserByIdentifier(userID);
+  const [user, currentUser] = await Promise.all([
+    getUserByIdentifier(userID),
+    getLoggedInUser(request),
+  ]);
 
   if (!user) {
     throw new Response(null, { status: 404 });
   }
 
-  const [currentUser, album, project, favorites] = await Promise.all([
-    getLoggedInUser(request),
+  const [album, project, favorites, allCollections] = await Promise.all([
     getUserAlbum(user, albumID),
     getUserProject(user, projectID),
-    getFavorites(user),
+    currentUser ? getFavorites(currentUser.id) : [],
+    currentUser ? getCollections(currentUser) : [],
   ]);
 
   if (
@@ -109,13 +115,14 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   return json<LoaderData>({
     project,
-    isFavorite: isFavorite({ projectId: project.id, favorites }),
+    favorite: findFavorite({ projectId: project.id, favorites }),
     isCurrentUser,
     currentUser,
     favouritesCount,
     album,
     categories,
     following,
+    allCollections,
   });
 };
 
@@ -125,21 +132,23 @@ export default function AlbumScreen() {
     isCurrentUser,
     currentUser,
     favouritesCount,
-    isFavorite,
+    favorite,
     album,
     categories,
     following,
+    allCollections,
   } = useLoaderData<LoaderData>();
 
   return (
     <ProjectScreen
       project={project}
       isCurrentUser={isCurrentUser}
-      isFavorite={isFavorite}
+      favorite={favorite}
       currentUser={currentUser}
       favouritesCount={favouritesCount}
       categories={categories}
       isFollowing={following}
+      allCollections={allCollections}
       breadcrumbs={
         <Breadcrumbs
           items={[

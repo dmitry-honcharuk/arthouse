@@ -6,17 +6,21 @@ import * as React from 'react';
 
 interface Props {
   label: string;
-  onDelete?: () => void;
+  onDelete?: React.EventHandler<any>;
   link?: string;
-  icon: ReactNode;
+  icon?: ReactNode;
 }
 
 export const Chip: FC<Props> = ({ label, onDelete, link, icon }) => {
+  const avatar = icon ? (
+    <Avatar sx={{ bgcolor: blueGrey[50] }}>{icon}</Avatar>
+  ) : undefined;
+
   if (!link) {
     return (
       <MaterialChip
         variant="outlined"
-        avatar={<Avatar sx={{ bgcolor: blueGrey[50] }}>{icon}</Avatar>}
+        avatar={avatar}
         label={label}
         onDelete={onDelete}
       />
@@ -29,7 +33,7 @@ export const Chip: FC<Props> = ({ label, onDelete, link, icon }) => {
       component={Link}
       to={link}
       clickable
-      avatar={<Avatar sx={{ bgcolor: blueGrey[50] }}>{icon}</Avatar>}
+      avatar={avatar}
       label={label}
       onDelete={onDelete}
     />

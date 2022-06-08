@@ -1,6 +1,6 @@
 import {
   Add,
-  Favorite,
+  Favorite as FavoriteIcon,
   FavoriteBorderOutlined,
   GppGoodOutlined,
   ImageOutlined,
@@ -25,7 +25,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import type { Category } from '@prisma/client';
+import type { Category, Collection, Favorite } from '@prisma/client';
 import { ProjectItemType } from '@prisma/client';
 import { Link } from '@remix-run/react';
 import format from 'date-fns/format';
@@ -39,6 +39,7 @@ import PageLayout from '~/modules/common/page-layout';
 import { FavoriteBtn } from '~/modules/favorites/components/favorite-button';
 import { HappyMessage } from '~/modules/favorites/components/happy-message';
 import { UnhappyMessage } from '~/modules/favorites/components/unhappy-message';
+import type { WithCollections } from '~/modules/favorites/types/with-collections';
 import { CategoriesCard } from '~/modules/projects/components/categories-card';
 import { ItemForm } from '~/modules/projects/components/item-form';
 import { ProjectItems } from '~/modules/projects/components/project-items';
@@ -60,7 +61,7 @@ import type { WithUser } from '~/modules/users/types/with-user';
 
 interface Props {
   isCurrentUser: boolean;
-  isFavorite: boolean;
+  favorite: null | (Favorite & WithCollections);
   favouritesCount: number;
   currentUser: UserWithProfile | null;
   project: ProjectWithItems &
@@ -71,6 +72,7 @@ interface Props {
   breadcrumbs?: ReactNode;
   categories: Category[];
   isFollowing: boolean;
+  allCollections: Collection[];
 }
 
 export const ProjectScreen: FC<Props> = ({
@@ -78,10 +80,11 @@ export const ProjectScreen: FC<Props> = ({
   currentUser,
   favouritesCount,
   isCurrentUser,
-  isFavorite,
+  favorite,
   breadcrumbs,
   categories,
   isFollowing,
+  allCollections,
 }) => {
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
@@ -183,7 +186,14 @@ export const ProjectScreen: FC<Props> = ({
             </Link>
           )}
           {!isCurrentUser && currentUser && (
-            <FavoriteBtn projectId={project.id} isFavorite={isFavorite} />
+            <FavoriteBtn
+              favorite={favorite}
+              projectId={project.id}
+              allCollections={allCollections}
+              favoritesLink={`/${getUserPath(
+                currentUser
+              )}/favorites?section=collections`}
+            />
           )}
           {isCurrentUser && (
             <Card variant="outlined">
@@ -199,7 +209,7 @@ export const ProjectScreen: FC<Props> = ({
                 >
                   <Badge badgeContent={favouritesCount} color="primary">
                     {favouritesCount ? (
-                      <Favorite color="secondary" />
+                      <FavoriteIcon color="secondary" />
                     ) : (
                       <FavoriteBorderOutlined color="secondary" />
                     )}
