@@ -1,6 +1,7 @@
 import {
   Add,
   FolderCopyOutlined,
+  GppGoodOutlined,
   GridViewOutlined,
   PersonPin,
   SettingsOutlined,
@@ -16,13 +17,13 @@ import { z } from 'zod';
 import { AlbumProjectsForm } from '~/modules/albums/components/album-projects-form';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
-import { getUserAlbums } from '~/modules/albums/get-user-albums';
 import type { Details as UpdateAlbumDetails } from '~/modules/albums/update-album';
 import { updateAlbum } from '~/modules/albums/update-album';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditButton } from '~/modules/common/edit-button';
 import PageLayout from '~/modules/common/page-layout';
 import { TogglableContent } from '~/modules/common/togglable-content';
+import type { WithEncryptedSecurity } from '~/modules/crypto/types/with-encrypted-security';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
 import { getProjectPath } from '~/modules/projects/get-project-path';
@@ -38,7 +39,7 @@ import { requireLoggedInUser } from '~/server/require-logged-in-user.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
-  album: Album & WithProjects & WithUser;
+  album: Album & WithProjects & WithUser & WithEncryptedSecurity;
   projects: Project[];
 }
 
@@ -102,18 +103,14 @@ export const action: ActionFunction = async ({ request, params }) => {
     })
     .parse(params);
 
-  const [currentUser, albums] = await Promise.all([
+  const [currentUser, album] = await Promise.all([
     requireLoggedInUser(request),
-    getUserAlbums(user),
+    getUserAlbum(user, albumID),
   ]);
 
   if (currentUser.id !== user && currentUser.profile?.nickname !== user) {
     throw new Response('Unauthorized', { status: 401 });
   }
-
-  const album = albums.find(
-    ({ id, slug }) => id === albumID || slug === albumID
-  );
 
   if (!album) {
     throw new Response('Unauthorized', { status: 401 });
@@ -187,7 +184,10 @@ export default function AlbumScreen() {
           alignItems="center"
           justifyContent="space-between"
         >
-          <Typography variant="h4">{album.name}</Typography>
+          <Stack direction="row" alignItems="center" gap={1}>
+            <Typography variant="h4">{album.name}</Typography>
+            {album.isSecure && album.security && <GppGoodOutlined />}
+          </Stack>
           {isCurrentUser && (
             <Link to={`/${getAlbumPath(album, album.user)}/settings`}>
               <Button
