@@ -57,3 +57,16 @@ function getSocialProviderIdField(
 
   throw new Error(`No social id field for provider ${provider}`);
 }
+
+export function getUserByEmail(email: string) {
+  return prisma.user.findUnique({
+    where: { email },
+    include: { profile: true },
+  });
+}
+
+export function createUser(email: string) {
+  return prisma.user.create({
+    data: { email },
+  });
+}

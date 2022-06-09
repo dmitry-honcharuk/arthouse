@@ -91,6 +91,7 @@ jobs:
               --from-literal=PROJECT_PASSWORD_KEY=${{ secrets.PROJECT_PASSWORD_KEY }} \
               --from-literal=ALBUM_PASSWORD_KEY=${{ secrets.ALBUM_PASSWORD_KEY }} \
               --from-literal=SENDINBLUE_API_KEY=${{ secrets.SENDINBLUE_API_KEY }} \
+              --from-literal=MAGIC_LINK_ENCRYPTION_KEY=${{ secrets.MAGIC_LINK_ENCRYPTION_KEY }} \
 
   deploy:
     runs-on: ubuntu-latest
