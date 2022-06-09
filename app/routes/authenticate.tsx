@@ -159,7 +159,7 @@ export default function Authenticate() {
       <div className="pt-36 px-10 flex justify-center">
         <Stack gap={2}>
           <div>
-            <Divider>Magic link</Divider>
+            <Divider>MAGIC LINK</Divider>
           </div>
 
           <Stack gap={1} alignItems="center">
@@ -190,7 +190,7 @@ export default function Authenticate() {
     <div className="pt-36 flex justify-center">
       <Stack sx={{ width: 256 }} gap={2}>
         <div>
-          <Divider>Magic link</Divider>
+          <Divider>MAGIC LINK</Divider>
         </div>
 
         <Form method="post">
@@ -201,14 +201,17 @@ export default function Authenticate() {
               type="email"
               size="small"
               error={!!magicLinkError}
-              helperText={magicLinkError}
+              helperText={
+                magicLinkError ??
+                'We will send you a letter with a link to your account.'
+              }
               disabled={state !== 'idle'}
               required
             />
             <LoadingButton
               loading={state !== 'idle'}
               type="submit"
-              variant="outlined"
+              variant="contained"
             >
               Send
             </LoadingButton>
