@@ -1,8 +1,7 @@
 import type { SignOptions } from 'jsonwebtoken';
 import { z } from 'zod';
 import { signJWT, verifyJWT } from '~/modules/auth/jwt';
-import { decrypt } from '~/modules/crypto/decrypt.server';
-import { encrypt } from '~/modules/crypto/encrypt.server';
+import { decrypt, encrypt } from '~/modules/crypto';
 
 interface Options {
   email: string;

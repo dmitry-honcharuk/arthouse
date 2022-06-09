@@ -1,6 +1,6 @@
 import { prisma } from '~/db.server';
 import { getAlbumSecretKey } from '~/modules/albums/get-album-secret-key';
-import { encrypt } from '~/modules/crypto/encrypt.server';
+import { encrypt } from '~/modules/crypto';
 
 export async function setAlbumPassword(albumId: string, password: string) {
   const secretKey = getAlbumSecretKey();

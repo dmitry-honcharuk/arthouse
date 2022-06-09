@@ -1,5 +1,5 @@
 import { prisma } from '~/db.server';
-import { encrypt } from '~/modules/crypto/encrypt.server';
+import { encrypt } from '~/modules/crypto';
 import { getProjectSecretKey } from '~/modules/projects/get-project-secret-key';
 
 export async function setProjectPassword(projectId: string, password: string) {
