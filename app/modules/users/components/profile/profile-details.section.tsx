@@ -17,8 +17,6 @@ export const ProfileDetailsSection: FC<{
   isCurrentUser: boolean;
 }> = ({ editable, user, isCurrentUser }) => {
   const [nickname, setNickname] = useState(user.profile?.nickname);
-  const [firstName, setFirstName] = useState(user.profile?.firstName);
-  const [lastName, setLastName] = useState(user.profile?.lastName);
   const navigate = useNavigate();
   const profile = useActionData<Profile>();
   const nameLabel = <span className="text-xs font-bold self-center">FN</span>;
@@ -53,123 +51,118 @@ export const ProfileDetailsSection: FC<{
       )}
       render={({ isEdit, setIsEdit }) => (
         <div className="flex flex-col gap-8">
-          <div className="flex items-start gap-4">
-            {nameLabel}
-            {isEdit ? (
-              <Form
-                onSubmit={() => setIsEdit(false)}
-                className="flex items-start gap-4 grow"
-                method="put"
-              >
-                <input type="hidden" name="fields" value="firstName" />
-                <input type="hidden" name="firstName" value={firstName ?? ''} />
-
+          <Form
+            onSubmit={() => setIsEdit(false)}
+            className="flex flex-col gap-4"
+            method="put"
+          >
+            <div className="flex items-start gap-6">
+              {nameLabel}
+              {isEdit ? (
+                <>
+                  <input type="hidden" name="fields" value="firstName" />
+                  <TextField
+                    autoFocus
+                    fullWidth
+                    label="First Name"
+                    size="small"
+                    variant="outlined"
+                    defaultValue={user.profile?.firstName}
+                    name="firstName"
+                  />
+                </>
+              ) : (
+                user.profile?.firstName
+              )}
+            </div>
+            <div className="flex items-start gap-6">
+              {lastNameLabel}
+              {isEdit ? (
+                <>
+                  <input type="hidden" name="fields" value="lastName" />
+                  <TextField
+                    fullWidth
+                    label="Last Name"
+                    size="small"
+                    variant="outlined"
+                    defaultValue={user.profile?.lastName}
+                    name="lastName"
+                  />
+                </>
+              ) : (
+                user.profile?.lastName
+              )}
+            </div>
+            <div className="flex items-start gap-4">
+              <MailOutline />
+              {isEdit ? (
                 <TextField
-                  label="First Name"
-                  size="small"
-                  variant="outlined"
-                  defaultValue={firstName}
-                  onChange={({ target }) => setFirstName(target.value)}
-                />
-              </Form>
-            ) : (
-              firstName
-            )}
-          </div>
-          <div className="flex items-start gap-4">
-            {lastNameLabel}
-            {isEdit ? (
-              <Form
-                onSubmit={() => setIsEdit(false)}
-                className="flex items-start gap-4 grow"
-                method="put"
-              >
-                <input type="hidden" name="fields" value="lastName" />
-                <input type="hidden" name="lastName" value={lastName ?? ''} />
-
-                <TextField
-                  label="Last Name"
-                  size="small"
-                  variant="outlined"
-                  defaultValue={lastName}
-                  onChange={({ target }) => setLastName(target.value)}
-                />
-              </Form>
-            ) : (
-              lastName
-            )}
-          </div>
-          <div className="flex items-start gap-4">
-            <MailOutline />
-            {isEdit ? (
-              <TextField
-                fullWidth
-                label="Email"
-                size="small"
-                name="email"
-                variant="outlined"
-                defaultValue={user.email}
-                disabled
-                helperText="You cannot change your email"
-              />
-            ) : (
-              <a href={`mailto:${user.email}`}>
-                <span className="underline">{user.email}</span>
-              </a>
-            )}
-          </div>
-          <div className="flex items-start gap-4">
-            <LocalOfferOutlined
-              color={user.profile?.nickname ? 'inherit' : 'disabled'}
-            />
-            {isEdit ? (
-              <Form
-                onSubmit={() => setIsEdit(false)}
-                className="flex items-start gap-4 grow"
-                method="put"
-              >
-                <input type="hidden" name="fields" value="nickname" />
-                <input type="hidden" name="nickname" value={nickname ?? ''} />
-
-                <TextField
-                  className="grow"
                   fullWidth
-                  label="Nickname"
+                  label="Email"
                   size="small"
+                  name="email"
                   variant="outlined"
-                  defaultValue={nickname}
-                  onChange={({ target }) => setNickname(getURI(target.value))}
-                  helperText={
-                    <span className="flex flex-col gap-1 items-start">
-                      <span>
-                        Your personal page could be accessed by the nickname
-                      </span>
-                      {nickname && <NicknameTag nickname={nickname} />}
-                    </span>
-                  }
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  autoFocus
+                  defaultValue={user.email}
+                  disabled
+                  helperText="You cannot change your email"
                 />
-                <Button type="submit" size="small" variant="outlined">
+              ) : (
+                <a href={`mailto:${user.email}`}>
+                  <span className="underline">{user.email}</span>
+                </a>
+              )}
+            </div>
+            <div className="flex items-start gap-4">
+              <LocalOfferOutlined
+                color={user.profile?.nickname ? 'inherit' : 'disabled'}
+              />
+              {isEdit ? (
+                <>
+                  <input type="hidden" name="fields" value="nickname" />
+                  <input type="hidden" name="nickname" value={nickname ?? ''} />
+                  <TextField
+                    className="grow"
+                    fullWidth
+                    label="Nickname"
+                    size="small"
+                    variant="outlined"
+                    defaultValue={nickname}
+                    onChange={({ target }) => setNickname(getURI(target.value))}
+                    helperText={
+                      <span className="flex flex-col gap-1 items-start">
+                        <span>
+                          Your personal page could be accessed by the nickname
+                        </span>
+                        {nickname && <NicknameTag nickname={nickname} />}
+                      </span>
+                    }
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                </>
+              ) : nickname ? (
+                <span className="flex flex-col gap-1 items-start">
+                  <NicknameTag nickname={nickname} isLink />
+
+                  <Typography variant="caption">
+                    {isCurrentUser
+                      ? 'Your personal page could be accessed by the nickname'
+                      : 'User personal page could be accessed by the nickname'}
+                  </Typography>
+                </span>
+              ) : (
+                "You didn't specify your nickname yet"
+              )}
+            </div>
+            {isEdit && (
+              <div className="flex justify-end">
+                <Button type="submit" size="medium" variant="outlined">
                   Save
                 </Button>
-              </Form>
-            ) : nickname ? (
-              <span className="flex flex-col gap-1 items-start">
-                <NicknameTag nickname={nickname} isLink />
-
-                <Typography variant="caption">
-                  {isCurrentUser
-                    ? 'Your personal page could be accessed by the nickname'
-                    : 'User personal page could be accessed by the nickname'}
-                </Typography>
-              </span>
-            ) : (
-              "You didn't specify your nickname yet"
+              </div>
             )}
-          </div>
+          </Form>
         </div>
       )}
     />
