@@ -10,7 +10,7 @@ type ItemsSetType = 'intersection' | 'union';
 interface Details {
   name?: string;
   statuses?: ProjectStatus[];
-  userId?: string;
+  userId?: string | string[];
   isSecure?: boolean;
   ids?: { include?: string[]; exclude?: string[] };
   order?: { favoriteCount?: SortOrder; createdAt?: SortOrder };
@@ -47,7 +47,9 @@ export async function getProjects(details?: Details): Promise<FullProject[]> {
       ...(details?.statuses && {
         status: { in: details.statuses },
       }),
-      userId: details?.userId,
+      userId: Array.isArray(details?.userId)
+        ? { in: details?.userId }
+        : details?.userId,
       isSecure: details?.isSecure,
     },
     include: {
