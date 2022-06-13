@@ -1,7 +1,7 @@
 import {
   GppGoodOutlined,
   VisibilityOffOutlined,
-  VisibilityOutlined,
+  VisibilityOutlined
 } from '@mui/icons-material';
 import {
   Button,
@@ -9,24 +9,26 @@ import {
   InputAdornment,
   Stack,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material';
 import type { Album } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Form, useActionData, useLoaderData } from '@remix-run/react';
-import * as React from 'react';
 import { z } from 'zod';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getAlbumSecretKey } from '~/modules/albums/get-album-secret-key';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
 import { TogglableContent } from '~/modules/common/togglable-content';
 import { getDecryptedSecurity } from '~/modules/crypto/get-decrypted-security';
+import { isSecured } from '~/modules/crypto/is-secured';
+import { getProjectPath } from '~/modules/projects/get-project-path';
+import { getUserProject } from '~/modules/projects/get-user-project';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import { ActionBuilder } from '~/server/action-builder.server';
 import {
   commitAlbumAuthSession,
-  getAlbumAuthSession,
+  getAlbumAuthSession
 } from '~/server/album-auth-session.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
@@ -61,22 +63,45 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response(null, { status: 404 });
   }
 
+  const albumProject = projectIdentifier
+    ? album.projects.find(({ id, slug }) =>
+        [id, slug].includes(projectIdentifier)
+      ) ?? null
+    : null;
+
+  if (projectIdentifier && !albumProject) {
+    throw new Response(null, { status: 404 });
+  }
+
+  const project = albumProject
+    ? await getUserProject(user, albumProject.id)
+    : null;
+
+  const albumPath = `/${getAlbumPath(album, album.user)}`;
+  const authorizedPath = projectIdentifier
+    ? `${albumPath}/${projectIdentifier}`
+    : albumPath;
+
   const isCurrentUser = currentUser?.id === album.userId;
+
+  if (isCurrentUser) {
+    return redirect(authorizedPath);
+  }
 
   const albumAuthSession = await getAlbumAuthSession(
     request.headers.get('Cookie')
   );
 
   if (
-    isCurrentUser ||
-    !album.isSecure ||
-    !album.security ||
+    isSecured(album) &&
     albumAuthSession.get(album.id) === album.security.passwordVersion
   ) {
-    const albumPath = `/${getAlbumPath(album, album.user)}`;
+    return redirect(authorizedPath);
+  }
 
+  if (project && !isSecured(album) && isSecured(project)) {
     return redirect(
-      projectIdentifier ? `${albumPath}/${projectIdentifier}` : albumPath
+      `/${getProjectPath(project, project.user)}/authorize?album=${albumID}`
     );
   }
 
