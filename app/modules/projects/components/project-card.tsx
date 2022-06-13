@@ -14,6 +14,7 @@ import { Link } from '@remix-run/react';
 import type { FC } from 'react';
 import { getStatusLabel } from '~/modules/projects/utils/get-status-label';
 import type { WithUser } from '~/modules/users/types/with-user';
+import { getFullName } from '~/modules/users/utils/get-full-name';
 
 export const ProjectCard: FC<{
   project: Project & Partial<WithUser>;
@@ -29,7 +30,7 @@ export const ProjectCard: FC<{
   project: { id, status, preview, caption, name, user, isSecure },
 }) => {
   const cardContent = (
-    <>
+    <Stack height="100%">
       {(showStatus || (isSecure && showIsSecured)) && (
         <div className="flex justify-end absolute right-0 top-2">
           <Status
@@ -67,39 +68,49 @@ export const ProjectCard: FC<{
           alt="Paella dish"
         />
       )}
-      <CardContent>
-        {user && (
-          <Typography
-            variant="subtitle1"
-            color="text.secondary"
-            component="div"
-          >
-            {user.profile?.nickname ?? user.email}
+      <CardContent
+        sx={{ '&:last-child': { padding: 2 } }}
+        className="flex flex-col grow"
+      >
+        <div className="grow">
+          <Typography gutterBottom variant="h5" component="div">
+            {name}
           </Typography>
-        )}
-        <Typography gutterBottom variant="h5" component="div">
-          {name}
-        </Typography>
-        {caption && (
-          <Typography variant="body2" color="text.secondary">
-            {caption}
+          {caption && (
+            <Typography variant="body2" color="text.secondary">
+              {caption}
+            </Typography>
+          )}
+        </div>
+
+        {user?.profile && (
+          <Typography
+            sx={{
+              textAlign: 'right',
+              color: ({ palette }) => palette.text.disabled,
+            }}
+            variant="body2"
+          >
+            {getFullName(user.profile)}
           </Typography>
         )}
       </CardContent>
       {showFavourite && (
-        <div className="flex justify-end absolute right-2 bottom-2">
-          <Favorite fontSize="small" color="secondary" />
-        </div>
+        <>
+          <div className="flex justify-end absolute left-2 top-2">
+            <Favorite sx={{ color: 'white', fontSize: '1.7rem' }} />
+          </div>
+          <div className="flex justify-end absolute left-[0.72rem] top-[0.7rem]">
+            <Favorite fontSize="small" color="secondary" />
+          </div>
+        </>
       )}
-    </>
+    </Stack>
   );
 
   const content = link ? (
     <Link to={link} className="block h-full">
-      <CardActionArea
-        sx={{ alignItems: 'normal' }}
-        className="h-full flex-col relative"
-      >
+      <CardActionArea sx={{ alignItems: 'normal' }} className="h-full relative">
         {cardContent}
       </CardActionArea>
     </Link>

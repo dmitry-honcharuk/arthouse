@@ -12,6 +12,7 @@ import {
   Box,
   Button,
   Card,
+  CardActionArea,
   CardActions,
   CardContent,
   CardMedia,
@@ -30,7 +31,6 @@ import { ProjectItemType } from '@prisma/client';
 import { Link } from '@remix-run/react';
 import format from 'date-fns/format';
 import type { FC, ReactNode } from 'react';
-import * as React from 'react';
 import { useState } from 'react';
 import type { WithCategories } from '~/modules/categories/types/with-categories';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
@@ -58,6 +58,8 @@ import { SocialLink } from '~/modules/users/components/profile/social-link';
 import { getUserPath } from '~/modules/users/get-user-path';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
+import { getFullName } from '~/modules/users/utils/get-full-name';
+import { HrefLink } from '../../common/href-link';
 
 interface Props {
   isCurrentUser: boolean;
@@ -250,24 +252,28 @@ export const ProjectScreen: FC<Props> = ({
             </Card>
           )}
           <Card elevation={3}>
-            <CardContent>
-              <div className="flex flex-col mb-2">
-                <div className="flex flex-row gap-4 items-center">
-                  <Link to={`/${getUserPath(project.user)}`}>
+            <CardActionArea
+              LinkComponent={HrefLink}
+              href={`/${getUserPath(project.user)}`}
+            >
+              <CardContent>
+                <div className="flex flex-col mb-2">
+                  <div className="flex flex-row gap-4 items-center">
                     <GravatarAvatar email={project.user.email} />
-                  </Link>
-                  {project.user.profile?.nickname && (
-                    <NicknameTag
-                      nickname={project.user.profile.nickname}
-                      isLink
-                    />
-                  )}
+                    <Stack alignItems="flex-start">
+                      {project.user.profile &&
+                        getFullName(project.user.profile)}
+                      {project.user.profile?.nickname && (
+                        <NicknameTag nickname={project.user.profile.nickname} />
+                      )}
+                    </Stack>
+                  </div>
                 </div>
-              </div>
-              {project.user.profile?.summary && (
-                <p className="text-sm">{project.user.profile.summary}</p>
-              )}
-            </CardContent>
+                {project.user.profile?.summary && (
+                  <p className="text-sm">{project.user.profile.summary}</p>
+                )}
+              </CardContent>
+            </CardActionArea>
             {currentUser && !isCurrentUser && (
               <CardActions>
                 <FollowButton

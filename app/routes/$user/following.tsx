@@ -15,7 +15,6 @@ import {
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
-import * as React from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
@@ -27,6 +26,7 @@ import { getUserPath } from '~/modules/users/get-user-path';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-context';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
+import { getFullName } from '~/modules/users/utils/get-full-name';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 type LoaderData = {
@@ -93,15 +93,22 @@ export default function UserFollowings() {
                   <CardActionArea>
                     <CardContent>
                       <Stack gap={1}>
-                        <Stack direction="row" alignItems="flex-end" gap={2}>
+                        <Stack direction="row" alignItems="center" gap={2}>
                           <GravatarAvatar email={followedUser.email} />
-                          {followedUser.profile?.nickname && (
-                            <NicknameTag
-                              nickname={followedUser.profile.nickname}
-                            />
+                          {followedUser.profile && (
+                            <Stack alignItems="flex-start">
+                              <Typography>
+                                {getFullName(followedUser.profile)}
+                              </Typography>
+
+                              {followedUser.profile.nickname && (
+                                <NicknameTag
+                                  nickname={followedUser.profile.nickname}
+                                />
+                              )}
+                            </Stack>
                           )}
                         </Stack>
-                        <Typography>{followedUser.email}</Typography>
                       </Stack>
                     </CardContent>
                   </CardActionArea>
