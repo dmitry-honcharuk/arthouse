@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - fix-97/unsecured-album-is-visible-when-full-of-secured-projects
 
     paths:
       - package.json
