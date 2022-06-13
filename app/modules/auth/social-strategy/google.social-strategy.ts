@@ -22,7 +22,7 @@ export class GoogleSocialStrategy implements SocialStrategy {
       throw new Error('Failed to get google auth payload.');
     }
 
-    const { sub: id, email } = payload;
+    const { sub: id, email, given_name, family_name } = payload;
 
     if (!email) {
       throw new Error(
@@ -30,6 +30,6 @@ export class GoogleSocialStrategy implements SocialStrategy {
       );
     }
 
-    return { id, email };
+    return { id, email, firstName: given_name, lastName: family_name };
   }
 }

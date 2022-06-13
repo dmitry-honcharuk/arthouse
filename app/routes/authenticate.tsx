@@ -123,6 +123,8 @@ export const action: ActionFunction = async (actionDetails) => {
 
       const user = await getUserBySocial({
         email: socialUser.email,
+        firstName: socialUser.firstName,
+        lastName: socialUser.lastName,
         social: { id: socialUser.id, provider: provider as SocialProvider },
       });
 
