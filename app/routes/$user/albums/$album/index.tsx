@@ -243,9 +243,13 @@ export default function AlbumScreen() {
                 </div>
               );
 
-              const displayProjects = album.projects.length
-                ? projectList
-                : addProjectButton;
+              const displayProjects = album.projects.length ? (
+                projectList
+              ) : isCurrentUser ? (
+                addProjectButton
+              ) : (
+                <span>There are no projects in this album yet</span>
+              );
 
               return (
                 <>
