@@ -1,4 +1,4 @@
-import { decrypt } from '~/modules/crypto/decrypt.server';
+import { decrypt } from '~/modules/crypto';
 import type { WithDecryptedPassword } from '~/modules/crypto/types/with-decrypted-password';
 import type { WithEncryptedPassword } from '~/modules/crypto/types/with-encrypted-password';
 
