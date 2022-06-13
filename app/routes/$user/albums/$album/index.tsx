@@ -12,7 +12,6 @@ import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import { castArray } from 'lodash';
-import * as React from 'react';
 import { z } from 'zod';
 import { AlbumProjectsForm } from '~/modules/albums/components/album-projects-form';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
@@ -23,6 +22,7 @@ import { Breadcrumbs } from '~/modules/common/breadcrumbs';
 import { EditButton } from '~/modules/common/edit-button';
 import PageLayout from '~/modules/common/page-layout';
 import { TogglableContent } from '~/modules/common/togglable-content';
+import { isSecured } from '~/modules/crypto/is-secured';
 import type { WithEncryptedSecurity } from '~/modules/crypto/types/with-encrypted-security';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
@@ -213,9 +213,14 @@ export default function AlbumScreen() {
                 />
               );
 
+              const projectsToDisplay =
+                isCurrentUser || isSecured(album)
+                  ? album.projects
+                  : album.projects.filter(({ isSecure }) => !isSecure);
+
               const projectList = (
                 <Projects>
-                  {album.projects.map((project) => (
+                  {projectsToDisplay.map((project) => (
                     <ProjectCard
                       key={project.id}
                       project={project}
@@ -243,7 +248,7 @@ export default function AlbumScreen() {
                 </div>
               );
 
-              const displayProjects = album.projects.length ? (
+              const displayProjects = projectsToDisplay.length ? (
                 projectList
               ) : isCurrentUser ? (
                 addProjectButton

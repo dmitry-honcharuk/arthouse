@@ -32,6 +32,7 @@ import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getAlbumAuthSession } from '~/server/album-auth-session.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
+import { getProjectAuthSession } from '~/server/project-auth-session.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -88,21 +89,46 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   const isCurrentUser = currentUser?.id === album.userId;
 
-  const session = await getAlbumAuthSession(request.headers.get('Cookie'));
+  const [albumSession, projectSession] = await Promise.all([
+    getAlbumAuthSession(request.headers.get('Cookie')),
+    getProjectAuthSession(request.headers.get('Cookie')),
+  ]);
 
   if (!isCurrentUser && album.isSecure && !album.security) {
     throw new Response(null, { status: 404 });
   }
 
+  const albumAuthPath = `/${getAlbumPath(
+    album,
+    album.user
+  )}/authorize?project=${projectID}`;
+
   if (
     !isCurrentUser &&
     album.isSecure &&
     album.security &&
-    session.get(album.id) !== album.security.passwordVersion
+    albumSession.get(album.id) !== album.security.passwordVersion
   ) {
-    return redirect(
-      `/${getAlbumPath(album, album.user)}/authorize?project=${projectID}`
-    );
+    return redirect(albumAuthPath);
+  }
+
+  if (
+    !isCurrentUser &&
+    !album.isSecure &&
+    project.isSecure &&
+    !project.security
+  ) {
+    throw new Response(null, { status: 404 });
+  }
+
+  if (
+    !isCurrentUser &&
+    !album.isSecure &&
+    project.isSecure &&
+    project.security &&
+    projectSession.get(project.id) !== project.security.passwordVersion
+  ) {
+    return redirect(albumAuthPath);
   }
 
   const [favouritesCount, categories, following] = await Promise.all([
