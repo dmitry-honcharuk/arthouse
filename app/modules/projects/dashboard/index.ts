@@ -1,3 +1,3 @@
-export { DashboardSorting } from './dashboard-sorting';
+export { DashboardView } from './dashboard-view';
 export { getProjectsForDashboard } from './get-projects-for-dashboard';
-export { isDashboardSorting } from './is-dashboard-sorting';
+export { isDashboardView } from './is-dashboard-view';

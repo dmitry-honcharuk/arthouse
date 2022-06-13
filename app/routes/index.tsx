@@ -1,4 +1,8 @@
-import { SpeedOutlined, WhatshotOutlined } from '@mui/icons-material';
+import {
+  PeopleAltOutlined,
+  SpeedOutlined,
+  WhatshotOutlined,
+} from '@mui/icons-material';
 import { Box, Stack, Tab, Tabs } from '@mui/material';
 import type { Category } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
@@ -13,11 +17,12 @@ import Layout from '~/modules/common/layout';
 import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
 import { Projects } from '~/modules/projects/components/project-list';
-import { DashboardSorting } from '~/modules/projects/dashboard/dashboard-sorting';
+import { DashboardView } from '~/modules/projects/dashboard/dashboard-view';
 import { getProjectsForDashboard } from '~/modules/projects/dashboard/get-projects-for-dashboard';
-import { isDashboardSorting } from '~/modules/projects/dashboard/is-dashboard-sorting';
+import { isDashboardView } from '~/modules/projects/dashboard/is-dashboard-view';
 import { getProjectPath } from '~/modules/projects/get-project-path';
 import type { FullProject } from '~/modules/projects/types/full-project';
+import { getFollowedUsers } from '~/modules/users/get-followed-users';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
@@ -25,17 +30,16 @@ interface LoaderData {
   currentUser: UserWithProfile | null;
   projects: FullProject[];
   favouriteIds: string[];
-  sorting: DashboardSorting;
+  view: DashboardView;
   allCategories: Category[];
   selectedCategories: Category[];
+  isFollowing: boolean;
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
-  const sortingQuery =
-    new URL(request.url).searchParams.get('sort') ?? DashboardSorting.Trending;
-  const sorting = isDashboardSorting(sortingQuery)
-    ? sortingQuery
-    : DashboardSorting.Trending;
+  const viewQuery =
+    new URL(request.url).searchParams.get('view') ?? DashboardView.Trending;
+  const view = isDashboardView(viewQuery) ? viewQuery : DashboardView.Trending;
   const categoriesSearch = new URL(request.url).searchParams.getAll(
     'categories'
   );
@@ -48,11 +52,17 @@ export const loader: LoaderFunction = async ({ request }) => {
   try {
     const currentUser = await getLoggedInUser(request);
 
-    const [favorites, projects, allCategories] = await Promise.all([
-      currentUser ? getFavorites(currentUser.id) : [],
-      getProjectsForDashboard({ sorting, categories: categoryIds }),
-      getCategories(),
-    ]);
+    const [favorites, projects, allCategories, followedUsers] =
+      await Promise.all([
+        currentUser ? getFavorites(currentUser.id) : [],
+        getProjectsForDashboard({
+          view,
+          categories: categoryIds,
+          ...(currentUser && { user: currentUser }),
+        }),
+        getCategories(),
+        currentUser ? getFollowedUsers(currentUser.id) : [],
+      ]);
 
     const selectedCategories = allCategories.filter(({ id }) =>
       categoryIds.includes(id)
@@ -62,18 +72,20 @@ export const loader: LoaderFunction = async ({ request }) => {
       currentUser,
       favouriteIds: favorites.map(({ projectId }) => projectId),
       projects,
-      sorting,
+      view,
       allCategories,
       selectedCategories,
+      isFollowing: followedUsers.length !== 0,
     });
   } catch (error) {
     return json<LoaderData>({
       currentUser: null,
       projects: [],
       favouriteIds: [],
-      sorting,
+      view,
       allCategories: [],
       selectedCategories: [],
+      isFollowing: false,
     });
   }
 };
@@ -83,12 +95,13 @@ export default function Dashboard() {
     currentUser,
     projects,
     favouriteIds,
-    sorting,
+    view,
     allCategories,
     selectedCategories,
+    isFollowing,
   } = useLoaderData<LoaderData>();
 
-  const [tab, setTab] = useState(sorting);
+  const [tab, setTab] = useState(view);
 
   const navigate = useNavigate();
 
@@ -109,12 +122,12 @@ export default function Dashboard() {
             icon={<WhatshotOutlined />}
             to={{
               search: getPageParams({
-                sort: DashboardSorting.Trending,
+                view: DashboardView.Trending,
                 categories: selectedCategories.map(({ id }) => id),
               }).toString(),
             }}
             component={Link}
-            value={DashboardSorting.Trending}
+            value={DashboardView.Trending}
             iconPosition="start"
             label="Trending"
             sx={{
@@ -127,12 +140,12 @@ export default function Dashboard() {
             icon={<SpeedOutlined />}
             to={{
               search: getPageParams({
-                sort: DashboardSorting.Latest,
+                view: DashboardView.Latest,
                 categories: selectedCategories.map(({ id }) => id),
               }).toString(),
             }}
             component={Link}
-            value={DashboardSorting.Latest}
+            value={DashboardView.Latest}
             iconPosition="start"
             label="Latest"
             sx={{
@@ -141,6 +154,26 @@ export default function Dashboard() {
               },
             }}
           />
+          {currentUser && isFollowing && (
+            <Tab
+              icon={<PeopleAltOutlined />}
+              to={{
+                search: getPageParams({
+                  view: DashboardView.Following,
+                  categories: selectedCategories.map(({ id }) => id),
+                }).toString(),
+              }}
+              component={Link}
+              value={DashboardView.Following}
+              iconPosition="start"
+              label="Following"
+              sx={{
+                '&.MuiButtonBase-root': {
+                  justifyContent: 'flex-end',
+                },
+              }}
+            />
+          )}
         </Tabs>
         <Box minWidth={200}>
           <CategoriesAutocomplete
@@ -183,16 +216,16 @@ export default function Dashboard() {
 }
 
 function getPageParams({
-  sort,
+  view,
   categories,
 }: {
-  sort?: DashboardSorting;
+  view?: DashboardView;
   categories?: number[];
 }): URLSearchParams {
   const params = new URLSearchParams();
 
-  if (sort) {
-    params.set('sort', sort);
+  if (view) {
+    params.set('view', view);
   }
 
   categories?.forEach((c) => params.append('categories', `${c}`));
