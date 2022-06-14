@@ -75,8 +75,12 @@ export const ProfileDetailsSection: FC<{
                 user.profile?.firstName
               )}
               {!isEdit &&
+                isCurrentUser &&
                 !user.profile?.firstName?.length &&
                 "You didn't specify your first name yet"}
+              {!isCurrentUser &&
+                !user.profile?.firstName?.length &&
+                "User didn't specify your first name yet"}
             </div>
             <div className="flex items-start gap-6">
               {lastNameLabel}
@@ -96,8 +100,12 @@ export const ProfileDetailsSection: FC<{
                 user.profile?.lastName
               )}
               {!isEdit &&
+                isCurrentUser &&
                 !user.profile?.lastName?.length &&
                 "You didn't specify your last name yet"}
+              {!isCurrentUser &&
+                !user.profile?.lastName?.length &&
+                "User didn't specify your last name yet"}
             </div>
             <div className="flex items-start gap-4">
               <MailOutline />
