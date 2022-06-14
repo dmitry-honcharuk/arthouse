@@ -19,9 +19,9 @@ import IconButton from '@mui/material/IconButton';
 import Toolbar from '@mui/material/Toolbar';
 import { Form, Link, useFetcher, useNavigate } from '@remix-run/react';
 import type { FC } from 'react';
-import * as React from 'react';
 import { useRef, useState } from 'react';
 import { GravatarAvatar } from '~/modules/common/gravatar-avatar';
+import { getFullName } from '~/modules/users/utils/get-full-name';
 import { NicknameTag } from '../users/components/profile/nickname-tag';
 import { getUserPath } from '../users/get-user-path';
 import type { UserWithProfile } from '../users/types/user-with-profile';
@@ -100,7 +100,13 @@ export const Header: FC<{ user: UserWithProfile | null }> = ({ user }) => {
                     <ListItemIcon>
                       <Person fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText className="text-left">Personal</ListItemText>
+                    <ListItemText
+                      className="text-left"
+                      primary="Personal page"
+                      secondary={
+                        user.profile ? getFullName(user.profile) : null
+                      }
+                    />
                   </MenuItem>
                   <fetcher.Form ref={logoutRef} action="/logout" method="post">
                     <MenuItem

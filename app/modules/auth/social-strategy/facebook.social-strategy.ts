@@ -6,12 +6,24 @@ export class FacebookSocialStrategy implements SocialStrategy {
 
   async authorize(): Promise<SocialUser> {
     const params = new URLSearchParams([
-      ['fields', 'email'],
+      ['fields', ['email', 'first_name', 'last_name'].join(',')],
       ['access_token', this.token],
     ]);
 
-    return fetch(`https://graph.facebook.com/me?${params.toString()}`).then(
+    const {
+      id,
+      email,
+      first_name: firstName,
+      last_name: lastName,
+    } = await fetch(`https://graph.facebook.com/me?${params.toString()}`).then(
       (r) => r.json()
     );
+
+    return {
+      id,
+      email,
+      firstName,
+      lastName,
+    };
   }
 }

@@ -32,12 +32,16 @@ export const action: ActionFunction = async (actionDetails) => {
       const {
         fields: field,
         nickname,
+        firstName,
+        lastName,
         summary,
         socialLinks,
       } = await formDataHandler.validate(
         z.object({
           fields: z.union([z.string(), z.array(z.string())]),
           nickname: z.string().optional(),
+          firstName: z.string().optional(),
+          lastName: z.string().optional(),
           summary: z.string().optional(),
           socialLinks: z.union([z.string(), z.array(z.string())]).optional(),
         })
@@ -55,6 +59,14 @@ export const action: ActionFunction = async (actionDetails) => {
 
       if (fields.includes('nickname')) {
         profileFields.nickname = nickname || null;
+      }
+
+      if (fields.includes('firstName')) {
+        profileFields.firstName = firstName || null;
+      }
+
+      if (fields.includes('lastName')) {
+        profileFields.lastName = lastName || null;
       }
 
       return json(await updateProfile(user.id, profileFields));

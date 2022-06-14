@@ -4,13 +4,20 @@ import { SocialProvider } from '~/modules/auth/types/social-provider';
 
 type Details = {
   email: string;
+  firstName?: string;
+  lastName?: string;
   social: {
     id: string;
     provider: SocialProvider;
   };
 };
 
-export async function getUserBySocial({ email, social }: Details) {
+export async function getUserBySocial({
+  email,
+  social,
+  firstName,
+  lastName,
+}: Details) {
   const socialIdField = getSocialProviderIdField(social.provider);
 
   const user = await prisma.user.findFirst({
@@ -28,6 +35,12 @@ export async function getUserBySocial({ email, social }: Details) {
       data: {
         email,
         [socialIdField]: social.id,
+        profile: {
+          create: {
+            firstName,
+            lastName,
+          },
+        },
       },
       include: { profile: true },
     });

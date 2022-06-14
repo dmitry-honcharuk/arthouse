@@ -24,7 +24,6 @@ import { ProjectStatus } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
-import * as React from 'react';
 import { useState } from 'react';
 import invariant from 'tiny-invariant';
 import { z } from 'zod';
@@ -45,6 +44,7 @@ import { getUserByIdentifier } from '~/modules/users/getUserById';
 import { isFollowing } from '~/modules/users/is-following';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
+import { getFullName } from '~/modules/users/utils/get-full-name';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 
 type FullAlbum = Album & WithProjects & WithUser;
@@ -150,13 +150,18 @@ export default function UserProjects() {
           <Card variant="outlined" className="mb-3">
             <CardContent>
               <Stack gap={1}>
-                <Stack direction="row" alignItems="flex-end" gap={2}>
+                <Stack direction="row" alignItems="center" gap={2}>
                   <GravatarAvatar email={user.email} />
-                  {user.profile?.nickname && (
-                    <NicknameTag nickname={user.profile.nickname} />
+                  {user.profile && (
+                    <Stack alignItems="flex-start">
+                      <Typography>{getFullName(user.profile)}</Typography>
+
+                      {user.profile.nickname && (
+                        <NicknameTag nickname={user.profile.nickname} />
+                      )}
+                    </Stack>
                   )}
                 </Stack>
-                <Typography>{user.email}</Typography>
               </Stack>
             </CardContent>
             <CardActions>
