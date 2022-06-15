@@ -4,6 +4,7 @@ import type { UploadHandler } from '@remix-run/node';
 import { writeAsyncIterableToWritable } from '@remix-run/node';
 import cuid from 'cuid';
 import { PassThrough } from 'stream';
+import last from 'lodash/last';
 import { z } from 'zod';
 
 export const uploadHandler: UploadHandler = async ({ data, filename }) => {
@@ -35,7 +36,9 @@ export const uploadHandler: UploadHandler = async ({ data, filename }) => {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY_ID,
     });
 
-  const name = `${cuid()}.${filename}`;
+  const filenameParts = filename.split('.');
+
+  const name = `${cuid()}.${last(filenameParts)}`;
 
   const upload = new Upload({
     client: new S3({
@@ -73,5 +76,9 @@ function getObjectUrl({
   region: string;
   bucket: string;
 }) {
+  if (bucket.includes('assets')) {
+    return `https://${bucket}/${filename}`;
+  }
+
   return `https://s3.${region}.amazonaws.com/${bucket}/${filename}`;
 }
