@@ -60,7 +60,7 @@ import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getFullName } from '~/modules/users/utils/get-full-name';
 import { HrefLink } from '../../common/href-link';
-import { ProjectExplicitlyForm as ProjectExplicitForm } from './project-explicitly-form';
+import { ProjectExplicitlyForm as ProjectExplicitForm } from './project-explicit-form';
 
 interface Props {
   isCurrentUser: boolean;
@@ -227,12 +227,23 @@ export const ProjectScreen: FC<Props> = ({
                 <GppGoodOutlined />
               </CardMedia>
             )}
+
+            {project.explicit && (
+              <CardMedia className="text-center bg-pink-100 py-1">
+                <Typography variant="overline" fontWeight="bold">
+                  Explicit Content
+                </Typography>
+              </CardMedia>
+            )}
+
             <CardContent>
               <Typography variant="h4" component="div">
                 {project.name}
               </Typography>
               {project.caption && (
-                <Typography variant="body2">{project.caption}</Typography>
+                <Typography variant="body2" whiteSpace="pre-wrap">
+                  {project.caption}
+                </Typography>
               )}
               <div className="text-right">
                 <Typography variant="overline">
