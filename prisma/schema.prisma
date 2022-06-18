@@ -27,6 +27,8 @@ model User {
   followedBy User[] @relation("UserFollows", references: [id])
   following  User[] @relation("UserFollows", references: [id])
 
+  showExplicit Boolean @default(false) @map("show_explicit")
+
   @@map("users")
 }
 
@@ -88,6 +90,8 @@ model Project {
   categories Category[]
 
   favoriteCount Int @default(0) @map("favorite_count")
+
+  explicit Boolean @default(false)
 
   @@unique([userId, slug])
   @@index([favoriteCount])
