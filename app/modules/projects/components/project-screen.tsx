@@ -60,6 +60,7 @@ import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getFullName } from '~/modules/users/utils/get-full-name';
 import { HrefLink } from '../../common/href-link';
+import { ProjectExplicitlyForm as ProjectExplicitForm } from './project-explicitly-form';
 
 interface Props {
   isCurrentUser: boolean;
@@ -243,11 +244,24 @@ export const ProjectScreen: FC<Props> = ({
           {isCurrentUser && (
             <Card elevation={3}>
               <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Publicity
+                </Typography>
                 <ProjectPublicityForm
                   project={project}
                   action={settingsPath}
                   settingsPath={settingsPath}
                 />
+              </CardContent>
+            </Card>
+          )}
+          {isCurrentUser && (
+            <Card elevation={3}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Explicit content
+                </Typography>
+                <ProjectExplicitForm project={project} action={settingsPath} />
               </CardContent>
             </Card>
           )}
