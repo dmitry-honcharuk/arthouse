@@ -60,6 +60,7 @@ import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getFullName } from '~/modules/users/utils/get-full-name';
 import { HrefLink } from '../../common/href-link';
+import { ExplicitProjectSplashScreen } from './explicit-project-splash-screen';
 import { ProjectExplicitlyForm as ProjectExplicitForm } from './project-explicit-form';
 
 interface Props {
@@ -76,6 +77,7 @@ interface Props {
   categories: Category[];
   isFollowing: boolean;
   allCollections: Collection[];
+  isAgeConfirmed: boolean;
 }
 
 export const ProjectScreen: FC<Props> = ({
@@ -88,11 +90,16 @@ export const ProjectScreen: FC<Props> = ({
   categories,
   isFollowing,
   allCollections,
+  isAgeConfirmed,
 }) => {
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
 
   const settingsPath = `/${getProjectPath(project, project.user)}/settings`;
+
+  if (project.explicit && !isCurrentUser && !isAgeConfirmed) {
+    return <ExplicitProjectSplashScreen />;
+  }
 
   return (
     <PageLayout breadcrumbs={breadcrumbs}>

@@ -27,7 +27,7 @@ export const ProjectCard: FC<{
   showIsSecured = false,
   showStatus = false,
   showFavourite = false,
-  project: { id, status, preview, caption, name, user, isSecure },
+  project: { id, status, preview, caption, name, user, isSecure, explicit },
 }) => {
   const cardContent = (
     <Stack height="100%">
@@ -60,13 +60,16 @@ export const ProjectCard: FC<{
           </Status>
         </div>
       )}
+
       {preview && (
-        <CardMedia
-          component="img"
-          sx={{ height: 200 }}
-          image={preview}
-          alt="Paella dish"
-        />
+        <CardMedia component="img" sx={{ height: 200 }} image={preview} />
+      )}
+      {explicit && (
+        <CardMedia className="text-center bg-pink-100 py-1">
+          <Typography variant="overline" fontWeight="bold">
+            Explicit Content
+          </Typography>
+        </CardMedia>
       )}
       <CardContent
         sx={{ '&:last-child': { padding: 2 } }}

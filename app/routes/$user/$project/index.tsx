@@ -8,7 +8,6 @@ import { ProjectItemType, ProjectStatus } from '@prisma/client';
 import type { ActionFunction, LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
-import * as React from 'react';
 import { z } from 'zod';
 import { getCategories } from '~/modules/categories/get-categories';
 import type { WithCategories } from '~/modules/categories/types/with-categories';
@@ -33,6 +32,7 @@ import { ActionBuilder } from '~/server/action-builder.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 import { getProjectAuthSession } from '~/server/project-auth-session.server';
+import { getUserDetailsSession } from '~/server/user-details-session.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -47,6 +47,7 @@ interface LoaderData {
   categories: Category[];
   following: boolean;
   allCollections: Collection[];
+  isAgeConfirmed: boolean;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -89,7 +90,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     return redirect(`/${getProjectPath(project, project.user)}/authorize`);
   }
 
-  const [favouritesCount, categories, following, allCollections] =
+  const [favouritesCount, categories, following, allCollections, userSession] =
     await Promise.all([
       countFavourites(project.id),
       getCategories(),
@@ -97,6 +98,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         ? isFollowing({ userId: project.user.id, followerId: currentUser.id })
         : false,
       currentUser ? getCollections(currentUser) : [],
+      getUserDetailsSession(request.headers.get('Cookie')),
     ]);
 
   return json<LoaderData>({
@@ -108,6 +110,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     categories,
     following,
     allCollections,
+    isAgeConfirmed: userSession.get('age-confirmed') === 'true',
   });
 };
 
@@ -171,6 +174,7 @@ export default function ProjectPage() {
     categories,
     following,
     allCollections,
+    isAgeConfirmed,
   } = useLoaderData<LoaderData>();
 
   return (
@@ -183,6 +187,7 @@ export default function ProjectPage() {
       categories={categories}
       isFollowing={following}
       allCollections={allCollections}
+      isAgeConfirmed={isAgeConfirmed}
       breadcrumbs={
         <Breadcrumbs
           items={[
