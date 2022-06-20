@@ -19,8 +19,6 @@ export async function getUserAlbums(
     throw new Error(`Invalid user ID: ${userId}`);
   }
 
-  console.log('details?.project?.explicit', details?.project?.explicit);
-
   return await prisma.album.findMany({
     where: {
       userId: user.id,

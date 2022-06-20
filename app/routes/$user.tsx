@@ -1,7 +1,6 @@
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { Outlet, useLoaderData } from '@remix-run/react';
-import * as React from 'react';
 import Layout from '~/modules/common/layout';
 import { getUserByIdentifier } from '~/modules/users/getUserById';
 import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
@@ -37,7 +36,13 @@ export default function UserProfile() {
 
   return (
     <Layout currentUser={currentUser} className="flex flex-col gap-8">
-      <Outlet context={{ user, isCurrentUser: user.id === currentUser?.id }} />
+      <Outlet
+        context={{
+          user,
+          isCurrentUser: user.id === currentUser?.id,
+          currentUser,
+        }}
+      />
     </Layout>
   );
 }

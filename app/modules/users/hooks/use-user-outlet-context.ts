@@ -5,5 +5,6 @@ export function useUserOutletContext() {
   return useOutletContext<{
     user: UserWithProfile;
     isCurrentUser: boolean;
+    currentUser: UserWithProfile | null;
   }>();
 }
