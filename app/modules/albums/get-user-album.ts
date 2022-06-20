@@ -5,7 +5,10 @@ import { getUserByIdentifier } from '../users/getUserById';
 
 export async function getUserAlbum(
   userIdentifier: string | Pick<User, 'id'>,
-  albumIdentifier: string
+  albumIdentifier: string,
+  details?: {
+    project?: { explicit?: boolean };
+  }
 ) {
   const user =
     typeof userIdentifier === 'string'
@@ -26,6 +29,9 @@ export async function getUserAlbum(
     include: {
       security: true,
       projects: {
+        where: {
+          explicit: details?.project?.explicit,
+        },
         include: {
           user: {
             include: { profile: true },

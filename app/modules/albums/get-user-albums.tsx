@@ -9,6 +9,7 @@ export async function getUserAlbums(
     };
     project?: {
       isSecure?: boolean;
+      explicit?: boolean;
     };
   }
 ) {
@@ -18,6 +19,8 @@ export async function getUserAlbums(
     throw new Error(`Invalid user ID: ${userId}`);
   }
 
+  console.log('details?.project?.explicit', details?.project?.explicit);
+
   return await prisma.album.findMany({
     where: {
       userId: user.id,
@@ -25,7 +28,10 @@ export async function getUserAlbums(
     },
     include: {
       projects: {
-        where: { isSecure: details?.project?.isSecure },
+        where: {
+          isSecure: details?.project?.isSecure,
+          explicit: details?.project?.explicit,
+        },
         include: { user: { include: { profile: true } } },
       },
       user: { include: { profile: true } },

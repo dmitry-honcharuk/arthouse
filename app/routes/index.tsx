@@ -8,7 +8,6 @@ import type { Category } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { Link, useLoaderData, useNavigate } from '@remix-run/react';
-import * as React from 'react';
 import { useState } from 'react';
 import { CategoriesAutocomplete } from '~/modules/categories/components/categories-autocomplete';
 import { CategoryChip } from '~/modules/categories/components/category-chip';

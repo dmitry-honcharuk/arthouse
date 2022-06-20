@@ -7,9 +7,11 @@ import { getFollowedUsers } from '~/modules/users/get-followed-users';
 export async function getFollowingProjects({
   user,
   categories,
+  showExplicit,
 }: {
   user: User;
   categories: number[];
+  showExplicit: boolean;
 }): Promise<FullProject[]> {
   const followedUsers = await getFollowedUsers(user.id);
 
@@ -20,5 +22,6 @@ export async function getFollowingProjects({
     ...(categories.length && { categories }),
     categoriesSet: 'union',
     userId: followedUsers.map(({ id }) => id),
+    ...(!showExplicit && { explicit: false }),
   });
 }

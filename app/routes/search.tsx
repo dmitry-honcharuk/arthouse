@@ -4,7 +4,6 @@ import { ProjectStatus } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
-import * as React from 'react';
 import { getCategories } from '~/modules/categories/get-categories';
 import { getFavorites } from '~/modules/favorites/get-favorites';
 import { ProjectCard } from '~/modules/projects/components/project-card';
@@ -65,6 +64,7 @@ export const loader: LoaderFunction = async ({ request }) => {
     }),
     statuses: [ProjectStatus.PUBLISHED],
     isSecure: false,
+    ...(!currentUser?.showExplicit && { explicit: false }),
   });
 
   const favorites = currentUser ? await getFavorites(currentUser.id) : [];
