@@ -1,6 +1,5 @@
 import { Stack, Switch, Tooltip, Typography } from '@mui/material';
 import type { FC, ReactNode } from 'react';
-import * as React from 'react';
 
 export const SecuritySwitch: FC<{
   isSecure: boolean;

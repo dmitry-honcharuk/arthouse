@@ -9,6 +9,7 @@ export async function getUserAlbums(
     };
     project?: {
       isSecure?: boolean;
+      explicit?: boolean;
     };
   }
 ) {
@@ -25,7 +26,10 @@ export async function getUserAlbums(
     },
     include: {
       projects: {
-        where: { isSecure: details?.project?.isSecure },
+        where: {
+          isSecure: details?.project?.isSecure,
+          explicit: details?.project?.explicit,
+        },
         include: { user: { include: { profile: true } } },
       },
       user: { include: { profile: true } },

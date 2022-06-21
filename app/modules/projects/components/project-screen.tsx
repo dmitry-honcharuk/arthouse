@@ -60,6 +60,8 @@ import type { UserWithProfile } from '~/modules/users/types/user-with-profile';
 import type { WithUser } from '~/modules/users/types/with-user';
 import { getFullName } from '~/modules/users/utils/get-full-name';
 import { HrefLink } from '../../common/href-link';
+import { ExplicitProjectSplashScreen } from './explicit-project-splash-screen';
+import { ProjectExplicitlyForm as ProjectExplicitForm } from './project-explicit-form';
 
 interface Props {
   isCurrentUser: boolean;
@@ -75,6 +77,7 @@ interface Props {
   categories: Category[];
   isFollowing: boolean;
   allCollections: Collection[];
+  isAgeConfirmed: boolean;
 }
 
 export const ProjectScreen: FC<Props> = ({
@@ -87,11 +90,16 @@ export const ProjectScreen: FC<Props> = ({
   categories,
   isFollowing,
   allCollections,
+  isAgeConfirmed,
 }) => {
   const [type, setType] = useState<ProjectItemType>(ProjectItemType.IMAGE);
   const [addItem, toggleAddItem] = useToggle(false);
 
   const settingsPath = `/${getProjectPath(project, project.user)}/settings`;
+
+  if (project.explicit && !isCurrentUser && !isAgeConfirmed) {
+    return <ExplicitProjectSplashScreen />;
+  }
 
   return (
     <PageLayout breadcrumbs={breadcrumbs}>
@@ -226,12 +234,23 @@ export const ProjectScreen: FC<Props> = ({
                 <GppGoodOutlined />
               </CardMedia>
             )}
+
+            {project.explicit && (
+              <CardMedia className="text-center bg-pink-100 py-1">
+                <Typography variant="overline" fontWeight="bold">
+                  Explicit Content
+                </Typography>
+              </CardMedia>
+            )}
+
             <CardContent>
               <Typography variant="h4" component="div">
                 {project.name}
               </Typography>
               {project.caption && (
-                <Typography variant="body2">{project.caption}</Typography>
+                <Typography variant="body2" whiteSpace="pre-wrap">
+                  {project.caption}
+                </Typography>
               )}
               <div className="text-right">
                 <Typography variant="overline">
@@ -243,11 +262,24 @@ export const ProjectScreen: FC<Props> = ({
           {isCurrentUser && (
             <Card elevation={3}>
               <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Publicity
+                </Typography>
                 <ProjectPublicityForm
                   project={project}
                   action={settingsPath}
                   settingsPath={settingsPath}
                 />
+              </CardContent>
+            </Card>
+          )}
+          {isCurrentUser && (
+            <Card elevation={3}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Explicit content
+                </Typography>
+                <ProjectExplicitForm project={project} action={settingsPath} />
               </CardContent>
             </Card>
           )}

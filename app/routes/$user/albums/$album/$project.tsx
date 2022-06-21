@@ -8,7 +8,6 @@ import type { Album, Category, Collection, Favorite } from '@prisma/client';
 import type { LoaderFunction } from '@remix-run/node';
 import { json, redirect } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
-import * as React from 'react';
 import { z } from 'zod';
 import { getAlbumPath } from '~/modules/albums/get-album-path';
 import { getUserAlbum } from '~/modules/albums/get-user-album';
@@ -33,6 +32,7 @@ import type { WithUser } from '~/modules/users/types/with-user';
 import { getAlbumAuthSession } from '~/server/album-auth-session.server';
 import { getLoggedInUser } from '~/server/get-logged-in-user.server';
 import { getProjectAuthSession } from '~/server/project-auth-session.server';
+import { getUserDetailsSession } from '~/server/user-details-session.server';
 
 interface LoaderData {
   isCurrentUser: boolean;
@@ -48,6 +48,7 @@ interface LoaderData {
   categories: Category[];
   following: boolean;
   allCollections: Collection[];
+  isAgeConfirmed: boolean;
 }
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -131,13 +132,15 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     return redirect(albumAuthPath);
   }
 
-  const [favouritesCount, categories, following] = await Promise.all([
-    countFavourites(project.id),
-    getCategories(),
-    currentUser && !isCurrentUser
-      ? isFollowing({ userId: project.user.id, followerId: currentUser.id })
-      : false,
-  ]);
+  const [favouritesCount, categories, following, userSession] =
+    await Promise.all([
+      countFavourites(project.id),
+      getCategories(),
+      currentUser && !isCurrentUser
+        ? isFollowing({ userId: project.user.id, followerId: currentUser.id })
+        : false,
+      getUserDetailsSession(request.headers.get('Cookie')),
+    ]);
 
   return json<LoaderData>({
     project,
@@ -149,6 +152,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     categories,
     following,
     allCollections,
+    isAgeConfirmed: userSession.get('age-confirmed') === 'true',
   });
 };
 
@@ -163,6 +167,7 @@ export default function AlbumScreen() {
     categories,
     following,
     allCollections,
+    isAgeConfirmed,
   } = useLoaderData<LoaderData>();
 
   return (
@@ -175,6 +180,7 @@ export default function AlbumScreen() {
       categories={categories}
       isFollowing={following}
       allCollections={allCollections}
+      isAgeConfirmed={isAgeConfirmed}
       breadcrumbs={
         <Breadcrumbs
           items={[

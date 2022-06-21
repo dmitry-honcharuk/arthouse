@@ -30,7 +30,6 @@ import {
   useNavigate,
 } from '@remix-run/react';
 import { castArray } from 'lodash';
-import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Breadcrumbs } from '~/modules/common/breadcrumbs';
@@ -222,6 +221,16 @@ export const action: ActionFunction = async (actionDetails) => {
               : []
           )
         );
+      }
+
+      if (fields.includes('explicit')) {
+        const { explicit } = await formDataHandler.validate(
+          z.object({
+            explicit: z.union([z.literal('true'), z.literal('false')]),
+          })
+        );
+
+        projectDetails.explicit = explicit === 'true';
       }
 
       return json(await updateProject(project.id, projectDetails));

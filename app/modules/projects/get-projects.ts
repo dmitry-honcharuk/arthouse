@@ -17,6 +17,7 @@ interface Details {
   tags?: string[];
   categories?: number[];
   categoriesSet?: ItemsSetType;
+  explicit?: boolean;
 }
 
 export async function getProjects(details?: Details): Promise<FullProject[]> {
@@ -51,6 +52,7 @@ export async function getProjects(details?: Details): Promise<FullProject[]> {
         ? { in: details?.userId }
         : details?.userId,
       isSecure: details?.isSecure,
+      explicit: details?.explicit,
     },
     include: {
       items: true,

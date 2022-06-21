@@ -16,16 +16,18 @@ export async function getProjectsForDashboard({
   view,
   categories,
 }: Filters): Promise<FullProject[]> {
+  const showExplicit = user?.showExplicit ?? false;
+
   switch (view) {
     case DashboardView.Latest:
-      return getLatestProjects({ categories });
+      return getLatestProjects({ categories, showExplicit });
 
     case DashboardView.Following:
       return user
-        ? getFollowingProjects({ user, categories })
-        : getLatestProjects({ categories });
+        ? getFollowingProjects({ user, categories, showExplicit })
+        : getLatestProjects({ categories, showExplicit });
 
     default:
-      return getTrendingProjects({ categories });
+      return getTrendingProjects({ categories, showExplicit });
   }
 }

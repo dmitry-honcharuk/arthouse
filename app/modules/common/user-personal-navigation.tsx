@@ -1,4 +1,5 @@
 import {
+  AccountCircleOutlined,
   BadgeOutlined,
   FavoriteBorderOutlined,
   FolderCopyOutlined,
@@ -7,7 +8,6 @@ import {
 import { Hidden, Tab, Tabs } from '@mui/material';
 import { Link, useMatches } from '@remix-run/react';
 import type { FC } from 'react';
-import * as React from 'react';
 import { useState } from 'react';
 import { getUserPath } from '~/modules/users/get-user-path';
 import { useUserOutletContext } from '~/modules/users/hooks/use-user-outlet-context';
@@ -17,6 +17,7 @@ enum Nav {
   Favourites = 'favorites',
   Following = 'following',
   Profile = 'profile',
+  Account = 'account',
 }
 
 export const UserPersonalNavigation: FC = () => {
@@ -93,6 +94,21 @@ export const UserPersonalNavigation: FC = () => {
               },
             }}
           />
+          {isCurrentUser && (
+            <Tab
+              icon={<AccountCircleOutlined />}
+              to={`/${userPath}/account`}
+              value={Nav.Account}
+              component={Link}
+              iconPosition="end"
+              label="Account"
+              sx={{
+                '&.MuiButtonBase-root': {
+                  justifyContent: 'flex-end',
+                },
+              }}
+            />
+          )}
         </Tabs>
       </Hidden>
       <Hidden smUp>

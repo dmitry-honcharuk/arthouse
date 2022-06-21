@@ -75,6 +75,10 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 
   const isCurrentUser = currentUser?.id === user.id;
 
+  const showExplicit = isCurrentUser
+    ? true
+    : currentUser?.showExplicit ?? false;
+
   const [projects, albums, favorites, following] = await Promise.all([
     getProjects({
       userId: user.id,
@@ -82,10 +86,14 @@ export const loader: LoaderFunction = async ({ request, params }) => {
         ? [ProjectStatus.DRAFT, ProjectStatus.PUBLISHED]
         : [ProjectStatus.PUBLISHED],
       ...(!isCurrentUser && { isSecure: false }),
+      ...(!showExplicit && { explicit: false }),
     }),
     getUserAlbums(user.id, {
       ...(!isCurrentUser && {
-        project: { isSecure: false },
+        project: {
+          isSecure: false,
+          ...(!showExplicit && { explicit: false }),
+        },
         albums: { isSecure: false },
       }),
     }),

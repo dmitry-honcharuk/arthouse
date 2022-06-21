@@ -57,11 +57,16 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     throw new Response(null, { status: 404 });
   }
 
-  const [currentUser, album, projects] = await Promise.all([
+  const [currentUser, projects] = await Promise.all([
     getLoggedInUser(request),
-    getUserAlbum(user, albumID),
     getUserProjects(user),
   ]);
+
+  const album = await getUserAlbum(user, albumID, {
+    project: {
+      ...(!currentUser?.showExplicit && { explicit: false }),
+    },
+  });
 
   if (!album) {
     throw new Response('Not Found', { status: 404 });
