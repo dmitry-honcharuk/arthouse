@@ -1,15 +1,22 @@
 import type { ActionFunction, DataFunctionArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
 import { ZodError } from 'zod';
+import { isResponse } from './is-response.server';
 
-type Method = 'POST' | 'PUT' | 'DELETE';
+type Method = 'POST' | 'PUT' | 'DELETE' | 'GET';
 
 type Handler = (
   context: Parameters<ActionFunction>[0]
 ) => ReturnType<ActionFunction>;
 
+type CorsConfig = {
+  origin: string;
+};
+
 export class ActionBuilder {
   private handlers = new Map<Method, Handler>();
+
+  private corsConfig: null | CorsConfig = null;
 
   static handleError(error: Error) {
     if (error instanceof ZodError) {
@@ -41,6 +48,12 @@ export class ActionBuilder {
     return this;
   }
 
+  cors(config: CorsConfig = { origin: '*' }): this {
+    this.corsConfig = config;
+
+    return this;
+  }
+
   build(): Handler | Response {
     try {
       const {
@@ -56,10 +69,27 @@ export class ActionBuilder {
       const result = handler(this.context);
 
       return result instanceof Promise
-        ? result.catch(ActionBuilder.handleError)
-        : result;
+        ? result
+            .then((r) => this.wrapWithCors(r))
+            .catch(ActionBuilder.handleError)
+        : this.wrapWithCors(result);
     } catch (e: any) {
       return ActionBuilder.handleError(e);
     }
+  }
+
+  private wrapWithCors<T>(response: T) {
+    if (!isResponse(response)) {
+      return response;
+    }
+
+    if (this.corsConfig) {
+      response.headers.set(
+        'Access-Control-Allow-Origin',
+        this.corsConfig.origin
+      );
+    }
+
+    return response;
   }
 }
