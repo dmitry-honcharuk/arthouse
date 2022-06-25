@@ -6,7 +6,6 @@ import { ActionBuilder } from '~/server/action-builder.server';
 
 export const loader: LoaderFunction = async (details) => {
   return new ActionBuilder(details)
-    .cors()
     .use('GET', async ({ request }) => {
       const email = z
         .string()

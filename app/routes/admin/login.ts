@@ -7,11 +7,10 @@ import { getAdminByEmail } from '~/modules/users/admins/get-admin-by-email';
 import { updateUser } from '~/modules/users/update-user';
 import { ActionBuilder } from '~/server/action-builder.server';
 import { FormDataHandler } from '~/server/form-data-handler.server';
-import { getSession } from '~/server/sessions.server';
+import { commitSession, getSession } from '~/server/sessions.server';
 
 export const action: ActionFunction = async (a) => {
   return new ActionBuilder(a)
-    .cors()
     .use('POST', async ({ request }) => {
       const session = await getSession(request.headers.get('Cookie'));
       const formDataHandler = new FormDataHandler(request);
@@ -53,7 +52,11 @@ export const action: ActionFunction = async (a) => {
 
         session.set('admin-token', getAdminToken(admin));
 
-        return json(null);
+        return json(null, {
+          headers: {
+            'Set-Cookie': await commitSession(session),
+          },
+        });
       }
 
       const valid = await checkPassword(password, admin.user.password);
@@ -64,7 +67,11 @@ export const action: ActionFunction = async (a) => {
 
       session.set('admin-token', getAdminToken(admin));
 
-      return json(null);
+      return json(null, {
+        headers: {
+          'Set-Cookie': await commitSession(session),
+        },
+      });
     })
     .build();
 };

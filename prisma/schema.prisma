@@ -217,9 +217,29 @@ model Category {
   @@map("categories")
 }
 
+enum Permission {
+  SUPER
+  BLOCK_PROJECT
+  BLOCK_USER
+}
+
 model Admin {
   userId String @id @map("user_id") @db.Uuid
   user   User   @relation(fields: [userId], references: [id])
 
+  permissions Permission[]
+
+  roles Role[]
+
   @@map("admins")
+}
+
+model Role {
+  name String @id
+
+  permissions Permission[]
+
+  admins Admin[]
+
+  @@map("roles")
 }
