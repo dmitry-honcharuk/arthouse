@@ -219,8 +219,9 @@ model Category {
 
 enum Permission {
   SUPER
-  BLOCK_PROJECT
-  BLOCK_USER
+  PROJECTS_BLOCK
+  USERS_BLOCK
+  USERS_LIST
 }
 
 model Admin {
