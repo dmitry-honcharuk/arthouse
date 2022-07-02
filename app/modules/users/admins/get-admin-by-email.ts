@@ -7,6 +7,7 @@ export function getAdminByEmail(email: string) {
     },
     include: {
       user: { include: { profile: true } },
+      roles: true,
     },
   });
 }
