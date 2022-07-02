@@ -22,12 +22,15 @@ model User {
 
   facebookId String? @unique @map("facebook_id")
 
+  password String?
+
   Favorite Favorite[]
 
   followedBy User[] @relation("UserFollows", references: [id])
   following  User[] @relation("UserFollows", references: [id])
 
   showExplicit Boolean @default(false) @map("show_explicit")
+  admin        Admin?
 
   @@map("users")
 }
@@ -212,4 +215,32 @@ model Category {
   projects Project[]
 
   @@map("categories")
+}
+
+enum Permission {
+  SUPER
+  PROJECTS_BLOCK
+  USERS_BLOCK
+  USERS_LIST
+}
+
+model Admin {
+  userId String @id @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  permissions Permission[]
+
+  roles Role[]
+
+  @@map("admins")
+}
+
+model Role {
+  name String @id
+
+  permissions Permission[]
+
+  admins Admin[]
+
+  @@map("roles")
 }
